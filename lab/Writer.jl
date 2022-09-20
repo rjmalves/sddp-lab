@@ -15,6 +15,9 @@ RAW_CUTS_FILENAME = "cortes.json"
 PROCESSED_CUTS_FILENAME = "cortes.csv"
 OUTDIR = "./out"
 CUTDIR = "cortes"
+OPERATION_FILENAME_PATH = joinpath(OUTDIR, OPERATION_FILENAME)
+OPERATION_PLOTS_PATH = joinpath(OUTDIR, OPERATION_PLOTS)
+PROCESSED_CUTS_PATH = joinpath(OUTDIR, PROCESSED_CUTS_FILENAME)
 CUTPATH = joinpath(OUTDIR, CUTDIR)
 
 function __check_outdir()
@@ -56,6 +59,7 @@ function __increase_dataframe!(df::DataFrame,
 end
 
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}})
+    @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
     df_global = DataFrame()
     for variavel = [:gt, :gh, :earm, :deficit, :vert, :ena]
         if (variavel == :earm)
@@ -66,7 +70,7 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}})
         end
     end
     __check_outdir()
-    CSV.write(joinpath(OUTDIR, OPERATION_FILENAME), df_global)
+    CSV.write(OPERATION_FILENAME_PATH, df_global)
 end
 
 
@@ -91,19 +95,21 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
 end
 
 function write_model_cuts(model::SDDP.PolicyGraph)::DataFrame
+    @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
     __check_outdir()
     jsonpath = joinpath(OUTDIR, RAW_CUTS_FILENAME)
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
     rm(jsonpath)
     df = __process_cuts(jsondata, "earm")
-    CSV.write(joinpath(OUTDIR, PROCESSED_CUTS_FILENAME), df)
+    CSV.write(PROCESSED_CUTS_PATH, df)
     return df
 end
 
 
 function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     cfg::ConfigData)
+    @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
     SDDP.add_spaghetti(plt; title="EARM", ymin=0, ymax=cfg.uhe.earmax) do data
         return data[:earm].out
@@ -124,11 +130,11 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
         return data[:ena]
     end
     __check_outdir()
-    SDDP.plot(plt, joinpath(OUTDIR, OPERATION_PLOTS), open=false)
+    SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)
 end
 
 function plot_model_cuts(cuts::DataFrame, cfg::ConfigData)
-    # TODO - fazer iterativo por nó
+    @info "Plotando cortes em $(CUTPATH)"
     stages = unique(cuts.estagio)
     x = collect(0:Int(cfg.uhe.earmax))
     for s in stages

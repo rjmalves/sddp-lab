@@ -2,6 +2,7 @@ module Study
 
 using Statistics
 using Distributions
+using Logging
 using Random
 using SDDP
 using GLPK
@@ -28,6 +29,7 @@ end
 function build_model(cfg::ConfigData,
     ena_dist::Dict{Int64,Vector{Float64}})::SDDP.PolicyGraph
 
+    @info "Compilando modelo"
     stages = Int(12 * cfg.years)
     sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage, ena_dist)
 
@@ -71,6 +73,7 @@ end
 
 function train_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)
+    @info "Calculando política"
     SDDP.train(model,
         iteration_limit=cfg.max_iterations,
     )
@@ -80,6 +83,7 @@ end
 function simulate_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
+    @info "Realizando simulação"
     return SDDP.simulate(model,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena])
