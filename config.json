@@ -1,0 +1,23 @@
+{
+    "MES_INICIAL": 1,
+    "ANOS": 2,
+    "MAX_ITERACOES": 100,
+    "NUMERO_SERIES_SIM_FINAL": 100,
+    "NUMERO_CENARIOS_ESTAGIO": 10,
+    "UHE": {
+        "GHMIN": 0.0,
+        "GHMAX": 100.0,
+        "EARMAX": 300.0,
+        "EARM_INICIAL": 150.0,
+        "PENALIDADE_VERTIMENTO": 0.01
+    },
+    "UTE": {
+        "GTMIN": 0.0,
+        "GTMAX": 20.0,
+        "CUSTO_GERACAO": 100.0
+    },
+    "SISTEMA": {
+        "CUSTO_DEFICIT": 1000.0,
+        "DEMANDA": 60.0
+    }
+}

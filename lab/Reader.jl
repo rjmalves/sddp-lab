@@ -8,6 +8,7 @@ export read_config, read_ena
 
 CONFIG_FILENAME = "config.json"
 ENA_FILENAME = "ena.csv"
+OUTDIR = "./out"
 
 function read_config()::ConfigData
     return from_json(JSON.parsefile(CONFIG_FILENAME))

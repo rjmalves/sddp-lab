@@ -79,6 +79,7 @@ end
 
 function simulate_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)::Vector{Vector{Dict{Symbol,Any}}}
+    SDDP.add_all_cuts(model)
     return SDDP.simulate(model,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena])
