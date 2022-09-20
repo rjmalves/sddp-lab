@@ -7,17 +7,22 @@ using ..Config: ConfigData
 using Plots
 using DataFrames
 
-export write_simulation_results, write_model_cuts, plot_simulation_results
+export write_simulation_results, write_model_cuts, plot_simulation_results, plot_model_cuts
 
 OPERATION_FILENAME = "operacao.csv"
 OPERATION_PLOTS = "operacao.html"
 RAW_CUTS_FILENAME = "cortes.json"
 PROCESSED_CUTS_FILENAME = "cortes.csv"
 OUTDIR = "./out"
+CUTDIR = "cortes"
+CUTPATH = joinpath(OUTDIR, CUTDIR)
 
 function __check_outdir()
     if !ispath(OUTDIR)
         mkpath(OUTDIR)
+    end
+    if !ispath(CUTPATH)
+        mkpath(CUTPATH)
     end
 end
 
@@ -122,38 +127,21 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     SDDP.plot(plt, joinpath(OUTDIR, OPERATION_PLOTS), open=false)
 end
 
-
 function plot_model_cuts(cuts::DataFrame, cfg::ConfigData)
     # TODO - fazer iterativo por nó
-    # TODO - obter numero de linhas
-    n = length(cuts)
+    stages = unique(cuts.estagio)
     x = collect(0:Int(cfg.uhe.earmax))
-
-    # Computes all cuts over domain
-    plotcut = [cuts[i][1] .+ cuts[i][2] * (x) for i = 1:n]
-    plotcut = hcat(plotcut...)
-
-    highest = mapslices(maximum, plotcut, dims=2)
-
-    # Plots
-    plot(x, plotcut; color="orange", linestyle=:dash, alpha=0.4, label="")
-    plot!(x, highest; color="orange", label="Approximated function")
+    for s in stages
+        cuts_stage = cuts[cuts.estagio.==s, :]
+        n = size(cuts_stage)[1]
+        plotcut = [cuts_stage.intercept[i] .+
+                   cuts_stage.coeficiente[i] * (x) for i = 1:n]
+        plotcut = hcat(plotcut...)
+        highest = mapslices(maximum, plotcut, dims=2)
+        plot(x, plotcut; color="orange", linestyle=:dash, alpha=0.4, label="")
+        plot!(x, highest; color="orange", label="FCF Aproximada")
+        savefig(joinpath(CUTPATH, string("estagio-", s, ".png")))
+    end
 end
-
-function plot_cuts(cuts, max_x)
-    n = length(cuts)
-    x = collect(0:max_x)
-
-    # Computes all cuts over domain
-    plotcut = [cuts[i][1] .+ cuts[i][2] * (x) for i = 1:n]
-    plotcut = hcat(plotcut...)
-
-    highest = mapslices(maximum, plotcut, dims=2)
-
-    # Plots
-    plot(x, plotcut; color="orange", linestyle=:dash, alpha=0.4, label="")
-    plot!(x, highest; color="orange", label="Approximated function")
-end
-
 
 end
