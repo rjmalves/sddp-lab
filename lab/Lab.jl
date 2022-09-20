@@ -1,5 +1,9 @@
 module Lab
 
+using Random
+
+Random.seed!(0)
+
 include("Config.jl")
 include("Reader.jl")
 include("Writer.jl")
