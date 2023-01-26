@@ -1,4 +1,8 @@
+ENV["GKSwstype"] = "100"
+
+
 include("lab/Lab.jl")
+
 
 cfg = Lab.read_config()
 ena = Lab.read_ena()

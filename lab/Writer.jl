@@ -61,7 +61,7 @@ end
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}})
     @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
     df_global = DataFrame()
-    for variavel = [:gt, :gh, :earm, :deficit, :vert, :ena]
+    for variavel = [:gt, :gh, :earm, :deficit, :vert, :ena, :cmo, :vagua]
         if (variavel == :earm)
             __increase_dataframe!(df_global, :earm, "earm_inicial", simulations, true, false)
             __increase_dataframe!(df_global, :earm, "earm_final", simulations, false, true)
@@ -111,7 +111,7 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     cfg::ConfigData)
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
-    SDDP.add_spaghetti(plt; title="EARM", ymin=0, ymax=cfg.uhe.earmax) do data
+    SDDP.add_spaghetti(plt; title="EARM", ymin=0.0, ymax=cfg.uhe.earmax) do data
         return data[:earm].out
     end
     SDDP.add_spaghetti(plt; title="GH", ymin=cfg.uhe.ghmin, ymax=cfg.uhe.ghmax) do data
@@ -128,6 +128,12 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     end
     SDDP.add_spaghetti(plt; title="ENA") do data
         return data[:ena]
+    end
+    SDDP.add_spaghetti(plt; title="CMO") do data
+        return data[:cmo]
+    end
+    SDDP.add_spaghetti(plt; title="VAGUA") do data
+        return data[:vagua]
     end
     __check_outdir()
     SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)

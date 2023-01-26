@@ -22,7 +22,7 @@ function __sample_enas(stages::Int,
             0.0,
             Inf),
         number_of_samples)
-            for s in 1:stages
+            for s in 0:stages-1
     ]
 end
 
@@ -33,7 +33,12 @@ function build_model(cfg::ConfigData,
     stages = Int(12 * cfg.years)
     sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage, ena_dist)
 
-    model = SDDP.LinearPolicyGraph(stages=stages,
+    graph = SDDP.LinearGraph(stages)
+    # SDDP.add_edge(graph, stages => 1, 0.95)
+
+    coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
+
+    model = SDDP.PolicyGraph(graph,
         sense=:Min,
         lower_bound=0.0,
         optimizer=GLPK.Optimizer) do subproblem, node
@@ -57,15 +62,28 @@ function build_model(cfg::ConfigData,
 
         # Balanço hídrico
         @constraint(subproblem,
+            balanco_hidrico,
             earm.out == earm.in - gh - vert + ena)
         # Balanço energético
         @constraint(subproblem,
+            balanco_energetico,
             gh + gt + deficit == cfg.system.demand)
+        # LPP 
+        # @constraint(subproblem,
+        #     lpp,
+        #     gh <= coef_lpp * earm.in)
+        # Nível mínimo
+        @constraint(subproblem,
+            fim_horizonte,
+            earm.out >= 60.)
+
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt
                                     + cfg.system.deficit_cost * deficit
                                     + cfg.uhe.spill_penal * vert)
     end
+
+
 
     return model
 
@@ -86,7 +104,11 @@ function simulate_model(model::SDDP.PolicyGraph,
     @info "Realizando simulação"
     return SDDP.simulate(model,
         cfg.number_simulated_series,
-        [:gt, :gh, :earm, :deficit, :vert, :ena])
+        [:gt, :gh, :earm, :deficit, :vert, :ena],
+        custom_recorders = Dict{Symbol,Function}(
+        :cmo => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_energetico]),
+        :vagua => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_hidrico]),
+    ),)
 end
 
 end
