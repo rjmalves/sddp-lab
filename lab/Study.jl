@@ -69,13 +69,13 @@ function build_model(cfg::ConfigData,
             balanco_energetico,
             gh + gt + deficit == cfg.system.demand)
         # LPP 
-        # @constraint(subproblem,
-        #     lpp,
-        #     gh <= coef_lpp * earm.in)
+        @constraint(subproblem,
+            lpp,
+            gh <= coef_lpp * earm.in)
         # Nível mínimo
         @constraint(subproblem,
             fim_horizonte,
-            earm.out >= 60.)
+            earm.out >= 60.0)
 
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt
@@ -105,10 +105,10 @@ function simulate_model(model::SDDP.PolicyGraph,
     return SDDP.simulate(model,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena],
-        custom_recorders = Dict{Symbol,Function}(
-        :cmo => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_energetico]),
-        :vagua => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_hidrico]),
-    ),)
+        custom_recorders=Dict{Symbol,Function}(
+            :cmo => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_energetico]),
+            :vagua => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_hidrico]),
+        ),)
 end
 
 end
