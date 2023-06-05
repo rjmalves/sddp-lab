@@ -60,16 +60,29 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, in
     end
 end
 
-function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}})
+function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData)
     @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
     df_global = DataFrame()
-    for variavel = [:gt, :gh, :earm, :deficit, :vert, :ena, :cmo, :vagua]
+
+    # variaveis de hidro
+    indexes = cfg.parque_uhe.order_uhes
+    for variavel = [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
-            __increase_dataframe!(df_global, :earm, "earm_inicial", [1], "XXX", simulations, true, false)
-            __increase_dataframe!(df_global, :earm, "earm_final", [1], "XXX",  simulations, false, true)
+            __increase_dataframe!(df_global, :earm, "earm_inicial", indexes, "indice", simulations, true, false)
+            __increase_dataframe!(df_global, :earm, "earm_final", indexes, "indice",  simulations, false, true)
         else
-            __increase_dataframe!(df_global, variavel, string(variavel), [1], "XXX", simulations)
+            __increase_dataframe!(df_global, variavel, string(variavel), indexes, "indice", simulations)
         end
+    end
+
+    # variaveis de termica
+    for variavel = [:gt]
+        __increase_dataframe!(df_global, variavel, string(variavel), [1], "indice", simulations)
+    end
+
+    # variaveis sistemicas
+    for variavel = [:deficit, :cmo] # :cmo vai eventualmente ser uma variavel de barra
+        __increase_dataframe!(df_global, variavel, string(variavel), [1], "indice", simulations)
     end
     __check_outdir()
     CSV.write(OPERATION_FILENAME_PATH, df_global)
