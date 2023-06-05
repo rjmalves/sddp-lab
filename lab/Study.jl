@@ -141,8 +141,8 @@ function simulate_model(model::SDDP.PolicyGraph,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena],
         custom_recorders=Dict{Symbol,Function}(
-            :cmo => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_energetico]),
-            :vagua => (sp::JuMP.Model) -> JuMP.dual(sp[:balanco_hidrico]),
+            :cmo => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_energetico]),
+            :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
         ),)
 end
 
