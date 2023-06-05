@@ -97,7 +97,7 @@ function build_model(cfg::ConfigData,
         # Balanco hidrico
         @constraint(subproblem,
             balanco_hidrico[n = 1:n_uhes],
-            earm.out[n] == earm.in[n] - gh[n] - vert[n] + ena[n])
+            earm[n].out == earm[n].in - gh[n] - vert[n] + ena[n])
 
         # Balanco energetico
         @constraint(subproblem,
@@ -111,8 +111,8 @@ function build_model(cfg::ConfigData,
 
         # Nivel minimo
         @constraint(subproblem,
-            fim_horizonte,
-            earm.out >= 60.0)
+            fim_horizonte[n = 1:n_uhes],
+            earm[n].out >= 60.0)
 
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt
