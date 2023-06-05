@@ -36,7 +36,7 @@ function build_model(cfg::ConfigData,
     graph = SDDP.LinearGraph(stages)
     # SDDP.add_edge(graph, stages => 1, 0.95)
 
-    coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
+    #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
 
     model = SDDP.PolicyGraph(graph,
         sense=:Min,
@@ -69,10 +69,11 @@ function build_model(cfg::ConfigData,
             balanco_energetico,
             gh + gt + deficit == cfg.system.demand)
         # LPP 
-        @constraint(subproblem,
-            lpp,
-            gh <= coef_lpp * earm.in)
-        # Nível mínimo
+        #@constraint(subproblem,
+        #    lpp,
+        #    gh <= coef_lpp * earm.in)
+
+        # Nivel minimo
         @constraint(subproblem,
             fim_horizonte,
             earm.out >= 60.0)
