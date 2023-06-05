@@ -58,8 +58,14 @@ function build_model(cfg::ConfigData,
             ena[1:n_uhes]
         end)
 
-        node_enas = sampled_enas[node]
+        # variaveis de decisao das termicas
+        @variable(subproblem, cfg.ute.gtmin <= gt <= cfg.ute.gtmax)
 
+        # deficit
+        @variable(subproblem, deficit >= 0)
+
+        # parametrizacao de transicao de estados
+        node_enas = sampled_enas[node]
         SDDP.parameterize(subproblem, node_enas) do w
             return JuMP.fix(ena, w)
         end
