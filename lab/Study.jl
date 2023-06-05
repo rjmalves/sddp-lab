@@ -26,19 +26,43 @@ function __sample_enas(stages::Int,
     ]
 end
 
+function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
+        n_uhes::Int, order_uhes::Vector{Int},
+        distributions::Dict{Int, Dict{Int, Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
+
+    # para cada estagio, um vetor tamanhp number_of_samples cujos elementos sao realizacoes 
+    # n_uhe-dimensional
+    out = [[zeros(n_uhes) for u in 1:number_of_samples] for s in 1:stages]
+    for u in 1:n_uhes
+        for s in 1:stages
+            dist = Normal(distributions[order_uhes[u]][(s + initial_month - 1) % 12 + 1][1],
+                distributions[order_uhes[u]][(s + initial_month - 1) % 12 + 1][2])
+            dist = truncated(dist, 0.0, Inf)
+            for n in 1:number_of_samples
+                out[s][n][u] += rand(dist, 1)[1]
+            end
+        end
+    end
+
+    return out
+
+end
+
 function build_model(cfg::ConfigData,
-    ena_dist::Dict{Int64,Vector{Float64}})::SDDP.PolicyGraph
+    ena_dist::Dict{Int64, Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
 
     @info "Compilando modelo"
     stages = Int(12 * cfg.years)
-    sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage, ena_dist)
-
+    n_uhes = cfg.parque_uhe.n_uhes
+    order_uhes = cfg.parque_uhe.order_uhes
+    
     graph = SDDP.LinearGraph(stages)
     # SDDP.add_edge(graph, stages => 1, 0.95)
-
+    
     #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
-
-    n_uhes = cfg.parque_uhe.n_uhes
+    
+    sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage,
+        n_uhes, order_uhes, ena_dist)
 
     model = SDDP.PolicyGraph(graph,
         sense=:Min,
@@ -67,7 +91,7 @@ function build_model(cfg::ConfigData,
         # parametrizacao de transicao de estados
         node_enas = sampled_enas[node]
         SDDP.parameterize(subproblem, node_enas) do w
-            return JuMP.fix(ena, w)
+            return JuMP.fix.(ena, w)
         end
 
         # Balanco hidrico
