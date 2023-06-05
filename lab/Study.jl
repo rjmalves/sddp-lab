@@ -38,20 +38,24 @@ function build_model(cfg::ConfigData,
 
     #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
 
+    n_uhes = cfg.parque_uhe.n_uhes
+
     model = SDDP.PolicyGraph(graph,
         sense=:Min,
         lower_bound=0.0,
         optimizer=GLPK.Optimizer) do subproblem, node
+
+        # variaveis de estado
         @variable(subproblem,
-            0 <= earm <= cfg.uhe.earmax,
+            0 <= earm[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
             SDDP.State,
-            initial_value = cfg.uhe.initial_ear)
+            initial_value = cfg.parque_uhe.uhes[n].initial_ear)
+        
+        # variaveis de decisao das hidro
         @variables(subproblem, begin
-            cfg.ute.gtmin <= gt <= cfg.ute.gtmax
-            cfg.uhe.ghmin <= gh <= cfg.uhe.ghmax
-            vert >= 0
-            deficit >= 0
-            ena
+            cfg.parque_uhe.uhes[n].ghmin <= gh[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+            vert[n = 1:n_uhes] >= 0
+            ena[1:n_uhes]
         end)
 
         node_enas = sampled_enas[node]
@@ -60,14 +64,16 @@ function build_model(cfg::ConfigData,
             return JuMP.fix(ena, w)
         end
 
-        # Balanço hídrico
+        # Balanco hidrico
         @constraint(subproblem,
-            balanco_hidrico,
-            earm.out == earm.in - gh - vert + ena)
-        # Balanço energético
+            balanco_hidrico[n = 1:n_uhes],
+            earm.out[n] == earm.in[n] - gh[n] - vert[n] + ena[n])
+
+        # Balanco energetico
         @constraint(subproblem,
             balanco_energetico,
-            gh + gt + deficit == cfg.system.demand)
+            sum(gh) + gt + deficit == cfg.system.demand)
+
         # LPP 
         #@constraint(subproblem,
         #    lpp,
@@ -81,10 +87,8 @@ function build_model(cfg::ConfigData,
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt
                                     + cfg.system.deficit_cost * deficit
-                                    + cfg.uhe.spill_penal * vert)
+                                    + sum(cfg.parque_uhe.uhes[n].spill_penal * vert[n] for n in 1:n_uhes))
     end
-
-
 
     return model
 
