@@ -34,17 +34,21 @@ struct ConfigData
     max_iterations::Int
     number_simulated_series::Int
     scenarios_by_stage::Int
-    uhe::UHEConfigData
+    parque_uhe::ParqueUHEConfigData
     ute::UTEConfigData
     system::SystemConfigData
 end
 
 function from_json(jsondata::Dict{String, Any})::ConfigData
-    uhe = UHEConfigData(jsondata["UHE"]["GHMIN"],
-                        jsondata["UHE"]["GHMAX"],
-                        jsondata["UHE"]["EARMAX"],
-                        jsondata["UHE"]["EARM_INICIAL"],
-                        jsondata["UHE"]["PENALIDADE_VERTIMENTO"])
+    uhes = map(
+        x -> UHEConfigData(x["GHMIN"],
+                           x["GHMAX"],
+                           x["EARMAX"],
+                           x["EARM_INICIAL"],
+                           x["PENALIDADE_VERTIMENTO"]),
+        values(jsondata["UHEs"]))
+    parque_uhe = ParqueUHEConfigData(uhes)
+
     ute = UTEConfigData(jsondata["UTE"]["GTMIN"],
                         jsondata["UTE"]["GTMAX"],
                         jsondata["UTE"]["CUSTO_GERACAO"])
@@ -56,7 +60,7 @@ function from_json(jsondata::Dict{String, Any})::ConfigData
                       jsondata["MAX_ITERACOES"],
                       jsondata["NUMERO_SERIES_SIM_FINAL"],
                       jsondata["NUMERO_CENARIOS_ESTAGIO"],
-                      uhe,
+                      parque_uhe,
                       ute,
                       system)
 end
