@@ -10,6 +10,13 @@ struct UHEConfigData
     spill_penal::Float64
 end
 
+struct ParqueUHEConfigData
+    n_uhes::Int
+    uhes::Vector{UHEConfigData}
+end
+
+ParqueUHEConfigData(uhes::Vector{UHEConfigData}) = ParqueUHEConfigData(length(uhes), uhes)
+
 struct UTEConfigData
     gtmin::Float64
     gtmax::Float64
