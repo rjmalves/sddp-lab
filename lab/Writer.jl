@@ -62,30 +62,35 @@ end
 
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData)
     @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
-    df_global = DataFrame()
+    
+    __check_outdir()
 
     # variaveis de hidro
+    df_hidro = DataFrame()
     indexes = cfg.parque_uhe.order_uhes
     for variavel = [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
-            __increase_dataframe!(df_global, :earm, "earm_inicial", indexes, "indice", simulations, true, false)
-            __increase_dataframe!(df_global, :earm, "earm_final", indexes, "indice",  simulations, false, true)
+            __increase_dataframe!(df_hidro, :earm, "earm_inicial", indexes, "UHE", simulations, true, false)
+            __increase_dataframe!(df_hidro, :earm, "earm_final", indexes, "UHE",  simulations, false, true)
         else
-            __increase_dataframe!(df_global, variavel, string(variavel), indexes, "indice", simulations)
+            __increase_dataframe!(df_hidro, variavel, string(variavel), indexes, "UHE", simulations)
         end
     end
-
+    CSV.write(joinpath(OUTDIR, "operacao_hidro.csv"), df_hidro)
+    
     # variaveis de termica
+    df_termo = DataFrame()
     for variavel = [:gt]
-        __increase_dataframe!(df_global, variavel, string(variavel), [1], "indice", simulations)
+        __increase_dataframe!(df_termo, variavel, string(variavel), [1], "UTE", simulations)
     end
-
+    CSV.write(joinpath(OUTDIR, "operacao_termo.csv"), df_termo)
+    
     # variaveis sistemicas
+    df_sistema = DataFrame()
     for variavel = [:deficit, :cmo] # :cmo vai eventualmente ser uma variavel de barra
-        __increase_dataframe!(df_global, variavel, string(variavel), [1], "indice", simulations)
+        __increase_dataframe!(df_sistema, variavel, string(variavel), [1], "SISTEMA", simulations)
     end
-    __check_outdir()
-    CSV.write(OPERATION_FILENAME_PATH, df_global)
+    CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
 end
 
 
