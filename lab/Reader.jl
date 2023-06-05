@@ -15,7 +15,7 @@ ENA_PATH = joinpath(INDIR, ENA_FILENAME)
 
 function read_config()::ConfigData
     @info "Lendo arquivo de configuração $(CONFIG_PATH)"
-    return from_json(JSON.parsefile(CONFIG_PATH))
+    return ConfigData(JSON.parsefile(CONFIG_PATH))
 end
 
 function read_ena()::Dict{Int,Vector{Float64}}

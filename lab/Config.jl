@@ -1,6 +1,6 @@
 module Config
 
-export ConfigData, from_json
+export ConfigData
 
 struct UHEConfigData
     ghmin::Float64
@@ -39,7 +39,7 @@ struct ConfigData
     system::SystemConfigData
 end
 
-function from_json(jsondata::Dict{String, Any})::ConfigData
+function ConfigData(jsondata::Dict{String, Any})::ConfigData
     uhes = map(
         x -> UHEConfigData(x["GHMIN"],
                            x["GHMAX"],
