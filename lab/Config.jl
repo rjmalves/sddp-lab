@@ -3,6 +3,7 @@ module Config
 export ConfigData
 
 struct UHEConfigData
+    index::Int
     ghmin::Float64
     ghmax::Float64
     earmax::Float64
@@ -12,10 +13,15 @@ end
 
 struct ParqueUHEConfigData
     n_uhes::Int
+    order_uhes::Vector{Int}
     uhes::Vector{UHEConfigData}
 end
 
-ParqueUHEConfigData(uhes::Vector{UHEConfigData}) = ParqueUHEConfigData(length(uhes), uhes)
+function ParqueUHEConfigData(uhes::Vector{UHEConfigData})
+    n_uhes = length(uhes)
+    order_uhes = map(x -> x.index, uhes)
+    ParqueUHEConfigData(n_uhes, order_uhes, uhes)
+end
 
 struct UTEConfigData
     gtmin::Float64
@@ -41,7 +47,8 @@ end
 
 function ConfigData(jsondata::Dict{String, Any})::ConfigData
     uhes = map(
-        x -> UHEConfigData(x["GHMIN"],
+        x -> UHEConfigData(x["INDEX"],
+                           x["GHMIN"],
                            x["GHMAX"],
                            x["EARMAX"],
                            x["EARM_INICIAL"],

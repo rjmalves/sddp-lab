@@ -7,6 +7,7 @@
     "UHEs": 
     {
         "UHE1": {
+            "INDEX": 1,
             "GHMIN": 0.0,
             "GHMAX": 50.0,
             "EARMAX": 300.0,
