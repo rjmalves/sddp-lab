@@ -41,32 +41,34 @@ function __extract_variable(data::Any,
     end
 end
 
-function __increase_dataframe!(df::DataFrame,
-    variable::Symbol,
-    name::String,
-    simulations::Vector{Vector{Dict{Symbol,Any}}},
-    in_state::Bool=false,
+function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, indexes::Vector{Int64},
+    index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false, 
     out_state::Bool=false)
-    internal_df = DataFrame()
-    internal_df.estagio = 1:length(simulations[1])
-    internal_df[!, "variavel"] = fill(name, length(simulations[1]))
-    for i = eachindex(simulations)
-        internal_df[!, string(i)] = [__extract_variable(s[variable], in_state, out_state)
-                                     for s in simulations[i]]
-        internal_df[!, string(i)] = round.(internal_df[!, string(i)], digits=2)
+
+    for j in eachindex(indexes)
+        index = indexes[j]
+        internal_df = DataFrame()
+        internal_df.estagio = 1:length(simulations[1])
+        internal_df[!, "variavel"] = fill(name, length(simulations[1]))
+        internal_df[!, index_name] = fill(index, length(simulations[1]))
+        for i = eachindex(simulations)
+            internal_df[!, string(i)] = [__extract_variable(s[variable][j], in_state, out_state)
+                                            for s in simulations[i]]
+            internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits=2)
+        end
+        append!(df, internal_df)
     end
-    append!(df, internal_df)
 end
 
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}})
     @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
     df_global = DataFrame()
     for variavel = [:gt, :gh, :earm, :deficit, :vert, :ena, :cmo, :vagua]
-        if (variavel == :earm)
-            __increase_dataframe!(df_global, :earm, "earm_inicial", simulations, true, false)
-            __increase_dataframe!(df_global, :earm, "earm_final", simulations, false, true)
+        if variavel == :earm
+            __increase_dataframe!(df_global, :earm, "earm_inicial", [1], "XXX", simulations, true, false)
+            __increase_dataframe!(df_global, :earm, "earm_final", [1], "XXX",  simulations, false, true)
         else
-            __increase_dataframe!(df_global, variavel, string(variavel), simulations)
+            __increase_dataframe!(df_global, variavel, string(variavel), [1], "XXX", simulations)
         end
     end
     __check_outdir()
