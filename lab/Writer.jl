@@ -93,12 +93,12 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
 end
 
-
 function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
     df[!, "estagio"] = fill(node, length(cutdata))
+    df[!, "statevar"] = fill(state_var, length(cutdata))
     df[!, "estado"] = [s["state"][state_var] for s in cutdata]
     df[!, "coeficiente"] = [s["coefficients"][state_var] for s in cutdata]
     df[!, "intercept"] = [s["intercept"] for s in cutdata]
@@ -121,11 +121,15 @@ function write_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
     rm(jsonpath)
-    df = __process_cuts(jsondata, "earm")
+    state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
+    df = DataFrame()
+    for sv in state_vars
+        sv_df = __process_cuts(jsondata, sv)
+        append!(df, sv_df)
+    end
     CSV.write(PROCESSED_CUTS_PATH, df)
     return df
 end
-
 
 function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     cfg::ConfigData)
