@@ -135,29 +135,54 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     cfg::ConfigData)
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
-    SDDP.add_spaghetti(plt; title="EARM", ymin=0.0, ymax=cfg.uhe.earmax) do data
-        return data[:earm].out
+
+    # parte hidro
+    order_uhes = cfg.parque_uhe.order_uhes
+
+    for i in 1:length(order_uhes)
+        nome = "EAR_" * string(order_uhes[i])
+        SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].earmax) do data
+            return data[:earm][i].out
+        end
     end
-    SDDP.add_spaghetti(plt; title="GH", ymin=cfg.uhe.ghmin, ymax=cfg.uhe.ghmax) do data
-        return data[:gh]
+
+    for i in 1:length(order_uhes)
+        nome = "GH_" * string(order_uhes[i])
+        SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].ghmax) do data
+            return data[:gh][i]
+        end
     end
+
+    for i in 1:length(order_uhes)
+        nome = "VERT_" * string(order_uhes[i])
+        SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
+            return data[:vert][i]
+        end
+    end
+
+    for i in 1:length(order_uhes)
+        nome = "ENA_" * string(order_uhes[i])
+        SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
+            return data[:ena][i]
+        end
+    end
+
+    for i in 1:length(order_uhes)
+        nome = "VAGUA_" * string(order_uhes[i])
+        SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
+            return data[:vagua][i]
+        end
+    end
+
+    # termo e sistema
     SDDP.add_spaghetti(plt; title="GT", ymin=cfg.ute.gtmin, ymax=cfg.ute.gtmax) do data
         return data[:gt]
     end
     SDDP.add_spaghetti(plt; title="DEFICIT") do data
         return data[:deficit]
     end
-    SDDP.add_spaghetti(plt; title="VERTIMENTO") do data
-        return data[:vert]
-    end
-    SDDP.add_spaghetti(plt; title="ENA") do data
-        return data[:ena]
-    end
     SDDP.add_spaghetti(plt; title="CMO") do data
         return data[:cmo]
-    end
-    SDDP.add_spaghetti(plt; title="VAGUA") do data
-        return data[:vagua]
     end
     __check_outdir()
     SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)
