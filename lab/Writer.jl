@@ -9,6 +9,8 @@ using DataFrames
 
 export write_simulation_results, write_model_cuts, plot_simulation_results, plot_model_cuts
 
+pythonplot()
+
 OPERATION_FILENAME = "operacao.csv"
 OPERATION_PLOTS = "operacao.html"
 RAW_CUTS_FILENAME = "cortes.json"
