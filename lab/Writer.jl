@@ -190,20 +190,37 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)
 end
 
-function plot_model_cuts(cuts::DataFrame, cfg::ConfigData)
-    @info "Plotando cortes em $(CUTPATH)"
+function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
+    cuts_stage = cuts[cuts.estagio.==s, :]
+    n = size(cuts_stage)[1]
+    plotcut = [cuts_stage.intercept[i] .+
+                cuts_stage.coeficiente[i] * (x) for i = 1:n]
+    plotcut = hcat(plotcut...)
+    highest = mapslices(maximum, plotcut, dims=2)
+
+    return highest, plotcut
+end
+
+function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData)
     stages = unique(cuts.estagio)
-    x = collect(0:Int(cfg.uhe.earmax))
+    x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
-        cuts_stage = cuts[cuts.estagio.==s, :]
-        n = size(cuts_stage)[1]
-        plotcut = [cuts_stage.intercept[i] .+
-                   cuts_stage.coeficiente[i] * (x) for i = 1:n]
-        plotcut = hcat(plotcut...)
-        highest = mapslices(maximum, plotcut, dims=2)
-        plot(x, plotcut; color="orange", linestyle=:dash, alpha=0.4, label="")
+        highest, plotcut = __compute_fcf1var_value(x, s, cuts)     
+        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
         savefig(joinpath(CUTPATH, string("estagio-", s, ".png")))
+    end
+end
+
+function plot_model_cuts(cuts::DataFrame, cfg::ConfigData)
+    @info "Plotando cortes em $(CUTPATH)"
+    n_uhes = cfg.parque_uhe.n_uhes
+    if n_uhes == 1
+        plot_model_cuts_1var(cuts, cfg)
+    elseif n_uhes == 2
+        @error "ainda nao implementado"
+    elseif n_uhes > 2
+        @error "nao e possivel realizar plots para mais de duas UHEs no sistema"
     end
 end
 
