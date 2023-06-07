@@ -206,7 +206,8 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
         highest, plotcut = __compute_fcf1var_value(x, s, cuts)     
-        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", linestyle=:dash, alpha=0.4, label="")
+        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi = 300,
+            linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
         savefig(joinpath(CUTPATH, string("estagio-", s, ".png")))
     end
