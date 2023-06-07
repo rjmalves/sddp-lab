@@ -10,6 +10,7 @@
             "INDEX": 1,
             "GHMIN": 0.0,
             "GHMAX": 50.0,
+            "EARMIN": 0.0,
             "EARMAX": 300.0,
             "EARM_INICIAL": 50.0,
             "PENALIDADE_VERTIMENTO": 0.01

@@ -112,7 +112,7 @@ function build_model(cfg::ConfigData,
         # Nivel minimo
         @constraint(subproblem,
             fim_horizonte[n = 1:n_uhes],
-            earm[n].out >= 60.0)
+            earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
 
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt

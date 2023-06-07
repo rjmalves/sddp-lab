@@ -6,6 +6,7 @@ struct UHEConfigData
     index::Int
     ghmin::Float64
     ghmax::Float64
+    earmin::Float64
     earmax::Float64
     initial_ear::Float64
     spill_penal::Float64
@@ -50,6 +51,7 @@ function ConfigData(jsondata::Dict{String, Any})::ConfigData
         x -> UHEConfigData(x["INDEX"],
                            x["GHMIN"],
                            x["GHMAX"],
+                           x["EARMIN"],
                            x["EARMAX"],
                            x["EARM_INICIAL"],
                            x["PENALIDADE_VERTIMENTO"]),
