@@ -77,10 +77,14 @@ function build_model(cfg::ConfigData,
         
         # variaveis de decisao das hidro
         @variables(subproblem, begin
-            cfg.parque_uhe.uhes[n].ghmin <= gh[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+            0 <= gh[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+            slack_ghmin[n = 1:n_uhes] >= 0
             vert[n = 1:n_uhes] >= 0
             ena[1:n_uhes]
         end)
+
+        # folga de ghmin
+        @constraint(subproblem, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >=  cfg.parque_uhe.uhes[n].ghmin)
 
         # variaveis de decisao das termicas
         @variable(subproblem, cfg.ute.gtmin <= gt <= cfg.ute.gtmax)
@@ -117,6 +121,7 @@ function build_model(cfg::ConfigData,
         # Custo
         @stageobjective(subproblem, cfg.ute.generation_cost * gt
                                     + cfg.system.deficit_cost * deficit
+                                    + sum(cfg.system.deficit_cost * 1.0001 * slack_ghmin[n] for n in 1:n_uhes)
                                     + sum(cfg.parque_uhe.uhes[n].spill_penal * vert[n] for n in 1:n_uhes))
     end
 
