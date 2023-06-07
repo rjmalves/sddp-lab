@@ -29,7 +29,7 @@ Manifest.toml
 **.log
 **.png
 **.html
-out/**
+out*/**
 
 # Package images
 *.so
