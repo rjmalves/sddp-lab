@@ -15,5 +15,8 @@ end
 if exec["ESCREVEOPERACAO"] Lab.write_simulation_results(sims, cfg) end
 if exec["PLOTAOPERACAO"] Lab.plot_simulation_results(sims, cfg) end
 
-cuts = Lab.write_model_cuts(model)
-Lab.plot_model_cuts(cuts, cfg)
+if exec["ESCREVECORTES"] || exec["PLOTACORTES"]
+    cuts = Lab.get_model_cuts(model)
+end
+if exec["ESCREVECORTES"] Lab.write_model_cuts(cuts) end
+if exec["PLOTACORTES"] Lab.plot_model_cuts(cuts, cfg) end
