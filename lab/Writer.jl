@@ -7,7 +7,7 @@ using ..Config: ConfigData
 using Plots
 using DataFrames
 
-export write_simulation_results, write_model_cuts, plot_simulation_results, plot_model_cuts
+export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulation_results, plot_model_cuts
 
 pythonplot()
 
@@ -116,8 +116,8 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
     return df
 end
 
-function write_model_cuts(model::SDDP.PolicyGraph)::DataFrame
-    @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
+function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
+    @info "Coletando cortes gerados"
     __check_outdir()
     jsonpath = joinpath(OUTDIR, RAW_CUTS_FILENAME)
     SDDP.write_cuts_to_file(model, jsonpath)
@@ -129,8 +129,13 @@ function write_model_cuts(model::SDDP.PolicyGraph)::DataFrame
         sv_df = __process_cuts(jsondata, sv)
         append!(df, sv_df)
     end
-    CSV.write(PROCESSED_CUTS_PATH, df)
     return df
+end
+
+function write_model_cuts(cuts::DataFrame)::Nothing
+    @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
+    CSV.write(PROCESSED_CUTS_PATH, cuts)
+    return nothing
 end
 
 function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
