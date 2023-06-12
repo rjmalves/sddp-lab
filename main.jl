@@ -21,4 +21,10 @@ end
 if exec["ESCREVECORTES"] Lab.write_model_cuts(cuts, exec["OUTDIR"]) end
 if exec["PLOTACORTES"] Lab.plot_model_cuts(cuts, cfg, exec["OUTDIR"]) end
 
+if exec["ESCREVEOPERACAO"] || exec["PLOTAOPERACAO"] || exec["ESCREVECORTES"] || exec["PLOTACORTES"]
+    @info "Escrevendo eco dos arquivos de entrada em " * exec["OUTDIR"]
+    cp(joinpath(exec["INDIR"], "config.json"), joinpath(exec["OUTDIR"], "config.json"))
+    cp(joinpath(exec["INDIR"], "ena.csv"), joinpath(exec["OUTDIR"], "ena.csv"))
+end
+
 @info "Execucao completa"
