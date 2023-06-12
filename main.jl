@@ -2,8 +2,10 @@ ENV["GKSwstype"] = "100"
 
 include("lab/Lab.jl")
 
-cfg = Lab.read_config("./data")
-ena = Lab.read_ena("./data")
+exec = Lab.read_exec()
+cfg = Lab.read_config(exec["INDIR"])
+ena = Lab.read_ena(exec["INDIR"])
+
 model = Lab.build_model(cfg, ena)
 Lab.train_model(model, cfg)
 

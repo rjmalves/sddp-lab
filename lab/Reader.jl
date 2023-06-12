@@ -6,7 +6,7 @@ using DataFrames
 using Logging
 using ..Config
 
-export read_config, read_ena
+export read_config, read_ena, read_exec
 
 function read_config(INDIR::String)::ConfigData
     CONFIG_PATH = joinpath(INDIR, "config.json")
@@ -27,6 +27,13 @@ function read_ena(INDIR::String)::Dict{Int,Dict{Int, Vector{Float64}}}
         out[u] = aux
     end
 
+    return out
+end
+
+function read_exec()::Dict{String, Any}
+    EXEC_PATH = if length(ARGS) == 1 ARGS[1] else "./data/execucao.json" end
+    @info "Lendo arquivo de execucao $(EXEC_PATH)"
+    out = JSON.parsefile(EXEC_PATH)
     return out
 end
 
