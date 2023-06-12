@@ -11,23 +11,9 @@ export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulati
 
 pythonplot()
 
-OPERATION_FILENAME = "operacao.csv"
-OPERATION_PLOTS = "operacao.html"
-RAW_CUTS_FILENAME = "cortes.json"
-PROCESSED_CUTS_FILENAME = "cortes.csv"
-OUTDIR = "./out"
-CUTDIR = "cortes"
-OPERATION_FILENAME_PATH = joinpath(OUTDIR, OPERATION_FILENAME)
-OPERATION_PLOTS_PATH = joinpath(OUTDIR, OPERATION_PLOTS)
-PROCESSED_CUTS_PATH = joinpath(OUTDIR, PROCESSED_CUTS_FILENAME)
-CUTPATH = joinpath(OUTDIR, CUTDIR)
-
-function __check_outdir()
+function __check_outdir(OUTDIR::String)
     if !ispath(OUTDIR)
         mkpath(OUTDIR)
-    end
-    if !ispath(CUTPATH)
-        mkpath(CUTPATH)
     end
 end
 
@@ -62,10 +48,12 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, in
     end
 end
 
-function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData)
-    @info "Escrevendo resultados da simulação em $(OPERATION_FILENAME_PATH)"
+function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
+    OUTDIR::String)
     
-    __check_outdir()
+    @info "Escrevendo resultados da simulação em $(OUTDIR)"
+    
+    __check_outdir(OUTDIR)
 
     # variaveis de hidro
     df_hidro = DataFrame()
@@ -118,8 +106,7 @@ end
 
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
-    __check_outdir()
-    jsonpath = joinpath(OUTDIR, RAW_CUTS_FILENAME)
+    jsonpath = joinpath("rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
     rm(jsonpath)
@@ -132,14 +119,16 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     return df
 end
 
-function write_model_cuts(cuts::DataFrame)::Nothing
+function write_model_cuts(cuts::DataFrame, OUTDIR::String)
+    PROCESSED_CUTS_PATH = joinpath(OUTDIR, "cortes.csv")
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
     CSV.write(PROCESSED_CUTS_PATH, cuts)
-    return nothing
 end
 
-function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
-    cfg::ConfigData)
+function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
+    OUTDIR::String)
+
+    OPERATION_PLOTS_PATH = joinpath(OUTDIR, "operacao.html")
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
 
@@ -191,7 +180,7 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     SDDP.add_spaghetti(plt; title="CMO") do data
         return data[:cmo]
     end
-    __check_outdir()
+    __check_outdir(OUTDIR)
     SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)
 end
 
@@ -206,7 +195,7 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     return highest, plotcut
 end
 
-function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData)
+function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     stages = unique(cuts.estagio)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
@@ -214,15 +203,17 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData)
         plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi = 300,
             linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
-        savefig(joinpath(CUTPATH, string("estagio-", s, ".png")))
+        savefig(joinpath(CUTDIR, string("estagio-", s, ".png")))
     end
 end
 
-function plot_model_cuts(cuts::DataFrame, cfg::ConfigData)
-    @info "Plotando cortes em $(CUTPATH)"
+function plot_model_cuts(cuts::DataFrame, cfg::ConfigData, OUTDIR::String)
+    CUTDIR = joinpath(OUTDIR, "plotcortes")
+    __check_outdir(CUTDIR)
+    @info "Plotando cortes em $(CUTDIR)"
     n_uhes = cfg.parque_uhe.n_uhes
     if n_uhes == 1
-        plot_model_cuts_1var(cuts, cfg)
+        plot_model_cuts_1var(cuts, cfg, CUTDIR)
     elseif n_uhes == 2
         @error "ainda nao implementado"
     elseif n_uhes > 2

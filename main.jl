@@ -12,11 +12,13 @@ Lab.train_model(model, cfg)
 if exec["ESCREVEOPERACAO"] || exec["PLOTAOPERACAO"]
     sims = Lab.simulate_model(model, cfg)
 end
-if exec["ESCREVEOPERACAO"] Lab.write_simulation_results(sims, cfg) end
-if exec["PLOTAOPERACAO"] Lab.plot_simulation_results(sims, cfg) end
+if exec["ESCREVEOPERACAO"] Lab.write_simulation_results(sims, cfg, exec["OUTDIR"]) end
+if exec["PLOTAOPERACAO"] Lab.plot_simulation_results(sims, cfg, exec["OUTDIR"]) end
 
 if exec["ESCREVECORTES"] || exec["PLOTACORTES"]
     cuts = Lab.get_model_cuts(model)
 end
-if exec["ESCREVECORTES"] Lab.write_model_cuts(cuts) end
-if exec["PLOTACORTES"] Lab.plot_model_cuts(cuts, cfg) end
+if exec["ESCREVECORTES"] Lab.write_model_cuts(cuts, exec["OUTDIR"]) end
+if exec["PLOTACORTES"] Lab.plot_model_cuts(cuts, cfg, exec["OUTDIR"]) end
+
+@info "Execucao completa"
