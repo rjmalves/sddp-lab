@@ -2,8 +2,8 @@ ENV["GKSwstype"] = "100"
 
 include("lab/Lab.jl")
 
-cfg = Lab.read_config()
-ena = Lab.read_ena()
+cfg = Lab.read_config("./data")
+ena = Lab.read_ena("./data")
 model = Lab.build_model(cfg, ena)
 Lab.train_model(model, cfg)
 

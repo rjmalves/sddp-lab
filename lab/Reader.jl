@@ -8,18 +8,14 @@ using ..Config
 
 export read_config, read_ena
 
-CONFIG_FILENAME = "config.json"
-ENA_FILENAME = "ena.csv"
-INDIR = "./data"
-CONFIG_PATH = joinpath(INDIR, CONFIG_FILENAME)
-ENA_PATH = joinpath(INDIR, ENA_FILENAME)
-
-function read_config()::ConfigData
+function read_config(INDIR::String)::ConfigData
+    CONFIG_PATH = joinpath(INDIR, "config.json")
     @info "Lendo arquivo de configuração $(CONFIG_PATH)"
     return ConfigData(JSON.parsefile(CONFIG_PATH))
 end
 
-function read_ena()::Dict{Int,Dict{Int, Vector{Float64}}}
+function read_ena(INDIR::String)::Dict{Int,Dict{Int, Vector{Float64}}}
+    ENA_PATH = joinpath(INDIR, "ena.csv")
     @info "Lendo arquivo de configuração $(ENA_PATH)"
     dat_ena = CSV.read(ENA_PATH, DataFrame)
     uhes = unique(dat_ena[:, :UHE])
