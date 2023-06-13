@@ -9,8 +9,6 @@ using DataFrames
 
 export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulation_results, plot_model_cuts
 
-pythonplot()
-
 function __check_outdir(OUTDIR::String)
     if !ispath(OUTDIR)
         mkpath(OUTDIR)
