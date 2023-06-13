@@ -23,10 +23,13 @@ docs/site/
 # environment.
 Manifest.toml
 
+# directory with python dependencies for PythonPlot
+.CondaPkg/**
+
 **.log
 **.png
 **.html
-out/**
+out*/**
 
 # Package images
 *.so

@@ -4,12 +4,17 @@
     "MAX_ITERACOES": 100,
     "NUMERO_SERIES_SIM_FINAL": 300,
     "NUMERO_CENARIOS_ESTAGIO": 10,
-    "UHE": {
-        "GHMIN": 0.0,
-        "GHMAX": 50.0,
-        "EARMAX": 300.0,
-        "EARM_INICIAL": 50.0,
-        "PENALIDADE_VERTIMENTO": 0.01
+    "UHEs": 
+    {
+        "UHE1": {
+            "INDEX": 1,
+            "GHMIN": 0.0,
+            "GHMAX": 50.0,
+            "EARMIN": 0.0,
+            "EARMAX": 300.0,
+            "EARM_INICIAL": 50.0,
+            "PENALIDADE_VERTIMENTO": 0.01
+        }
     },
     "UTE": {
         "GTMIN": 0.0,
