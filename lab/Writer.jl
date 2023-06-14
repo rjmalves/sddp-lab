@@ -104,10 +104,9 @@ end
 
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
-    jsonpath = joinpath("rawcuts.json")
+    jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
-    rm(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
     for sv in state_vars
