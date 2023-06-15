@@ -9,8 +9,6 @@ using DataFrames
 
 export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulation_results, plot_model_cuts
 
-pythonplot()
-
 function __check_outdir(OUTDIR::String)
     if !ispath(OUTDIR)
         mkpath(OUTDIR)
@@ -106,10 +104,9 @@ end
 
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
-    jsonpath = joinpath("rawcuts.json")
+    jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
-    rm(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
     for sv in state_vars
