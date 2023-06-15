@@ -28,7 +28,7 @@ function __extract_variable(data::Any,
 end
 
 function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, indexes::Vector{Int64},
-    index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false, 
+    index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false,
     out_state::Bool=false)
 
     for j in eachindex(indexes)
@@ -39,7 +39,7 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, in
         internal_df[!, index_name] = fill(index, length(simulations[1]))
         for i = eachindex(simulations)
             internal_df[!, string(i)] = [__extract_variable(s[variable][j], in_state, out_state)
-                                            for s in simulations[i]]
+                                         for s in simulations[i]]
             internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits=2)
         end
         append!(df, internal_df)
@@ -48,31 +48,31 @@ end
 
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
     OUTDIR::String)
-    
+
     @info "Escrevendo resultados da simulação em $(OUTDIR)"
-    
+
     __check_outdir(OUTDIR)
 
     # variaveis de hidro
     df_hidro = DataFrame()
-    indexes = cfg.parque_uhe.order_uhes
+    indexes = collect(Int64, 1:length(cfg.parque_uhe.uhes))
     for variavel = [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
             __increase_dataframe!(df_hidro, :earm, "earm_inicial", indexes, "UHE", simulations, true, false)
-            __increase_dataframe!(df_hidro, :earm, "earm_final", indexes, "UHE",  simulations, false, true)
+            __increase_dataframe!(df_hidro, :earm, "earm_final", indexes, "UHE", simulations, false, true)
         else
             __increase_dataframe!(df_hidro, variavel, string(variavel), indexes, "UHE", simulations)
         end
     end
     CSV.write(joinpath(OUTDIR, "operacao_hidro.csv"), df_hidro)
-    
+
     # variaveis de termica
     df_termo = DataFrame()
     for variavel = [:gt]
         __increase_dataframe!(df_termo, variavel, string(variavel), [1], "UTE", simulations)
     end
     CSV.write(joinpath(OUTDIR, "operacao_termo.csv"), df_termo)
-    
+
     # variaveis sistemicas
     df_sistema = DataFrame()
     for variavel = [:deficit, :cmo] # :cmo vai eventualmente ser uma variavel de barra
@@ -130,37 +130,37 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, 
     plt = SDDP.SpaghettiPlot(simulations)
 
     # parte hidro
-    order_uhes = cfg.parque_uhe.order_uhes
+    order_uhes = collect(Int64, 1:length(cfg.parque_uhe.uhes))
 
-    for i in 1:length(order_uhes)
+    for i in order_uhes
         nome = "EAR_" * string(order_uhes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].earmax) do data
             return data[:earm][i].out
         end
     end
 
-    for i in 1:length(order_uhes)
+    for i in order_uhes
         nome = "GH_" * string(order_uhes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].ghmax) do data
             return data[:gh][i]
         end
     end
 
-    for i in 1:length(order_uhes)
+    for i in order_uhes
         nome = "VERT_" * string(order_uhes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vert][i]
         end
     end
 
-    for i in 1:length(order_uhes)
+    for i in order_uhes
         nome = "ENA_" * string(order_uhes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:ena][i]
         end
     end
 
-    for i in 1:length(order_uhes)
+    for i in order_uhes
         nome = "VAGUA_" * string(order_uhes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vagua][i]
@@ -185,7 +185,7 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     cuts_stage = cuts[cuts.estagio.==s, :]
     n = size(cuts_stage)[1]
     plotcut = [cuts_stage.intercept[i] .+
-                cuts_stage.coeficiente[i] * (x) for i = 1:n]
+               cuts_stage.coeficiente[i] * (x) for i = 1:n]
     plotcut = hcat(plotcut...)
     highest = mapslices(maximum, plotcut, dims=2)
 
@@ -196,8 +196,8 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     stages = unique(cuts.estagio)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
-        highest, plotcut = __compute_fcf1var_value(x, s, cuts)     
-        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi = 300,
+        highest, plotcut = __compute_fcf1var_value(x, s, cuts)
+        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi=300,
             linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
         savefig(joinpath(CUTDIR, string("estagio-", s, ".png")))
