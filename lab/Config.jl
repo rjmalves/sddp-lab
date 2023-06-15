@@ -9,7 +9,7 @@ Classe contendo informacoes sobre uma UHE
 
 Atributos da classe
 
- * `index::Int`: indice da UHE no sistema
+ * `name::String`: indice da UHE no sistema
  * `ghmin::Float64`: geracao minima
  * `ghmax::Float64`: geracao maxima
  * `earmin::Float64`: energia armazenada minima
