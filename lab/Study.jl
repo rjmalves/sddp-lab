@@ -27,16 +27,16 @@ function __sample_enas(stages::Int,
 end
 
 function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
-        n_uhes::Int, order_uhes::Vector{Int},
-        distributions::Dict{Int, Dict{Int, Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
+    n_uhes::Int,
+    distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
 
-    # para cada estagio, um vetor tamanhp number_of_samples cujos elementos sao realizacoes 
+    # para cada estagio, um vetor tamanho number_of_samples cujos elementos sao realizacoes 
     # n_uhe-dimensional
     out = [[zeros(n_uhes) for u in 1:number_of_samples] for s in 1:stages]
     for u in 1:n_uhes
         for s in 1:stages
-            dist = Normal(distributions[order_uhes[u]][(s + initial_month - 1) % 12 + 1][1],
-                distributions[order_uhes[u]][(s + initial_month - 1) % 12 + 1][2])
+            dist = Normal(distributions[u][(s+initial_month-1)%12+1][1],
+                distributions[u][(s+initial_month-1)%12+1][2])
             dist = truncated(dist, 0.0, Inf)
             for n in 1:number_of_samples
                 out[s][n][u] += rand(dist, 1)[1]
@@ -49,20 +49,19 @@ function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
 end
 
 function build_model(cfg::ConfigData,
-    ena_dist::Dict{Int64, Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
+    ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
 
     @info "Compilando modelo"
     stages = Int(12 * cfg.years)
     n_uhes = cfg.parque_uhe.n_uhes
-    order_uhes = cfg.parque_uhe.order_uhes
-    
+
     graph = SDDP.LinearGraph(stages)
     # SDDP.add_edge(graph, stages => 1, 0.95)
-    
+
     #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
-    
+
     sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage,
-        n_uhes, order_uhes, ena_dist)
+        n_uhes, ena_dist)
 
     model = SDDP.PolicyGraph(graph,
         sense=:Min,
@@ -71,20 +70,20 @@ function build_model(cfg::ConfigData,
 
         # variaveis de estado
         @variable(subproblem,
-            0 <= earm[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
+            0 <= earm[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
             SDDP.State,
             initial_value = cfg.parque_uhe.uhes[n].initial_ear)
-        
+
         # variaveis de decisao das hidro
         @variables(subproblem, begin
-            0 <= gh[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
-            slack_ghmin[n = 1:n_uhes] >= 0
-            vert[n = 1:n_uhes] >= 0
+            0 <= gh[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+            slack_ghmin[n=1:n_uhes] >= 0
+            vert[n=1:n_uhes] >= 0
             ena[1:n_uhes]
         end)
 
         # folga de ghmin
-        @constraint(subproblem, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >=  cfg.parque_uhe.uhes[n].ghmin)
+        @constraint(subproblem, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >= cfg.parque_uhe.uhes[n].ghmin)
 
         # variaveis de decisao das termicas
         @variable(subproblem, cfg.ute.gtmin <= gt <= cfg.ute.gtmax)
@@ -100,7 +99,7 @@ function build_model(cfg::ConfigData,
 
         # Balanco hidrico
         @constraint(subproblem,
-            balanco_hidrico[n = 1:n_uhes],
+            balanco_hidrico[n=1:n_uhes],
             earm[n].out == earm[n].in - gh[n] - vert[n] + ena[n])
 
         # Balanco energetico
@@ -115,7 +114,7 @@ function build_model(cfg::ConfigData,
 
         # Nivel minimo
         @constraint(subproblem,
-            fim_horizonte[n = 1:n_uhes],
+            fim_horizonte[n=1:n_uhes],
             earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
 
         # Custo
