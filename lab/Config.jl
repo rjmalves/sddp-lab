@@ -3,7 +3,6 @@ module Config
 export ConfigData
 
 struct UHEConfigData
-    index::Int
     name::String
     ghmin::Float64
     ghmax::Float64
@@ -46,12 +45,8 @@ struct ConfigData
 end
 
 function ConfigData(jsondata::Dict{String,Any})::ConfigData
-    uhesInput = jsondata["UHEs"]
-    for (index, value) in enumerate(uhesInput)
-        uhesInput[index]["INDEX"] = index
-    end
     uhes = map(
-        x -> UHEConfigData(x["INDEX"],
+        x -> UHEConfigData(
             x["NOME"],
             x["GHMIN"],
             x["GHMAX"],
@@ -59,7 +54,7 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
             x["EARMAX"],
             x["EARM_INICIAL"],
             x["PENALIDADE_VERTIMENTO"]),
-        uhesInput)
+        jsondata["UHEs"])
     parque_uhe = ParqueUHEConfigData(uhes)
 
     ute = UTEConfigData(jsondata["UTE"]["GTMIN"],
