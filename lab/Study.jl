@@ -26,19 +26,6 @@ Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
  * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
      retornado por `Lab.Reader.read_ena()`
 """
-function __sample_enas(stages::Int,
-    initial_month::Int,
-    number_of_samples::Int,
-    distributions::Dict{Int,Vector{Float64}})::Vector{Vector{Float64}}
-    return [rand(truncated(Normal(distributions[(s+initial_month-1)%12+1][1],
-                distributions[(s+initial_month-1)%12+1][2]),
-            0.0,
-            Inf),
-        number_of_samples)
-            for s in 0:stages-1
-    ]
-end
-
 function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
     n_uhes::Int,
     distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
