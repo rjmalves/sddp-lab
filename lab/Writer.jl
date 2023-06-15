@@ -55,7 +55,7 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
 
     # variaveis de hidro
     df_hidro = DataFrame()
-    indexes = collect(Int64, 1:length(cfg.parque_uhe.uhes))
+    indexes = collect(Int64, 1:cfg.parque_uhe.n_uhes)
     for variavel = [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
             __increase_dataframe!(df_hidro, :earm, "earm_inicial", indexes, "UHE", simulations, true, false)
@@ -130,38 +130,38 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, 
     plt = SDDP.SpaghettiPlot(simulations)
 
     # parte hidro
-    order_uhes = collect(Int64, 1:length(cfg.parque_uhe.uhes))
+    indexes = collect(Int64, 1:cfg.parque_uhe.n_uhes)
 
-    for i in order_uhes
-        nome = "EAR_" * string(order_uhes[i])
+    for i in indexes
+        nome = "EAR_" * string(indexes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].earmax) do data
             return data[:earm][i].out
         end
     end
 
-    for i in order_uhes
-        nome = "GH_" * string(order_uhes[i])
+    for i in indexes
+        nome = "GH_" * string(indexes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].ghmax) do data
             return data[:gh][i]
         end
     end
 
-    for i in order_uhes
-        nome = "VERT_" * string(order_uhes[i])
+    for i in indexes
+        nome = "VERT_" * string(indexes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vert][i]
         end
     end
 
-    for i in order_uhes
-        nome = "ENA_" * string(order_uhes[i])
+    for i in indexes
+        nome = "ENA_" * string(indexes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:ena][i]
         end
     end
 
-    for i in order_uhes
-        nome = "VAGUA_" * string(order_uhes[i])
+    for i in indexes
+        nome = "VAGUA_" * string(indexes[i])
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vagua][i]
         end
