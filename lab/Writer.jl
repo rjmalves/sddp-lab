@@ -46,6 +46,25 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, in
     end
 end
 
+function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, elements::Vector{String},
+    index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false,
+    out_state::Bool=false)
+
+    for j in 1:length(elements)
+        element = elements[j]
+        internal_df = DataFrame()
+        internal_df.estagio = 1:length(simulations[1])
+        internal_df[!, "variavel"] = fill(name, length(simulations[1]))
+        internal_df[!, index_name] = fill(element, length(simulations[1]))
+        for i = eachindex(simulations)
+            internal_df[!, string(i)] = [__extract_variable(s[variable][j], in_state, out_state)
+                                         for s in simulations[i]]
+            internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits=2)
+        end
+        append!(df, internal_df)
+    end
+end
+
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
     OUTDIR::String)
 
@@ -55,13 +74,13 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
 
     # variaveis de hidro
     df_hidro = DataFrame()
-    indexes = collect(Int64, 1:cfg.parque_uhe.n_uhes)
+    names = map(u -> u.name, cfg.parque_uhe.uhes)
     for variavel = [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
-            __increase_dataframe!(df_hidro, :earm, "earm_inicial", indexes, "UHE", simulations, true, false)
-            __increase_dataframe!(df_hidro, :earm, "earm_final", indexes, "UHE", simulations, false, true)
+            __increase_dataframe!(df_hidro, :earm, "earm_inicial", names, "UHE", simulations, true, false)
+            __increase_dataframe!(df_hidro, :earm, "earm_final", names, "UHE", simulations, false, true)
         else
-            __increase_dataframe!(df_hidro, variavel, string(variavel), indexes, "UHE", simulations)
+            __increase_dataframe!(df_hidro, variavel, string(variavel), names, "UHE", simulations)
         end
     end
     CSV.write(joinpath(OUTDIR, "operacao_hidro.csv"), df_hidro)
@@ -133,35 +152,35 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, 
     indexes = collect(Int64, 1:cfg.parque_uhe.n_uhes)
 
     for i in indexes
-        nome = "EAR_" * string(indexes[i])
+        nome = "EAR_" * string(cfg.parque_uhe.uhes[i].name)
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].earmax) do data
             return data[:earm][i].out
         end
     end
 
     for i in indexes
-        nome = "GH_" * string(indexes[i])
+        nome = "GH_" * string(cfg.parque_uhe.uhes[i].name)
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0, ymax=cfg.parque_uhe.uhes[i].ghmax) do data
             return data[:gh][i]
         end
     end
 
     for i in indexes
-        nome = "VERT_" * string(indexes[i])
+        nome = "VERT_" * string(cfg.parque_uhe.uhes[i].name)
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vert][i]
         end
     end
 
     for i in indexes
-        nome = "ENA_" * string(indexes[i])
+        nome = "ENA_" * string(cfg.parque_uhe.uhes[i].name)
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:ena][i]
         end
     end
 
     for i in indexes
-        nome = "VAGUA_" * string(indexes[i])
+        nome = "VAGUA_" * string(cfg.parque_uhe.uhes[i].name)
         SDDP.add_spaghetti(plt; title=nome, ymin=0.0) do data
             return data[:vagua][i]
         end
