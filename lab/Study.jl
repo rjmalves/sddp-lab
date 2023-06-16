@@ -111,7 +111,11 @@ function build_model(cfg::ConfigData,
         # Balanco hidrico
         @constraint(subproblem,
             balanco_hidrico[n=1:n_uhes],
-            earm[n].out == earm[n].in - gh[n] - vert[n] + ena[n])
+            earm[n].out == earm[n].in - gh[n] - vert[n] + ena[n] +
+                           sum(gh[j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name) +
+                           sum(vert[j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name)
+        )
+
 
         # Balanco energetico
         @constraint(subproblem,
@@ -151,6 +155,8 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
 """
 function train_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)
+    # Debug subproblema
+    # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
     SDDP.train(model,
         iteration_limit=cfg.max_iterations,

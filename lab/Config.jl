@@ -9,7 +9,8 @@ Classe contendo informacoes sobre uma UHE
 
 Atributos da classe
 
- * `name::String`: indice da UHE no sistema
+ * `name::String`: nome da UHE no sistema
+ * `downstream::String`: nome da UHE à jusante, se houver
  * `ghmin::Float64`: geracao minima
  * `ghmax::Float64`: geracao maxima
  * `earmin::Float64`: energia armazenada minima
@@ -19,6 +20,7 @@ Atributos da classe
 """
 struct UHEConfigData
     name::String
+    downstream::String
     ghmin::Float64
     ghmax::Float64
     earmin::Float64
@@ -116,10 +118,11 @@ end
 
 Constroi um objeto `ConfigData` a partir de um dicionario lido do json `config.json` de entrada
 """
-function ConfigData(jsondata::Dict{String, Any})::ConfigData
+function ConfigData(jsondata::Dict{String,Any})::ConfigData
     uhes = map(
         x -> UHEConfigData(
             x["NOME"],
+            x["JUSANTE"],
             x["GHMIN"],
             x["GHMAX"],
             x["EARMIN"],

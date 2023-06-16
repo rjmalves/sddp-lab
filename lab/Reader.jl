@@ -10,10 +10,14 @@ export read_config, read_ena, read_exec
 
 """
     read_config(INDIR::String)
-
+    
 Le um arquivo de configuracao de estudo `config.json` localizado no diretorio `INDIR`
 
-Retorna objeto `Lab.Config.ConfigData`. Para mais detalhes, ver sua documentacao 
+Retorna objeto `Lab.Config.ConfigData`. Para mais detalhes, ver sua documentacao.
+
+# Arguments
+
+ * `INDIR`: diretório para leitura do arquivo
 """
 function read_config(INDIR::String)::ConfigData
     CONFIG_PATH = joinpath(INDIR, "config.json")
@@ -22,9 +26,16 @@ function read_config(INDIR::String)::ConfigData
 end
 
 """
-    read_ena(INDIR::String)
+    read_ena(INDIR, CFG)
 
-Le um arquivo de ENAs para o estudo `ena.csv` localizado no diretorio `INDIR`
+Le um arquivo de ENAs para o estudo `ena.csv` localizado no diretorio `INDIR`, recebendo as
+configurações do estudo `CFG` para armazenamento ordenado das informações.
+
+# Arguments
+
+ * `INDIR`: diretório para leitura do arquivo
+ * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+ 
 
 # Extended help
 
@@ -56,17 +67,18 @@ Dict(1 =>
 )
 ```
 """
-function read_ena(INDIR::String)::Dict{Int,Dict{Int,Vector{Float64}}}
+function read_ena(INDIR::String, CFG::ConfigData)::Dict{Int,Dict{Int,Vector{Float64}}}
     ENA_PATH = joinpath(INDIR, "ena.csv")
     @info "Lendo arquivo de configuração $(ENA_PATH)"
     dat_ena = CSV.read(ENA_PATH, DataFrame)
     uhes = unique(dat_ena[:, :UHE])
-
+    uhes_ordenadas = map(uhe -> uhe.name, CFG.parque_uhe.uhes)
     out = Dict()
     for u in uhes
         aux = Dict((e.MES, [e.MEDIA, e.DESVIO])
                    for e in CSV.File(ENA_PATH) if e.UHE == u)
-        out[u] = aux
+        indice_u = findfirst(item -> item == string("", u), uhes_ordenadas)
+        out[indice_u] = aux
     end
 
     return out
@@ -79,7 +91,7 @@ Le um arquivo parametros de execucao do estudo `execucao.json`
 
 Diferente das demais funcoes leitoras, `read_exec()` nao recebe argumento. Caso o julia seja 
 inicializado com um argumento correspondendo ao caminho de um `execucao.json`, este sera usado; do
-contrario, le no diretorio de entrada default `./data`
+contrario, le no diretorio de entrada default `./data`.
 """
 function read_exec()::Dict{String,Any}
     EXEC_PATH = if length(ARGS) == 1
@@ -93,9 +105,13 @@ function read_exec()::Dict{String,Any}
 end
 
 """
-    read_exec(INDIR::String)
+    read_exec(INDIR)
 
-Le um arquivo parametros de execucao do estudo `execucao.json` localizado em `INDIR`
+Le um arquivo parametros de execucao do estudo `execucao.json` localizado em `INDIR`.
+
+# Arguments
+    
+ * `INDIR`: diretório para leitura do arquivo
 """
 function read_exec(INDIR::String)::Dict{String,Any}
     EXEC_PATH = joinpath(INDIR, "execucao.json")

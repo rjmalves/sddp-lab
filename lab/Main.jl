@@ -17,7 +17,7 @@ Realiza um estudo completo: aproxima politica, realiza simulacao e escreve todos
 """
 function compute_simulate_policy(execution::Dict{String,Any})
     cfg = read_config(execution["INDIR"])
-    ena = read_ena(execution["INDIR"])
+    ena = read_ena(execution["INDIR"], cfg)
 
     model = build_model(cfg, ena)
     train_model(model, cfg)
@@ -25,14 +25,22 @@ function compute_simulate_policy(execution::Dict{String,Any})
     if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"]
         sims = simulate_model(model, cfg)
     end
-    if execution["ESCREVEOPERACAO"] write_simulation_results(sims, cfg, execution["OUTDIR"]) end
-    if execution["PLOTAOPERACAO"] plot_simulation_results(sims, cfg, execution["OUTDIR"]) end
+    if execution["ESCREVEOPERACAO"]
+        write_simulation_results(sims, cfg, execution["OUTDIR"])
+    end
+    if execution["PLOTAOPERACAO"]
+        plot_simulation_results(sims, cfg, execution["OUTDIR"])
+    end
 
     if execution["ESCREVECORTES"] || execution["PLOTACORTES"]
         cuts = get_model_cuts(model)
     end
-    if execution["ESCREVECORTES"] write_model_cuts(cuts, execution["OUTDIR"]) end
-    if execution["PLOTACORTES"] plot_model_cuts(cuts, cfg, execution["OUTDIR"]) end
+    if execution["ESCREVECORTES"]
+        write_model_cuts(cuts, execution["OUTDIR"])
+    end
+    if execution["PLOTACORTES"]
+        plot_model_cuts(cuts, cfg, execution["OUTDIR"])
+    end
 
     if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"] || execution["ESCREVECORTES"] || execution["PLOTACORTES"]
         @info "Escrevendo eco dos arquivos de entrada em " * execution["OUTDIR"]
