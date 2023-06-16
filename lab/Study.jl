@@ -13,19 +13,19 @@ using ..Config: ConfigData
 using ..Reader: read_config, read_ena
 using ..Writer: plot_simulation_results, write_simulation_results
 
-function __sample_enas(stages::Int,
-    initial_month::Int,
-    number_of_samples::Int,
-    distributions::Dict{Int,Vector{Float64}})::Vector{Vector{Float64}}
-    return [rand(truncated(Normal(distributions[(s+initial_month-1)%12+1][1],
-                distributions[(s+initial_month-1)%12+1][2]),
-            0.0,
-            Inf),
-        number_of_samples)
-            for s in 0:stages-1
-    ]
-end
+"""
+    __sample_enas(stages, initial_month, number_of_samples, n_uhes, distributions)
 
+Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
+
+# Arguments
+
+ * `stages::Int`: numero de estágios para contrução do SAA
+ * `initial_month::Int`: mes inicial
+ * `number_of_samples::Int`: numero de aberturas a cada estagio
+ * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
+     retornado por `Lab.Reader.read_ena()`
+"""
 function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
     n_uhes::Int,
     distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
@@ -48,6 +48,17 @@ function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
 
 end
 
+"""
+    build_model(cfg, ena_dist)
+
+Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estudo e ENAs fornecidos
+
+# Arguments
+
+ * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+ * `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
+     `Lab.Reader.read_ena()`
+"""
 function build_model(cfg::ConfigData,
     ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
 
@@ -128,6 +139,16 @@ function build_model(cfg::ConfigData,
 
 end
 
+"""
+    train_model(model, cfg)
+
+Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes de estudo fornecidas
+
+# Arguments
+
+ * `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
+ * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+"""
 function train_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)
     @info "Calculando política"
@@ -136,7 +157,16 @@ function train_model(model::SDDP.PolicyGraph,
     )
 end
 
+"""
+    simulate_model(model, cfg)
 
+Realiza simulacao final parametrizada de acordo com configuracoes de estudo fornecidas
+
+# Arguments
+
+* `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
+* `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+"""
 function simulate_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
