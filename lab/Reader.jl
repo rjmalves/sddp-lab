@@ -14,17 +14,18 @@ function read_config(INDIR::String)::ConfigData
     return ConfigData(JSON.parsefile(CONFIG_PATH))
 end
 
-function read_ena(INDIR::String)::Dict{Int,Dict{Int,Vector{Float64}}}
+function read_ena(INDIR::String, CFG::ConfigData)::Dict{Int,Dict{Int,Vector{Float64}}}
     ENA_PATH = joinpath(INDIR, "ena.csv")
     @info "Lendo arquivo de configuração $(ENA_PATH)"
     dat_ena = CSV.read(ENA_PATH, DataFrame)
     uhes = unique(dat_ena[:, :UHE])
-
+    uhes_ordenadas = map(uhe -> uhe.name, CFG.parque_uhe.uhes)
     out = Dict()
     for u in uhes
         aux = Dict((e.MES, [e.MEDIA, e.DESVIO])
                    for e in CSV.File(ENA_PATH) if e.UHE == u)
-        out[u] = aux
+        indice_u = findfirst(item -> item == string("", u), uhes_ordenadas)
+        out[indice_u] = aux
     end
 
     return out
