@@ -9,12 +9,33 @@ using DataFrames
 
 export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulation_results, plot_model_cuts
 
+"""
+    __check_outdir(OUTDIR)
+
+Confere a existência do diretório de saída para os dados da execução
+
+# Arguments
+
+ * `OUTDIR::String`: diretório configurado para saída dos dados
+"""
 function __check_outdir(OUTDIR::String)
     if !ispath(OUTDIR)
         mkpath(OUTDIR)
     end
 end
 
+"""
+    __extract_variable(data, in_state, out_state)
+
+Extrai o valor numérico de uma variável, abstraindo se esta é
+uma variável de estado ou decisão.
+
+# Arguments
+
+ * `data::Any`: variável
+ * `in_state::Bool`: se a extração é do estado inicial
+ * `out_state::Bool`: se a extração é do estado final
+"""
 function __extract_variable(data::Any,
     in_state::Bool=false,
     out_state::Bool=false)::Any
@@ -27,6 +48,22 @@ function __extract_variable(data::Any,
     end
 end
 
+"""
+    __increase_dataframe!(df, variable, name, indexes, index_name, simulations, in_state, out_state)
+
+Acrescenta dados de uma variável da operação a um DataFrame existente.
+
+# Arguments
+
+ * `df::DataFrame`: DataFrame com os dados para exportação
+ * `variable::Symbol`: identificador interno da variável a ser adicionada
+ * `name::String`: identificador externo da variável a ser adicionada
+ * `indexes::Vector{Int64}`: índices internos dos elementos para os quais a variável será extraída
+ * `index_name::String`: nome do índice para exportação
+ * `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
+ * `in_state::Bool`: se a extração é do estado inicial
+ * `out_state::Bool`: se a extração é do estado final
+"""
 function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, indexes::Vector{Int64},
     index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false,
     out_state::Bool=false)
@@ -46,6 +83,22 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, in
     end
 end
 
+"""
+    __increase_dataframe!(df, variable, name, indexes, index_name, simulations, in_state, out_state)
+
+Acrescenta dados de uma variável da operação a um DataFrame existente.
+
+# Arguments
+
+ * `df::DataFrame`: DataFrame com os dados para exportação
+ * `variable::Symbol`: identificador interno da variável a ser adicionada
+ * `name::String`: identificador externo da variável a ser adicionada
+ * `elements::Vector{String}`: elementos para os quais a variável será extraída
+ * `index_name::String`: nome do índice para exportação
+ * `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
+ * `in_state::Bool`: se a extração é do estado inicial
+ * `out_state::Bool`: se a extração é do estado final
+"""
 function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, elements::Vector{String},
     index_name::String, simulations::Vector{Vector{Dict{Symbol,Any}}}, in_state::Bool=false,
     out_state::Bool=false)
@@ -65,6 +118,16 @@ function __increase_dataframe!(df::DataFrame, variable::Symbol, name::String, el
     end
 end
 
+"""
+    write_simulation_results(simulations, OUTDIR)
+
+Exporta os dados de saídas da simulação final do modelo.
+
+# Arguments
+
+ * `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
+ * `OUTDIR::String`: diretório de saída para escrita dos dados
+"""
 function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
     OUTDIR::String)
 
@@ -100,6 +163,16 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
 end
 
+"""
+    __process_node_cut(nodecuts, state_var)
+
+Gera um `DataFrame` com dados dos cortes de um nó.
+
+# Arguments
+
+ * `nodecuts::Any`: dados dos cortes de um nó, gerados pelo `SDDP.jl`
+ * `state_var::String`: variável de estado a ser extraída
+"""
 function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
@@ -112,6 +185,16 @@ function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     return df
 end
 
+"""
+    __process_cuts(cuts, state_var)
+
+Gera um `DataFrame` com dados dos cortes de um nó.
+
+# Arguments
+
+ * `cuts::Vector{Any}`: dados dos cortes dos nós, gerados pelo `SDDP.jl`
+ * `state_var::String`: variável de estado a ser extraída
+"""
 function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
     df = DataFrame()
     for nodecuts in cuts
@@ -121,6 +204,15 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
     return df
 end
 
+"""
+    get_model_cuts(model)
+
+Extrai os cortes gerados pelo modelo no formato de um `DataFrame`.
+
+# Arguments
+
+ * `model::SDDP.PolicyGraph`: modelo no formato do `SDDP.jl`
+"""
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
@@ -135,12 +227,33 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     return df
 end
 
+"""
+    write_model_cuts(cuts, OUTDIR)
+
+Exporta os dados dos cortes gerados pelo modelo.
+
+# Arguments
+
+ * `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
+ * `OUTDIR::String`: diretório de saída para escrita dos dados
+"""
 function write_model_cuts(cuts::DataFrame, OUTDIR::String)
     PROCESSED_CUTS_PATH = joinpath(OUTDIR, "cortes.csv")
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
     CSV.write(PROCESSED_CUTS_PATH, cuts)
 end
 
+"""
+    plot_simulation_results(cuts, cfg, OUTDIR)
+
+Gera visualizações para as variáveis da operação calculadas durante a simulação final.
+
+# Arguments
+
+ * `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados da operação na simulação do `SDDP.jl`
+ * `cfg::ConfigData`: configuração de entrada para extração dos elementos do estudo
+ * `OUTDIR::String`: diretório de saída para os plots
+"""
 function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData,
     OUTDIR::String)
 
@@ -200,6 +313,17 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, 
     SDDP.plot(plt, OPERATION_PLOTS_PATH, open=false)
 end
 
+"""
+    __compute_fcf1var_value(x, s, cuts)
+
+Realiza amostragem dos cortes para visualização da FCF de uma variável de estado,
+
+# Arguments
+
+* `x::Vector{Float64}`: vetor de valores para amostragem dos cortes
+* `s::String`: estágio para visualização dos cortes
+* `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
+"""
 function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     cuts_stage = cuts[cuts.estagio.==s, :]
     n = size(cuts_stage)[1]
@@ -211,6 +335,18 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     return highest, plotcut
 end
 
+"""
+    plot_model_cuts_1var(cuts, cfg, OUTDIR)
+
+Gera visualizações para os cortes produzidos pelo modelo no caso de uma
+única variável de estado.
+
+# Arguments
+
+ * `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
+ * `cfg::ConfigData`: configuração de entrada para validação do número de elementos
+ * `OUTDIR::String`: diretório de saída para os plots
+"""
 function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     stages = unique(cuts.estagio)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
@@ -223,6 +359,17 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     end
 end
 
+"""
+    plot_model_cuts(cuts, cfg, OUTDIR)
+
+Gera visualizações para os cortes produzidos pelo modelo.
+
+# Arguments
+
+ * `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
+ * `cfg::ConfigData`: configuração de entrada para validação do número de elementos
+ * `OUTDIR::String`: diretório de saída para os plots
+"""
 function plot_model_cuts(cuts::DataFrame, cfg::ConfigData, OUTDIR::String)
     CUTDIR = joinpath(OUTDIR, "plotcortes")
     __check_outdir(CUTDIR)
