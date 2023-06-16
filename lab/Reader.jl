@@ -77,7 +77,7 @@ end
 
 Le um arquivo parametros de execucao do estudo `execucao.json`
 
-Diferente das demais funcoes leitoras, `read_exec` nao recebe argumento. Caso o julia seja 
+Diferente das demais funcoes leitoras, `read_exec()` nao recebe argumento. Caso o julia seja 
 inicializado com um argumento correspondendo ao caminho de um `execucao.json`, este sera usado; do
 contrario, le no diretorio de entrada default `./data`
 """
@@ -87,6 +87,18 @@ function read_exec()::Dict{String,Any}
     else
         "./data/execucao.json"
     end
+    @info "Lendo arquivo de execucao $(EXEC_PATH)"
+    out = JSON.parsefile(EXEC_PATH)
+    return out
+end
+
+"""
+    read_exec(INDIR::String)
+
+Le um arquivo parametros de execucao do estudo `execucao.json` localizado em `INDIR`
+"""
+function read_exec(INDIR::String)::Dict{String,Any}
+    EXEC_PATH = joinpath(INDIR, "execucao.json")
     @info "Lendo arquivo de execucao $(EXEC_PATH)"
     out = JSON.parsefile(EXEC_PATH)
     return out
