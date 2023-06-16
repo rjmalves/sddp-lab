@@ -4,6 +4,7 @@ export ConfigData
 
 struct UHEConfigData
     name::String
+    downstream::String
     ghmin::Float64
     ghmax::Float64
     earmin::Float64
@@ -48,6 +49,7 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
     uhes = map(
         x -> UHEConfigData(
             x["NOME"],
+            x["JUSANTE"],
             x["GHMIN"],
             x["GHMAX"],
             x["EARMIN"],
