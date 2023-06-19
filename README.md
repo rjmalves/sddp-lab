@@ -14,13 +14,24 @@ $ julia --project main.jl
 ```
 
 
-## Compilação
-$ julia
+## Instalação como pacote
 
-]activate .
+É possível realizar a instalação do pacote a partir do repositório privado, mesmo sem adicioná-lo a um registro privado.
 
-using PackageCompiler
-create_sysimage(sysimage_path="sddp-lab.so", precompile_execution_file="main.jl")
+Tendo instalada uma versão de Julia `>=1.7`, desde que esteja configurada a CLI do `git` local com as credenciais necessárias para se acessar o repositório, basta fazer, se for usada autenticação via `ssh`, por exemplo:
 
+```bash
+export JULIA_PKG_USE_CLI_GIT=true
+julia
+]
+add git@github.com:rjmalves/sddp-lab.git
+```
 
-$ julia --sysimage "sddp-lab.so" --project  main.jl
+No caso de uso em sistema operacional Windows, pode-se fazer algo semelhante, por exemplo no `PowerShell`:
+
+```powershell
+$env:JULIA_PKG_USE_CLI_GIT=true
+julia
+]
+add git@github.com:rjmalves/sddp-lab.git
+```
