@@ -1,4 +1,4 @@
-module Lab
+module SDDPlab
 
 using Random
 
