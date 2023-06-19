@@ -18,7 +18,7 @@ $ julia --project main.jl
 
 É possível realizar a instalação do pacote a partir do repositório privado, mesmo sem adicioná-lo a um registro privado.
 
-Tendo instalada uma versão de Julia `>=1.7`, desde que esteja configurada a CLI do `git` local com as credenciais necessárias para se acessar o repositório, basta fazer, se for usada autenticação via `ssh`, por exemplo:
+Tendo instalada uma versão de Julia `>=1.7`, desde que esteja configurada a CLI do `git` local com as credenciais necessárias para se acessar o repositório, basta fazer, utilizando autenticação via `ssh`:
 
 ```bash
 export JULIA_PKG_USE_CLI_GIT=true
