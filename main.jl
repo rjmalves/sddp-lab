@@ -1,6 +1,6 @@
 ENV["GKSwstype"] = "100"
 
-include("src/Lab.jl")
+include("src/SDDPlab.jl")
 
-exec = Lab.read_exec()
-Lab.compute_simulate_policy(exec)
+exec = SDDPlab.read_exec()
+SDDPlab.compute_simulate_policy(exec)
