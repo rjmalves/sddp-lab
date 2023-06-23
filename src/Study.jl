@@ -30,7 +30,9 @@ function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
     n_uhes::Int,
     distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
 
-    # para cada estagio, um vetor tamanho number_of_samples cujos elementos sao realizacoes 
+    Random.seed!(0)
+
+    # para cada estagio, um vetor tamanho number_of_samples cujos elementos sao realizacoes
     # n_uhe-dimensional
     out = [[zeros(n_uhes) for u in 1:number_of_samples] for s in 1:stages]
     for u in 1:n_uhes
@@ -122,7 +124,7 @@ function build_model(cfg::ConfigData,
             balanco_energetico,
             sum(gh) + gt + deficit == cfg.system.demand)
 
-        # LPP 
+        # LPP
         #@constraint(subproblem,
         #    lpp,
         #    gh <= coef_lpp * earm.in)
