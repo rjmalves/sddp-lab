@@ -157,8 +157,14 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
 
     # variaveis sistemicas
     df_sistema = DataFrame()
-    for variavel = [:deficit, :cmo] # :cmo vai eventualmente ser uma variavel de barra
-        __increase_dataframe!(df_sistema, variavel, string(variavel), [1], "SISTEMA", simulations)
+    for variavel = [:deficit, :cmo, :stage_objective, :bellman_term, :custo_total] # :cmo vai eventualmente ser uma variavel de barra
+        if variavel == :stage_objective
+            __increase_dataframe!(df_sistema, variavel, "custo_presente", [1], "SISTEMA", simulations)
+        elseif variavel == :bellman_term
+            __increase_dataframe!(df_sistema, variavel, "custo_futuro", [1], "SISTEMA", simulations)
+        else
+            __increase_dataframe!(df_sistema, variavel, string(variavel), [1], "SISTEMA", simulations)
+        end
     end
     CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
 end
@@ -328,7 +334,7 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     cuts_stage = cuts[cuts.estagio.==s, :]
     n = size(cuts_stage)[1]
     plotcut = [cuts_stage.intercept[i] .+
-               cuts_stage.coeficiente[i] * (x) for i = 1:n]
+               cuts_stage.coeficiente[i] * (x .- cuts_stage.estado[i]) for i = 1:n]
     plotcut = hcat(plotcut...)
     highest = mapslices(maximum, plotcut, dims=2)
 
