@@ -334,7 +334,7 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     cuts_stage = cuts[cuts.estagio.==s, :]
     n = size(cuts_stage)[1]
     plotcut = [cuts_stage.intercept[i] .+
-               cuts_stage.coeficiente[i] * (x) for i = 1:n]
+               cuts_stage.coeficiente[i] * (x .- cuts_stage.estado[i]) for i = 1:n]
     plotcut = hcat(plotcut...)
     highest = mapslices(maximum, plotcut, dims=2)
 
