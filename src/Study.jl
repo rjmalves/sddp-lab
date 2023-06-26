@@ -183,6 +183,7 @@ function simulate_model(model::SDDP.PolicyGraph,
         custom_recorders=Dict{Symbol,Function}(
             :cmo => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_energetico]),
             :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
+            :custo_total => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),)
 end
 
