@@ -55,7 +55,7 @@ function ParqueUHEConfigData(uhes::Vector{UHEConfigData})
 end
 
 """
-    UHEConfigData
+    UTEConfigData
 
 Classe contendo informacoes sobre uma UTE
 
