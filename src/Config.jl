@@ -72,6 +72,30 @@ struct UTEConfigData
 end
 
 """
+    ParqueUTEConfigData
+
+Classe contendo informacoes do parque termico do sistema
+
+Atributos da classe
+
+ * `n_utes::Int`: numero de UTEs no sistema
+ * `utes::Vector{UTEConfigData}`: vetor de objetos `UTEConfigData`
+"""
+struct ParqueUTEConfigData
+    n_utes::Int
+    utes::Vector{UTEConfigData}
+end
+
+"""
+    ParqueUTEConfigData(utes::Vector{UTEConfigData})
+
+Constroi um `ParqueUTEConfigData` a partir de um vetor de `UTEConfigData`
+"""
+function ParqueUTEConfigData(utes::Vector{UTEConfigData})
+    n_utes = length(utes)
+    ParqueUTEConfigData(n_utes, utes)
+end
+"""
     SystemConfigData
 
 Classe contendo informacoes gerais do sistema
@@ -99,7 +123,7 @@ Atributos da classe
  * `number_simulated_series::Int`: numero de series para a simulacao final
  * `scenarios_by_stage::Int`: numero de aberturas backward por estagio
  * `parque_uhe::ParqueUHEConfigData`: objeto `ParqueUHEConfigData` representando o parque hidro
- * `ute::UTEConfigData`: objeto `UTEConfigData` representando a termica
+ * `parque_ute::ParqueUTEConfigData`: objeto `ParqueUTEConfigData` representando o parque termico
  * `system::SystemConfigData`: objeto `SystemConfigData` representando parametros gerais do sistema
 """
 struct ConfigData
@@ -109,7 +133,7 @@ struct ConfigData
     number_simulated_series::Int
     scenarios_by_stage::Int
     parque_uhe::ParqueUHEConfigData
-    ute::UTEConfigData
+    parque_ute::ParqueUTEConfigData
     system::SystemConfigData
 end
 
@@ -132,9 +156,14 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
         jsondata["UHEs"])
     parque_uhe = ParqueUHEConfigData(uhes)
 
-    ute = UTEConfigData(jsondata["UTE"]["GTMIN"],
-        jsondata["UTE"]["GTMAX"],
-        jsondata["UTE"]["CUSTO_GERACAO"])
+    utes = map(
+        x -> UTEConfigData(x["GTMIN"],
+        x["GTMAX"],
+        x["CUSTO_GERACAO"]),
+        jsondata["UTEs"]
+    )
+    parque_ute = ParqueUTEConfigData(utes)
+
     system = SystemConfigData(jsondata["SISTEMA"]["CUSTO_DEFICIT"],
         jsondata["SISTEMA"]["DEMANDA"])
 
@@ -144,7 +173,7 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
         jsondata["NUMERO_SERIES_SIM_FINAL"],
         jsondata["NUMERO_CENARIOS_ESTAGIO"],
         parque_uhe,
-        ute,
+        parque_ute,
         system)
 end
 

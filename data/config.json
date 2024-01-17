@@ -16,11 +16,13 @@
             "PENALIDADE_VERTIMENTO": 0.01
         }
     ],
-    "UTE": {
-        "GTMIN": 0.0,
-        "GTMAX": 30.0,
-        "CUSTO_GERACAO": 100.0
-    },
+    "UTEs": [
+        {
+            "GTMIN": 0.0,
+            "GTMAX": 30.0,
+            "CUSTO_GERACAO": 100.0
+        }
+    ],
     "SISTEMA": {
         "CUSTO_DEFICIT": 1000.0,
         "DEMANDA": 60.0
