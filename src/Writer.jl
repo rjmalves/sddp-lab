@@ -151,7 +151,7 @@ function write_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}},
     # variaveis de termica
     df_termo = DataFrame()
     for variavel = [:gt]
-        __increase_dataframe!(df_termo, variavel, string(variavel), [1], "UTE", simulations)
+        __increase_dataframe!(df_termo, variavel, string(variavel), [cfg.parque_ute.n_utes], "UTE", simulations)
     end
     CSV.write(joinpath(OUTDIR, "operacao_termo.csv"), df_termo)
 
@@ -306,8 +306,10 @@ function plot_simulation_results(simulations::Vector{Vector{Dict{Symbol,Any}}}, 
     end
 
     # termo e sistema
-    SDDP.add_spaghetti(plt; title="GT", ymin=cfg.ute.gtmin, ymax=cfg.ute.gtmax) do data
-        return data[:gt]
+    gtmin = sum(x.gtmin for x in cfg.parque_ute.utes)
+    gtmax = sum(x.gtmax for x in cfg.parque_ute.utes)
+    SDDP.add_spaghetti(plt; title="GT", ymin=gtmin, ymax=gtmax) do data
+        return sum(data[:gt])
     end
     SDDP.add_spaghetti(plt; title="DEFICIT") do data
         return data[:deficit]

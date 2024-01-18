@@ -67,6 +67,7 @@ function build_model(cfg::ConfigData,
     @info "Compilando modelo"
     stages = Int(12 * cfg.years)
     n_uhes = cfg.parque_uhe.n_uhes
+    n_utes = cfg.parque_ute.n_utes
 
     graph = SDDP.LinearGraph(stages)
     # SDDP.add_edge(graph, stages => 1, 0.95)
@@ -99,7 +100,7 @@ function build_model(cfg::ConfigData,
         @constraint(subproblem, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >= cfg.parque_uhe.uhes[n].ghmin)
 
         # variaveis de decisao das termicas
-        @variable(subproblem, cfg.ute.gtmin <= gt <= cfg.ute.gtmax)
+        @variable(subproblem, cfg.parque_ute.utes[n].gtmin <= gt[n=1:n_utes] <= cfg.parque_ute.utes[n].gtmax)
 
         # deficit
         @variable(subproblem, deficit >= 0)
@@ -122,7 +123,7 @@ function build_model(cfg::ConfigData,
         # Balanco energetico
         @constraint(subproblem,
             balanco_energetico,
-            sum(gh) + gt + deficit == cfg.system.demand)
+            sum(gh) + sum(gt) + deficit == cfg.system.demand)
 
         # LPP
         #@constraint(subproblem,
@@ -135,7 +136,7 @@ function build_model(cfg::ConfigData,
             earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
 
         # Custo
-        @stageobjective(subproblem, cfg.ute.generation_cost * gt
+        @stageobjective(subproblem, sum(cfg.parque_ute.utes[n].generation_cost * gt[n] for n in 1:n_utes)
                                     + cfg.system.deficit_cost * deficit
                                     + sum(cfg.system.deficit_cost * 1.0001 * slack_ghmin[n] for n in 1:n_uhes)
                                     + sum(cfg.parque_uhe.uhes[n].spill_penal * vert[n] for n in 1:n_uhes))

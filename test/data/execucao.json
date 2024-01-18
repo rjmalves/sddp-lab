@@ -1,0 +1,8 @@
+{
+    "INDIR": "data",
+    "OUTDIR": "out",
+    "ESCREVECORTES": true,
+    "ESCREVEOPERACAO": true,
+    "PLOTACORTES": true,
+    "PLOTAOPERACAO": true
+}
