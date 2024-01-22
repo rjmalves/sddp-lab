@@ -246,6 +246,7 @@ Exporta os dados dos cortes gerados pelo modelo.
 function write_model_cuts(cuts::DataFrame, OUTDIR::String)
     PROCESSED_CUTS_PATH = joinpath(OUTDIR, "cortes.csv")
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
+    __check_outdir(OUTDIR)
     CSV.write(PROCESSED_CUTS_PATH, cuts)
 end
 
