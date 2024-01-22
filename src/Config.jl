@@ -119,8 +119,14 @@ Atributos da classe
 
  * `initial_month::Int`: mes inicial do estudo
  * `years::Int`: numero de anos
+ * `discout_factor::Float64`: fator de desconto
+ * `discout_by_stage::Bool`: o valor do desconto eh por estagio
+ * `discout_by_cycle::Bool`: o valor do desconto eh por ciclo
+ * `cyclic::Bool`: o estudo eh ciclico
+ * `cycle_lenght::Int`: tamanho do ciclo
  * `max_iterations::Int`: maximo numero de iteracoes para construcao da politica
  * `number_simulated_series::Int`: numero de series para a simulacao final
+ * `years_simulated_series::Int`: numero de anos para a simulacao final
  * `scenarios_by_stage::Int`: numero de aberturas backward por estagio
  * `parque_uhe::ParqueUHEConfigData`: objeto `ParqueUHEConfigData` representando o parque hidro
  * `parque_ute::ParqueUTEConfigData`: objeto `ParqueUTEConfigData` representando o parque termico
@@ -129,8 +135,14 @@ Atributos da classe
 struct ConfigData
     initial_month::Int
     years::Int
+    discout_factor::Float64
+    discout_by_stage::Bool
+    discout_by_cycle::Bool
+    cyclic::Bool
+    cycle_lenght::Int
     max_iterations::Int
     number_simulated_series::Int
+    years_simulated_series::Int
     scenarios_by_stage::Int
     parque_uhe::ParqueUHEConfigData
     parque_ute::ParqueUTEConfigData
@@ -167,10 +179,20 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
     system = SystemConfigData(jsondata["SISTEMA"]["CUSTO_DEFICIT"],
         jsondata["SISTEMA"]["DEMANDA"])
 
+    if jsondata["DESCONTO_ESTAGIO"] && jsondata["DESCONTO_CICLO"] && jsondata["CICLICO"]
+        @warn "Desconto por estágio e ciclo ativados simultaneamente. Será considerado como desconto por ciclo."
+    end
+
     return ConfigData(jsondata["MES_INICIAL"],
         jsondata["ANOS"],
+        jsondata["TAXA_DESCONTO"],
+        jsondata["DESCONTO_ESTAGIO"],
+        jsondata["DESCONTO_CICLO"],
+        jsondata["CICLICO"],
+        jsondata["PERIODO_CICLO"],
         jsondata["MAX_ITERACOES"],
         jsondata["NUMERO_SERIES_SIM_FINAL"],
+        jsondata["ANOS_SIM_FINAL"],
         jsondata["NUMERO_CENARIOS_ESTAGIO"],
         parque_uhe,
         parque_ute,

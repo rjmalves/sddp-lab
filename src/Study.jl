@@ -51,6 +51,39 @@ function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
 end
 
 """
+    build_graph(cfg)
+
+Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
+
+# Arguments
+
+ * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+"""
+function build_graph(cfg::ConfigData)
+    graph = SDDP.Graph(0)
+    edge_prob = cfg.discout_by_stage ? cfg.discout_factor : 1.0
+
+    if cfg.cyclic
+        if cfg.discout_by_cycle
+            edge_prob = cfg.discout_factor ^ (1/cfg.cycle_lenght)
+        end
+        for s in 1:cfg.cycle_lenght
+            SDDP.add_node(graph, s)
+            SDDP.add_edge(graph, s-1 => s, edge_prob)
+        end
+        SDDP.add_edge(graph, cfg.cycle_lenght => 1, edge_prob)
+        return graph, cfg.cycle_lenght
+    else
+        nstages = Int(12 * cfg.years)
+        for s in 1:nstages
+            SDDP.add_node(graph, s)
+            SDDP.add_edge(graph, s-1 => s, edge_prob)
+        end
+        return graph, nstages
+    end
+end
+
+"""
     build_model(cfg, ena_dist)
 
 Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estudo e ENAs fornecidos
@@ -65,12 +98,10 @@ function build_model(cfg::ConfigData,
     ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
 
     @info "Compilando modelo"
-    stages = Int(12 * cfg.years)
     n_uhes = cfg.parque_uhe.n_uhes
     n_utes = cfg.parque_ute.n_utes
 
-    graph = SDDP.LinearGraph(stages)
-    # SDDP.add_edge(graph, stages => 1, 0.95)
+    graph, stages = build_graph(cfg)
 
     #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
 
@@ -179,10 +210,14 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
 function simulate_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
+    sampler = SDDP.InSampleMonteCarlo(
+        max_depth = cfg.years_simulated_series*12,
+        terminate_on_dummy_leaf=false)
     @info "Realizando simulação"
     return SDDP.simulate(model,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena],
+        sampling_scheme=sampler,
         custom_recorders=Dict{Symbol,Function}(
             :cmo => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_energetico]),
             :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
