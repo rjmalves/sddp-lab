@@ -1,0 +1,8 @@
+{
+    "INDIR": "data_per",
+    "OUTDIR": "out_per",
+    "ESCREVECORTES": true,
+    "ESCREVEOPERACAO": true,
+    "PLOTACORTES": true,
+    "PLOTAOPERACAO": true
+}
