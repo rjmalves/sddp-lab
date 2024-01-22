@@ -20,7 +20,7 @@ Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
 
 # Arguments
 
- * `stages::Int`: numero de estágios para contrução do SAA
+ * `stages::Int`: numero de estágios para construção do SAA
  * `initial_month::Int`: mes inicial
  * `number_of_samples::Int`: numero de aberturas a cada estagio
  * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
