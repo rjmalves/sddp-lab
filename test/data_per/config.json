@@ -1,10 +1,10 @@
 {
     "MES_INICIAL": 1,
     "ANOS": 10,
-    "TAXA_DESCONTO": 1.0,
+    "TAXA_DESCONTO": 0.8928571428571428,
     "DESCONTO_ESTAGIO": false,
-    "DESCONTO_CICLO": false,
-    "CICLICO": false,
+    "DESCONTO_CICLO": true,
+    "CICLICO": true,
     "PERIODO_CICLO": 12,
     "MAX_ITERACOES": 100,
     "NUMERO_SERIES_SIM_FINAL": 300,
