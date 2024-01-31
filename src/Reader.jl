@@ -42,9 +42,10 @@ configurações do estudo `CFG` para armazenamento ordenado das informações.
 O objeto retornado e um dicionario contendo as informacoes acerca das ENAs para cada UHE e cada mes.
 O primeiro nivel do dicionario diz respeito as UHEs, cujas chaves sao nomeadas de acordo com o 
 valor na coluna `UHE` do arquivo `ena.csv`. Cada elemento de primeiro nivel e, tambem, um 
-dicionario. Estes sao todos de 12 elementos, correspondendo aos meses, cujas chaves sao nomeadas 
-`"1", "2", ..., "12"`. Os valores de cada elemento sao vetores de duas posicoes: media e desvio 
-padrao de uma normal da qual amostrar valores de ENA naquele mes, para aquela UHE.
+dicionario. Estes sao todos de `cfg.cycle_lenght` elementos,
+correspondendo a meses/semanas/... de um modelo periódico,
+cujas chaves sao numeradas `"1", "2", ..., "cfg.cycle_lenght"`. Os valores de cada elemento sao vetores de duas posicoes: media e desvio 
+padrao de uma normal da qual amostrar valores de ENA naquele estágio, para aquela UHE.
 
 Exemplo de dicionario com uma unica UHE
 
@@ -71,11 +72,12 @@ function read_ena(INDIR::String, CFG::ConfigData)::Dict{Int,Dict{Int,Vector{Floa
     ENA_PATH = joinpath(INDIR, "ena.csv")
     @info "Lendo arquivo de configuração $(ENA_PATH)"
     dat_ena = CSV.read(ENA_PATH, DataFrame)
+    stage_name = names(dat_ena)[2]
     uhes = unique(dat_ena[:, :UHE])
     uhes_ordenadas = map(uhe -> uhe.name, CFG.parque_uhe.uhes)
     out = Dict()
     for u in uhes
-        aux = Dict((e.MES, [e.MEDIA, e.DESVIO])
+        aux = Dict((e[Symbol(stage_name)], [e.MEDIA, e.DESVIO])
                    for e in CSV.File(ENA_PATH) if e.UHE == u)
         indice_u = findfirst(item -> item == string("", u), uhes_ordenadas)
         out[indice_u] = aux

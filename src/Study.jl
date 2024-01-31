@@ -14,7 +14,7 @@ using ..Reader: read_config, read_ena
 using ..Writer: plot_simulation_results, write_simulation_results
 
 """
-    __sample_enas(stages, initial_month, number_of_samples, n_uhes, distributions)
+    __sample_enas(stages, initial_month, number_of_samples, n_uhes, period, distributions)
 
 Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
 
@@ -23,11 +23,13 @@ Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
  * `stages::Int`: numero de estágios para construção do SAA
  * `initial_month::Int`: mes inicial
  * `number_of_samples::Int`: numero de aberturas a cada estagio
+ * `n_uhes::Int`: numero de UHEs
+ * `period::Int`: tamanho do ciclo
  * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
      retornado por `Lab.Reader.read_ena()`
 """
 function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
-    n_uhes::Int,
+    n_uhes::Int,period::Int,
     distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
 
     Random.seed!(0)
@@ -37,8 +39,8 @@ function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
     out = [[zeros(n_uhes) for u in 1:number_of_samples] for s in 1:stages]
     for u in 1:n_uhes
         for s in 1:stages
-            dist = Normal(distributions[u][(s+initial_month-1)%12+1][1],
-                distributions[u][(s+initial_month-1)%12+1][2])
+            params = distributions[u][(s+initial_month-1)%period+1]
+            dist = Normal(params[1], params[2])
             dist = truncated(dist, 0.0, Inf)
             for n in 1:number_of_samples
                 out[s][n][u] += rand(dist, 1)[1]
@@ -74,7 +76,7 @@ function build_graph(cfg::ConfigData)
         SDDP.add_edge(graph, cfg.cycle_lenght => 1, edge_prob)
         return graph, cfg.cycle_lenght
     else
-        nstages = Int(12 * cfg.years)
+        nstages = Int(cfg.cycle_lenght * cfg.cycles)
         for s in 1:nstages
             SDDP.add_node(graph, s)
             SDDP.add_edge(graph, s-1 => s, edge_prob)
@@ -106,7 +108,7 @@ function build_model(cfg::ConfigData,
     #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
 
     sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage,
-        n_uhes, ena_dist)
+        n_uhes, cfg.cycle_lenght, ena_dist)
 
     model = SDDP.PolicyGraph(graph,
         sense=:Min,
@@ -211,7 +213,7 @@ function simulate_model(model::SDDP.PolicyGraph,
     cfg::ConfigData)::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
     sampler = SDDP.InSampleMonteCarlo(
-        max_depth = cfg.years_simulated_series*12,
+        max_depth = cfg.cycles_simulated_series*cfg.cycle_lenght,
         terminate_on_dummy_leaf=false)
     @info "Realizando simulação"
     return SDDP.simulate(model,
