@@ -1,0 +1,46 @@
+{
+    "MES_INICIAL": 1,
+    "CICLOS": 10,
+    "TAXA_DESCONTO": 0.8928571428571428,
+    "DESCONTO_ESTAGIO": false,
+    "DESCONTO_CICLO": true,
+    "CICLICO": true,
+    "PERIODO_CICLO": 52,
+    "MAX_ITERACOES": 100,
+    "NUMERO_SERIES_SIM_FINAL": 300,
+    "CICLOS_SIM_FINAL": 2,
+    "NUMERO_CENARIOS_ESTAGIO": 10,
+    "UHEs": [
+        {
+            "NOME": "UHE1",
+            "JUSANTE": "",
+            "GHMIN": 0.0,
+            "GHMAX": 420.0,
+            "EARMIN": 0.0,
+            "EARMAX": 5400.0,
+            "EARM_INICIAL": 1800.0,
+            "PENALIDADE_VERTIMENTO": 0.01
+        }
+    ],
+    "UTEs": [
+        {
+            "GTMIN": 0.0,
+            "GTMAX": 70.0,
+            "CUSTO_GERACAO": 50.0
+        },
+        {
+            "GTMIN": 0.0,
+            "GTMAX": 35.0,
+            "CUSTO_GERACAO": 125.0
+        },
+        {
+            "GTMIN": 0.0,
+            "GTMAX": 35.0,
+            "CUSTO_GERACAO": 250.0
+        }
+    ],
+    "SISTEMA": {
+        "CUSTO_DEFICIT": 1000.0,
+        "DEMANDA": 465.0
+    }
+}
