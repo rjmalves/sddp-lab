@@ -1,0 +1,8 @@
+{
+    "INDIR": "data_semanal",
+    "OUTDIR": "out_semanal",
+    "ESCREVECORTES": true,
+    "ESCREVEOPERACAO": true,
+    "PLOTACORTES": true,
+    "PLOTAOPERACAO": true
+}
