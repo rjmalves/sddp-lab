@@ -355,8 +355,9 @@ function __compute_fcf1var_value_new(x::Vector{Float64}, s::String, cuts::DataFr
                 for c in eachrow(cuts_stage)]
     plotcut = hcat(plotcut...)
 
-    highest = maximum(cuts_stage.intercept .+ cuts_stage.coeficiente .* ( x' .- cuts_stage.estado ), dims=1)
-    return highest[:], plotcut
+    highest, idxs = findmax(cuts_stage.intercept .+ cuts_stage.coeficiente .* ( x' .- cuts_stage.estado ), dims=1)
+    watervalue = cuts_stage.coeficiente[[myidx.I[1] for myidx in idxs]]
+    return highest[:], plotcut, watervalue[:]
 end
 
 """
@@ -375,11 +376,13 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     stages = unique(cuts.estagio)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
-        highest, plotcut = __compute_fcf1var_value_new(x, s, cuts)
+        highest, plotcut, watervalue = __compute_fcf1var_value_new(x, s, cuts)
         plot([minimum(x), maximum(x)], plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi=300,
             linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
         savefig(joinpath(CUTDIR, string("estagio-", s, ".png")))
+        plot(x, watervalue; color="blue", label="Valor da água")
+        savefig(joinpath(CUTDIR, string("estagio-", s, "-water.png")))
     end
 end
 
