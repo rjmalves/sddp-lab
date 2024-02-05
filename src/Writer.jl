@@ -344,6 +344,21 @@ function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
     return highest, plotcut
 end
 
+function __compute_fcf1var_value_new(x::Vector{Float64}, s::String, cuts::DataFrame)
+    min_x = minimum(x)
+    max_x = maximum(x)
+
+    cuts_stage = cuts[cuts.estagio.==s, :]
+    plotcut = [[c.intercept + c.coeficiente * (min_x - c.estado),
+                c.intercept + c.coeficiente * (max_x - c.estado)
+                ]
+                for c in eachrow(cuts_stage)]
+    plotcut = hcat(plotcut...)
+
+    highest = maximum(cuts_stage.intercept .+ cuts_stage.coeficiente .* ( x' .- cuts_stage.estado ), dims=1)
+    return highest[:], plotcut
+end
+
 """
     plot_model_cuts_1var(cuts, cfg, OUTDIR)
 
@@ -360,8 +375,8 @@ function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
     stages = unique(cuts.estagio)
     x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
     for s in stages
-        highest, plotcut = __compute_fcf1var_value(x, s, cuts)
-        plot(x, plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi=300,
+        highest, plotcut = __compute_fcf1var_value_new(x, s, cuts)
+        plot([minimum(x), maximum(x)], plotcut; ylim=(0.0, maximum(plotcut)), color="orange", dpi=300,
             linestyle=:dash, alpha=0.4, label="")
         plot!(x, highest; color="orange", label="FCF Aproximada")
         savefig(joinpath(CUTDIR, string("estagio-", s, ".png")))
