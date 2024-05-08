@@ -1,0 +1,21 @@
+{
+    "inflow": {
+        // independent | AR | PAR | HMM | ...
+        "kind": "independent",
+        "params": {
+            "file": "inflow_scenarios.csv"
+            // TODO - maybe support json files depending on the "kind"
+            // or always json files
+        }
+    },
+    "load": {
+        // deterministic | ...
+        "kind": "deterministic",
+        "params": {
+            "file": "load.csv"
+            // TODO - maybe support json files depending on the "kind"
+            // or always json files
+        }
+    }
+    // TODO - cost
+}

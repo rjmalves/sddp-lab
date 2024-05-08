@@ -1,0 +1,33 @@
+{
+    // Policy graph constructor for defining
+    // if the graph is regular, cyclic, etc.
+    "policy_graph": {
+        "kind": "regular",
+        "params": {
+            // Parameters for the policy graph
+            "discount_rate": 1.00
+        }
+    },
+    // TODO - policy graph x stochastic processes
+    // some other fields may influence the policy graph
+    // like scenarios, load, costs, etc.
+    "convergence": {
+        // Min/Max number of iterations
+        "min_iterations": 10,
+        "max_iterations": 50,
+        // Early stopping criteria and params
+        "early_stopping": {
+            // zinf | statistical | gap | ...
+            "kind": "zinf",
+            "params": {
+                // Threshold for the early
+                // stopping in % of zinf delta
+                // per iteration
+                "threshold": 0.1,
+                "num_iterations": 6
+            }
+        }
+    },
+    // TODO - Expectation of the policy - risk neutral, risk averse, etc..
+    "expectation": {}
+}
