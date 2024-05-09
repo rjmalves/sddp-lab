@@ -1,5 +1,5 @@
 {
-    // policy | simulation
+    // policy | simulation - lower_simulation | upper_simulation
     "task": "policy",
     "solver": {
         // CLP | GLPK | HiGHS | CPLEX | Gurobi | ...
