@@ -1,7 +1,7 @@
 {
     "inflow": {
-        // independent | AR | PAR | HMM | ...
-        "kind": "independent",
+        // naive | AR | PAR | HMM | ...
+        "kind": "naive",
         "params": {
             "file": "inflow_scenarios.csv"
             // TODO - maybe support json files depending on the "kind"
