@@ -1,5 +1,9 @@
 module StochasticProcess
 
+using Distributions, Copulas
+using LinearAlgebra
+
+import Copulas: Copula
 import Base: length
 
 abstract type AbstractStochasticProcess end
