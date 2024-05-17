@@ -1,9 +1,3 @@
-using Distributions, Copulas
-using LinearAlgebra
-
-import Copulas: Copula
-import Base: length
-
 # CLASS UnitaryNaive -----------------------------------------------------------------------
 
 struct UnitaryNaive
@@ -99,7 +93,49 @@ function length(s::Naive)
     length(__get_ids(s))
 end
 
+function size(s::Naive)
+    first_id = __get_ids(s)[1]
+    first_us = s.models[first_id]
+
+    (length(__get_ids(s)), length(first_us.distributions))
+end
+
+function __generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer)
+
+    size_s = size(s)
+
+    out = [zeros(Float64, (size_s[1], B)) for n in range(1, N)]
+
+    for n in range(1, N)
+        m = (n + initial_season - 1)
+
+        # this + 1e-5 is a trick to allow cycling over the seasons -- might be worth some
+        # optimization in the future
+        season = m - size_s[2] * Int(div(m, size_s[2] + 1e-5))
+        D = __build_mvdist(s, season)
+        out[n] .+= rand(rng, D, B)
+    end
+    
+    return out
+end
+
+function __generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
+    __generate_saa(Random.default_rng(), s, initial_season, N, B)
+end
+
 # HELPERS ----------------------------------------------------------------------------------
+
+function __build_mvdist(s::Naive, season::Int)
+    
+    ids = __get_ids(s)
+
+    marginals = (s.models[id].distributions[season] for id in ids)
+    copula = s.copulas[season]
+
+    D = SklarDist(copula, marginals)
+
+    return D
+end
 
 """
     __instantiate_dist(name::String, params::Vector{Real})
