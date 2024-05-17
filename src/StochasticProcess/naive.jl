@@ -1,6 +1,7 @@
-using Distributions
+using Distributions, Copulas
 using LinearAlgebra
 
+import Copulas: Copula
 import Base: length
 
 # CLASS UnitaryNaive -----------------------------------------------------------------------
@@ -41,7 +42,7 @@ struct Naive <: AbstractStochasticProcess
     models::Dict{Integer, UnitaryNaive}
 
     # similar to 'models', but the Int key now corresponds to the season
-    R_matrices::Dict{Integer, Matrix{Real}}
+    copulas::Dict{Integer, Copula}
 
 end
 
@@ -52,7 +53,7 @@ function Naive(d::Dict{String, Any})
     #   __validate_dict_matrices
 
     models = __build_marginal_models(d)
-    matrices = __build_R_matrices(d)
+    matrices = __build_copulas(d)
 
     Naive(models, matrices)
 
@@ -68,17 +69,24 @@ function __build_marginal_models(d::Dict{String, Any})
     return unitaries
 end
 
-function __build_R_matrices(d::Dict{String, Any})
+function __build_copulas(d::Dict{String, Any})
 
-    matrices = map(d["correlation_matrices"]) do mat
-        mat = stack(mat["matrix"], dims = 1)
-        mat = real(mat) # this real() call should be moved to __validate above
+    copulas = Dict{Integer, Copula}()
+
+    for (i, i_copula) in enumerate(d["copulas"])
+
+        name = i_copula["name"]
+        seas = Int(i_copula["season"]) # this Int() call should be moved to __validate
+        params = stack(i_copula["parameters"]) |> real # this block should be moved to a __validate
+
+        i_copula = __instantiate_copula(name, params)
+        i_copula = Dict{Integer, Copula}(seas => i_copula)
+
+        merge!(copulas, i_copula)
+
     end
 
-    seasons = map(x -> x["season"], d["correlation_matrices"])
-    matrices = Dict{Integer, Matrix{Real}}(zip(seasons, matrices))
-
-    return matrices
+    return copulas
 end
 
 # METHODS ----------------------------------------------------------------------------------
@@ -100,5 +108,15 @@ Return instance of a distribution from Distributions.jl of type `name` and param
 """
 function __instantiate_distribution(name::String, params::Vector{T} where T <: Real) 
     d = getfield(Distributions, Symbol(name))(params...)
+    return d
+end
+
+"""
+    __instantiate_copula(name::String, params::Vector{Real})
+
+Return instance of a copula from Copulas.jl of type `name` and parameters `params`
+"""
+function __instantiate_copula(name::String, params::Union{Vector{T}, Matrix{Float64}} where T <: Real) 
+    d = getfield(Copulas, Symbol(name))(params...)
     return d
 end
