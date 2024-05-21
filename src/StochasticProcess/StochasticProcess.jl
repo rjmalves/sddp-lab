@@ -2,6 +2,7 @@ module StochasticProcess
 
 using Random, Distributions, Copulas
 using LinearAlgebra
+using JuMP
 
 import Copulas: Copula
 import Base: length, size
