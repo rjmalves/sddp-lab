@@ -45,6 +45,13 @@ function generate_saa(s::AbstractStochasticProcess, initial_season::Integer, N::
 end
 
 """
+    add_inflow_uncertainty!(m, s)
+
+Add stochastic variables and inflow model recurrence constraints to a JuMP model `m`
+"""
+add_inflow_uncertainty!(m::JuMP.Model, s::AbstractStochasticProcess)
+
+"""
     __validate(s::AbstractStochasticProcess)
 
 Return `true` if `s` is a valid instance of stochastic process; raise errors otherwise

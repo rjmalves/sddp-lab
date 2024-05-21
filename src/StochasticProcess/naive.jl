@@ -125,6 +125,16 @@ function generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
     __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
+function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)
+
+    n_hydro = length(s)
+
+    @variable(m, ω_inflow[1:n_hydro])
+    @constraint(m, inflow_model, m[:ena] .== ω_inflow)
+
+    return m
+end
+
 # HELPERS ----------------------------------------------------------------------------------
 
 function __build_mvdist(s::Naive, season::Int)
