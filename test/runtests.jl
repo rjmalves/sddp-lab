@@ -1,10 +1,10 @@
+using Test
 using SDDPlab
 
-exec = SDDPlab.read_exec("data/")
-SDDPlab.compute_simulate_policy(exec)
+include("utils.jl")
 
-exec = SDDPlab.read_exec("data_per/")
-SDDPlab.compute_simulate_policy(exec)
+test_files = __list_test_files(".")
 
-exec = SDDPlab.read_exec("data_semanal/")
-SDDPlab.compute_simulate_policy(exec)
+for tf in test_files
+    include(tf)
+end
