@@ -34,14 +34,14 @@ tuple, so refer to the corresponding documentation for more details
 size(s::AbstractStochasticProcess)
 
 """
-    __generate_saa([rng::AbstractRNG, ]s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+    generate_saa([rng::AbstractRNG, ]s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
 
 Generate a Sample Average Approximation of the noise (uncertainty) terms in model `s`
 """
-__generate_saa(rng::AbstractRNG, s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+generate_saa(rng::AbstractRNG, s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
 
-function __generate_saa(s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
-    __generate_saa(Random.default_rng(), s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+function generate_saa(s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+    generate_saa(Random.default_rng(), s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
 end
 
 """

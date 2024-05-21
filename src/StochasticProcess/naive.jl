@@ -83,7 +83,7 @@ function __build_copulas(d::Dict{String, Any})
     return copulas
 end
 
-# METHODS ----------------------------------------------------------------------------------
+# GENERAL METHODS --------------------------------------------------------------------------
 
 function __get_ids(s::Naive)
     map(x -> x.id, values(s.models))
@@ -100,7 +100,9 @@ function size(s::Naive)
     (length(__get_ids(s)), length(first_us.distributions))
 end
 
-function __generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer)
+# SDDP METHODS -----------------------------------------------------------------------------
+
+function generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer)
 
     size_s = size(s)
 
@@ -119,7 +121,7 @@ function __generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::
     return out
 end
 
-function __generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
+function generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
     __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
