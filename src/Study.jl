@@ -1,17 +1,9 @@
-module Study
-
 using Statistics
 using Distributions
 using Logging
 using Random
 using SDDP
 using GLPK
-
-export build_model, train_model, simulate_model
-
-using ..Config: ConfigData
-using ..Reader: read_config, read_ena
-using ..Writer: plot_simulation_results, write_simulation_results
 
 """
     __sample_enas(stages, initial_month, number_of_samples, n_uhes, period, distributions)
@@ -225,6 +217,4 @@ function simulate_model(model::SDDP.PolicyGraph,
             :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
             :custo_total => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),)
-end
-
 end

@@ -1,11 +1,3 @@
-module Main
-
-using ..Reader
-using ..Study
-using ..Writer
-
-export compute_simulate_policy
-
 """
     compute_simulate_policy(execution)
 
@@ -49,6 +41,4 @@ function compute_simulate_policy(execution::Dict{String,Any})
     end
 
     @info "Execucao completa"
-end
-
 end

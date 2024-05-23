@@ -1,7 +1,3 @@
-module Config
-
-export ConfigData
-
 """
    UHEConfigData
 
@@ -197,6 +193,4 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
         parque_uhe,
         parque_ute,
         system)
-end
-
 end
