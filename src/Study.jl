@@ -1,10 +1,3 @@
-using Statistics
-using Distributions
-using Logging
-using Random
-using SDDP
-using GLPK
-
 """
     __sample_enas(stages, initial_month, number_of_samples, n_uhes, period, distributions)
 
