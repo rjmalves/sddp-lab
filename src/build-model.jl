@@ -42,67 +42,88 @@ function __generate_subproblem_builder(cfg::ConfigData,
 
     function fun_sp_build(sp::JuMP.Model, node::Int)
         
-        # variaveis de estado
-        @variable(sp,
-            0 <= earm[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
-            SDDP.State,
-            initial_value = cfg.parque_uhe.uhes[n].initial_ear)
+        __add_hydro!(sp, cfg)
+        __add_thermal!(sp, cfg)
+        __add_systemic!(sp, cfg)
+        __add_inflow!(sp, cfg)
+        __add_hydro_balance!(sp, cfg)
+        __add_load_balance!(sp, cfg)
 
-        # variaveis de decisao das hidro
-        @variables(sp, begin
-            0 <= gh[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
-            slack_ghmin[n=1:n_uhes] >= 0
-            vert[n=1:n_uhes] >= 0
-            ena[1:n_uhes]
-        end)
-
-        # folga de ghmin
-        @constraint(sp, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >= cfg.parque_uhe.uhes[n].ghmin)
-
-        # variaveis de decisao das termicas
-        @variable(sp, cfg.parque_ute.utes[n].gtmin <= gt[n=1:n_utes] <= cfg.parque_ute.utes[n].gtmax)
-
-        # deficit
-        @variable(sp, deficit >= 0)
-
-        # parametrizacao de transicao de estados
-        node_enas = SAA[node]
-        SDDP.parameterize(sp, node_enas) do w
-            return JuMP.fix.(ena, w)
+        Ω_node = SAA[node]
+        SDDP.parameterize(sp, Ω_node) do ω
+            return JuMP.fix.(sp[:ω_inflow], ω)
         end
 
-        # Balanco hidrico
-        @constraint(sp,
-            balanco_hidrico[n=1:n_uhes],
-            earm[n].out == earm[n].in - gh[n] - vert[n] + ena[n] +
-                           sum(gh[j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name) +
-                           sum(vert[j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name)
+        @stageobjective(sp,
+            sum(
+                cfg.parque_ute.utes[n].generation_cost * sp[:gt][n] for n in 1:n_utes)
+                + cfg.system.deficit_cost * sp[:deficit]
+                + sum(cfg.system.deficit_cost * 1.0001 * sp[:slack_ghmin][n] for n in 1:n_uhes)
+                + sum(cfg.parque_uhe.uhes[n].spill_penal * sp[:vert][n] for n in 1:n_uhes
+            )
         )
-
-
-        # Balanco energetico
-        @constraint(sp,
-            balanco_energetico,
-            sum(gh) + sum(gt) + deficit == cfg.system.demand)
-
-        # LPP
-        #@constraint(sp,
-        #    lpp,
-        #    gh <= coef_lpp * earm.in)
-
-        # Nivel minimo
-        @constraint(sp,
-            fim_horizonte[n=1:n_uhes],
-            earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
-
-        # Custo
-        @stageobjective(sp, sum(cfg.parque_ute.utes[n].generation_cost * gt[n] for n in 1:n_utes)
-                                    + cfg.system.deficit_cost * deficit
-                                    + sum(cfg.system.deficit_cost * 1.0001 * slack_ghmin[n] for n in 1:n_uhes)
-                                    + sum(cfg.parque_uhe.uhes[n].spill_penal * vert[n] for n in 1:n_uhes))
     end
 
     return fun_sp_build
+end
+
+function __add_hydro!(sp::JuMP.Model, cfg::ConfigData)
+
+    n_uhes = cfg.parque_uhe.n_uhes
+
+    @variable(sp, 0 <= earm[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
+        SDDP.State,
+        initial_value = cfg.parque_uhe.uhes[n].initial_ear)
+
+    @variables(sp, begin
+        0 <= gh[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+        slack_ghmin[n=1:n_uhes] >= 0
+        vert[n=1:n_uhes] >= 0
+    end)
+
+    @constraint(sp, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >= cfg.parque_uhe.uhes[n].ghmin)
+
+    @constraint(sp,
+        fim_horizonte[n=1:n_uhes],
+        earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
+
+end
+
+function __add_thermal!(sp::JuMP.Model, cfg::ConfigData)
+    n_utes = cfg.parque_ute.n_utes
+    @variable(sp, cfg.parque_ute.utes[n].gtmin <= gt[n=1:n_utes] <= cfg.parque_ute.utes[n].gtmax)
+
+end
+
+function __add_systemic!(sp::JuMP.Model, cfg::ConfigData)
+    @variable(sp, deficit >= 0)
+end
+
+function __add_inflow!(sp::JuMP.Model, cfg::ConfigData)
+    n_uhes = cfg.parque_uhe.n_uhes
+
+    @variable(sp, ena[1:n_uhes])
+    @variable(sp, ω_inflow[1:n_uhes])
+
+    @constraint(sp, inflow_model, ena .== ω_inflow)
+end
+
+function __add_hydro_balance!(sp::JuMP.Model, cfg::ConfigData)
+
+    n_uhes = cfg.parque_uhe.n_uhes
+
+    @constraint(sp,
+        balanco_hidrico[n=1:n_uhes],
+        sp[:earm][n].out == sp[:earm][n].in - sp[:gh][n] - sp[:vert][n] + sp[:ena][n] +
+                        sum(sp[:gh][j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name) +
+                        sum(sp[:vert][j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name)
+    )
+end
+
+function __add_load_balance!(sp::JuMP.Model, cfg::ConfigData)
+    @constraint(sp,
+        balanco_energetico,
+        sum(sp[:gh]) + sum(sp[:gt]) + sp[:deficit] == cfg.system.demand)       
 end
 
 """
