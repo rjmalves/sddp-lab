@@ -1,14 +1,3 @@
-module Writer
-
-using SDDP
-using CSV
-using JSON
-using ..Config: ConfigData
-using Plots
-using DataFrames
-
-export write_simulation_results, get_model_cuts, write_model_cuts, plot_simulation_results, plot_model_cuts
-
 """
     __check_outdir(OUTDIR)
 
@@ -409,6 +398,4 @@ function plot_model_cuts(cuts::DataFrame, cfg::ConfigData, OUTDIR::String)
     elseif n_uhes > 2
         @error "nao e possivel realizar plots para mais de duas UHEs no sistema"
     end
-end
-
 end

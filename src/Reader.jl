@@ -1,13 +1,3 @@
-module Reader
-
-using JSON
-using CSV
-using DataFrames
-using Logging
-using ..Config
-
-export read_config, read_ena, read_exec
-
 """
     read_config(INDIR::String)
     
@@ -120,6 +110,4 @@ function read_exec(INDIR::String)::Dict{String,Any}
     @info "Lendo arquivo de execucao $(EXEC_PATH)"
     out = JSON.parsefile(EXEC_PATH)
     return out
-end
-
 end
