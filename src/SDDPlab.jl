@@ -9,6 +9,7 @@ using Logging
 include("Config.jl")
 include("Reader.jl")
 include("Writer.jl")
+include("build-model.jl")
 include("Study.jl")
 include("Main.jl")
 
