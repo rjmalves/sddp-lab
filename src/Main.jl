@@ -13,7 +13,7 @@ Realiza um estudo completo: aproxima politica, realiza simulacao e escreve todos
 
 # Arguments
 
- * `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
+  - `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
 """
 function compute_simulate_policy(execution::Dict{String,Any})
     cfg = read_config(execution["INDIR"])
@@ -50,12 +50,12 @@ function compute_simulate_policy(execution::Dict{String,Any})
         cp(
             joinpath(execution["INDIR"], "config.json"),
             joinpath(execution["OUTDIR"], "config.json");
-            force=true,
+            force = true,
         )
         cp(
             joinpath(execution["INDIR"], "ena.csv"),
             joinpath(execution["OUTDIR"], "ena.csv");
-            force=true,
+            force = true,
         )
     end
 

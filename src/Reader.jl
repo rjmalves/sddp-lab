@@ -10,14 +10,14 @@ export read_config, read_ena, read_exec
 
 """
     read_config(INDIR::String)
-    
+
 Le um arquivo de configuracao de estudo `config.json` localizado no diretorio `INDIR`
 
 Retorna objeto `Lab.Config.ConfigData`. Para mais detalhes, ver sua documentacao.
 
 # Arguments
 
- * `INDIR`: diretório para leitura do arquivo
+  - `INDIR`: diretório para leitura do arquivo
 """
 function read_config(INDIR::String)::ConfigData
     CONFIG_PATH = joinpath(INDIR, "config.json")
@@ -33,25 +33,24 @@ configurações do estudo `CFG` para armazenamento ordenado das informações.
 
 # Arguments
 
- * `INDIR`: diretório para leitura do arquivo
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
- 
+  - `INDIR`: diretório para leitura do arquivo
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 
 # Extended help
 
 O objeto retornado e um dicionario contendo as informacoes acerca das ENAs para cada UHE e cada mes.
-O primeiro nivel do dicionario diz respeito as UHEs, cujas chaves sao nomeadas de acordo com o 
-valor na coluna `UHE` do arquivo `ena.csv`. Cada elemento de primeiro nivel e, tambem, um 
+O primeiro nivel do dicionario diz respeito as UHEs, cujas chaves sao nomeadas de acordo com o
+valor na coluna `UHE` do arquivo `ena.csv`. Cada elemento de primeiro nivel e, tambem, um
 dicionario. Estes sao todos de `cfg.cycle_lenght` elementos,
 correspondendo a meses/semanas/... de um modelo periódico,
-cujas chaves sao numeradas `"1", "2", ..., "cfg.cycle_lenght"`. Os valores de cada elemento sao vetores de duas posicoes: media e desvio 
+cujas chaves sao numeradas `"1", "2", ..., "cfg.cycle_lenght"`. Os valores de cada elemento sao vetores de duas posicoes: media e desvio
 padrao de uma normal da qual amostrar valores de ENA naquele estágio, para aquela UHE.
 
 Exemplo de dicionario com uma unica UHE
 
 ```julia
-Dict(1 => 
-    Dict(
+Dict(
+    1 => Dict(
         5 => [50.0, 5.0],
         12 => [45.0, 4.5],
         8 => [25.0, 2.5],
@@ -63,8 +62,8 @@ Dict(1 =>
         7 => [35.0, 3.5],
         4 => [60.0, 6.0],
         2 => [80.0, 8.0],
-        10 => [20.0, 2.0]
-    )
+        10 => [20.0, 2.0],
+    ),
 )
 ```
 """
@@ -93,7 +92,7 @@ end
 
 Le um arquivo parametros de execucao do estudo `execucao.json`
 
-Diferente das demais funcoes leitoras, `read_exec()` nao recebe argumento. Caso o julia seja 
+Diferente das demais funcoes leitoras, `read_exec()` nao recebe argumento. Caso o julia seja
 inicializado com um argumento correspondendo ao caminho de um `execucao.json`, este sera usado; do
 contrario, le no diretorio de entrada default `./data`.
 """
@@ -114,8 +113,8 @@ end
 Le um arquivo parametros de execucao do estudo `execucao.json` localizado em `INDIR`.
 
 # Arguments
-    
- * `INDIR`: diretório para leitura do arquivo
+
+  - `INDIR`: diretório para leitura do arquivo
 """
 function read_exec(INDIR::String)::Dict{String,Any}
     EXEC_PATH = joinpath(INDIR, "execucao.json")

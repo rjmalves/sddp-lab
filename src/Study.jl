@@ -20,13 +20,13 @@ Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
 
 # Arguments
 
- * `stages::Int`: numero de estágios para construção do SAA
- * `initial_month::Int`: mes inicial
- * `number_of_samples::Int`: numero de aberturas a cada estagio
- * `n_uhes::Int`: numero de UHEs
- * `period::Int`: tamanho do ciclo
- * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
-     retornado por `Lab.Reader.read_ena()`
+  - `stages::Int`: numero de estágios para construção do SAA
+  - `initial_month::Int`: mes inicial
+  - `number_of_samples::Int`: numero de aberturas a cada estagio
+  - `n_uhes::Int`: numero de UHEs
+  - `period::Int`: tamanho do ciclo
+  - `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
+    retornado por `Lab.Reader.read_ena()`
 """
 function __sample_enas(
     stages::Int,
@@ -62,7 +62,7 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
 
 # Arguments
 
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
 function build_graph(cfg::ConfigData)
     graph = SDDP.Graph(0)
@@ -95,9 +95,9 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
 
 # Arguments
 
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
- * `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
-     `Lab.Reader.read_ena()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
+    `Lab.Reader.read_ena()`
 """
 function build_model(
     cfg::ConfigData, ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}}
@@ -120,13 +120,13 @@ function build_model(
     )
 
     model = SDDP.PolicyGraph(
-        graph; sense=:Min, lower_bound=0.0, optimizer=GLPK.Optimizer
+        graph; sense = :Min, lower_bound = 0.0, optimizer = GLPK.Optimizer
     ) do subproblem, node
 
         # variaveis de estado
         @variable(
             subproblem,
-            0 <= earm[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
+            0 <= earm[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
             SDDP.State,
             initial_value = cfg.parque_uhe.uhes[n].initial_ear
         )
@@ -135,9 +135,9 @@ function build_model(
         @variables(
             subproblem,
             begin
-                0 <= gh[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
-                slack_ghmin[n=1:n_uhes] >= 0
-                vert[n=1:n_uhes] >= 0
+                0 <= gh[n = 1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
+                slack_ghmin[n = 1:n_uhes] >= 0
+                vert[n = 1:n_uhes] >= 0
                 ena[1:n_uhes]
             end
         )
@@ -152,7 +152,9 @@ function build_model(
         # variaveis de decisao das termicas
         @variable(
             subproblem,
-            cfg.parque_ute.utes[n].gtmin <= gt[n=1:n_utes] <= cfg.parque_ute.utes[n].gtmax
+            cfg.parque_ute.utes[n].gtmin <=
+                gt[n = 1:n_utes] <=
+                cfg.parque_ute.utes[n].gtmax
         )
 
         # deficit
@@ -167,7 +169,7 @@ function build_model(
         # Balanco hidrico
         @constraint(
             subproblem,
-            balanco_hidrico[n=1:n_uhes],
+            balanco_hidrico[n = 1:n_uhes],
             earm[n].out ==
                 earm[n].in - gh[n] - vert[n] +
             ena[n] +
@@ -196,7 +198,7 @@ function build_model(
         # Nivel minimo
         @constraint(
             subproblem,
-            fim_horizonte[n=1:n_uhes],
+            fim_horizonte[n = 1:n_uhes],
             earm[n].out >= cfg.parque_uhe.uhes[n].earmin
         )
 
@@ -220,14 +222,14 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
 
 # Arguments
 
- * `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
 function train_model(model::SDDP.PolicyGraph, cfg::ConfigData)
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
-    return SDDP.train(model; iteration_limit=cfg.max_iterations)
+    return SDDP.train(model; iteration_limit = cfg.max_iterations)
 end
 
 """
@@ -237,24 +239,24 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
 
 # Arguments
 
-* `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
-* `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
 function simulate_model(
     model::SDDP.PolicyGraph, cfg::ConfigData
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
     sampler = SDDP.InSampleMonteCarlo(;
-        max_depth=cfg.cycles_simulated_series * cfg.cycle_lenght,
-        terminate_on_dummy_leaf=false,
+        max_depth = cfg.cycles_simulated_series * cfg.cycle_lenght,
+        terminate_on_dummy_leaf = false,
     )
     @info "Realizando simulação"
     return SDDP.simulate(
         model,
         cfg.number_simulated_series,
         [:gt, :gh, :earm, :deficit, :vert, :ena];
-        sampling_scheme=sampler,
-        custom_recorders=Dict{Symbol,Function}(
+        sampling_scheme = sampler,
+        custom_recorders = Dict{Symbol,Function}(
             :cmo => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_energetico]),
             :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
             :custo_total => (sp::JuMP.Model) -> JuMP.objective_value(sp),
