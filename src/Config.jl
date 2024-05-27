@@ -51,7 +51,7 @@ Constroi um `ParqueUHEConfigData` a partir de um vetor de `UHEConfigData`
 """
 function ParqueUHEConfigData(uhes::Vector{UHEConfigData})
     n_uhes = length(uhes)
-    ParqueUHEConfigData(n_uhes, uhes)
+    return ParqueUHEConfigData(n_uhes, uhes)
 end
 
 """
@@ -93,7 +93,7 @@ Constroi um `ParqueUTEConfigData` a partir de um vetor de `UTEConfigData`
 """
 function ParqueUTEConfigData(utes::Vector{UTEConfigData})
     n_utes = length(utes)
-    ParqueUTEConfigData(n_utes, utes)
+    return ParqueUTEConfigData(n_utes, utes)
 end
 """
     SystemConfigData
@@ -164,26 +164,27 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
             x["EARMIN"],
             x["EARMAX"],
             x["EARM_INICIAL"],
-            x["PENALIDADE_VERTIMENTO"]),
-        jsondata["UHEs"])
+            x["PENALIDADE_VERTIMENTO"],
+        ),
+        jsondata["UHEs"],
+    )
     parque_uhe = ParqueUHEConfigData(uhes)
 
     utes = map(
-        x -> UTEConfigData(x["GTMIN"],
-        x["GTMAX"],
-        x["CUSTO_GERACAO"]),
-        jsondata["UTEs"]
+        x -> UTEConfigData(x["GTMIN"], x["GTMAX"], x["CUSTO_GERACAO"]), jsondata["UTEs"]
     )
     parque_ute = ParqueUTEConfigData(utes)
 
-    system = SystemConfigData(jsondata["SISTEMA"]["CUSTO_DEFICIT"],
-        jsondata["SISTEMA"]["DEMANDA"])
+    system = SystemConfigData(
+        jsondata["SISTEMA"]["CUSTO_DEFICIT"], jsondata["SISTEMA"]["DEMANDA"]
+    )
 
     if jsondata["DESCONTO_ESTAGIO"] && jsondata["DESCONTO_CICLO"] && jsondata["CICLICO"]
         @warn "Desconto por estágio e ciclo ativados simultaneamente. Será considerado como desconto por ciclo."
     end
 
-    return ConfigData(jsondata["MES_INICIAL"],
+    return ConfigData(
+        jsondata["MES_INICIAL"],
         jsondata["CICLOS"],
         jsondata["TAXA_DESCONTO"],
         jsondata["DESCONTO_ESTAGIO"],
@@ -196,7 +197,8 @@ function ConfigData(jsondata::Dict{String,Any})::ConfigData
         jsondata["NUMERO_CENARIOS_ESTAGIO"],
         parque_uhe,
         parque_ute,
-        system)
+        system,
+    )
 end
 
 end

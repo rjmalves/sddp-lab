@@ -77,8 +77,10 @@ function read_ena(INDIR::String, CFG::ConfigData)::Dict{Int,Dict{Int,Vector{Floa
     uhes_ordenadas = map(uhe -> uhe.name, CFG.parque_uhe.uhes)
     out = Dict()
     for u in uhes
-        aux = Dict((e[Symbol(stage_name)], [e.MEDIA, e.DESVIO])
-                   for e in CSV.File(ENA_PATH) if e.UHE == u)
+        aux = Dict(
+            (e[Symbol(stage_name)], [e.MEDIA, e.DESVIO]) for
+            e in CSV.File(ENA_PATH) if e.UHE == u
+        )
         indice_u = findfirst(item -> item == string("", u), uhes_ordenadas)
         out[indice_u] = aux
     end
