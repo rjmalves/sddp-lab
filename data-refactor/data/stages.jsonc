@@ -1,0 +1,9 @@
+{
+    // explicit | daily | weekly | monthly | yearly
+    "kind": "explicit",
+    "params": {
+        "file": "stages.csv"
+    }
+    // TODO - stages with different lengths demand
+    // unit conversions when constructing each subproblem
+}

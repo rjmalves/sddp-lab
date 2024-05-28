@@ -1,0 +1,53 @@
+{
+    // policy | simulation - lower_simulation | upper_simulation
+    "task": "policy",
+    "solver": {
+        // CLP | GLPK | HiGHS | CPLEX | Gurobi | ...
+        "name": "CLP",
+        "params": {
+            "time_limit": 60,
+            "threads": 1
+        }
+    },
+    "resources": {
+        // serial | parallel  
+        "strategy": "serial",
+        "processes": 1,
+        // TCP/IP (Distributed) | MPI (MPI.jl)
+        "communication": "TCP/IP",
+        // slurm | pbs | local (ClusterManagers.jl)
+        "manager": "slurm"
+    },
+    "inputs": {
+        "path": "data",
+        // Each file defines settings for a specific
+        // component of the lab
+        "files": {
+            // Settings regarding the solution algorithm
+            // that is used to solve the optimization problem
+            // (decomposition strategy, discretization, etc.)
+            "algorithm": "algorithm.jsonc",
+            // Defines the stages that compose the problem
+            // (initial dates, time periods, etc.)
+            "stages": "stages.jsonc",
+            // Defines the scenarios that are used to the
+            // optimization, including the scenario generation
+            // model and its parameters
+            "scenarios": "scenarios.jsonc",
+            // Defines the system that is being optimized,
+            // with all the hydro plants, thermal plants, 
+            // load buses and exchange lines.
+            "system": "system.jsonc",
+            // Defines the constraints that are used in some
+            // problems, in a generic way
+            "constraints": "constraints.jsonc"
+        }
+    },
+    "outputs":{
+        "path": "out",
+        // can disable some of the outputs
+        "policy": true,
+        "simulation": true,
+        "plots": true
+    }
+}
