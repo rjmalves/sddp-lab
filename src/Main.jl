@@ -13,7 +13,7 @@ Realiza um estudo completo: aproxima politica, realiza simulacao e escreve todos
 
 # Arguments
 
- * `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
+  - `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
 """
 function compute_simulate_policy(execution::Dict{String,Any})
     cfg = read_config(execution["INDIR"])
@@ -42,10 +42,21 @@ function compute_simulate_policy(execution::Dict{String,Any})
         plot_model_cuts(cuts, cfg, execution["OUTDIR"])
     end
 
-    if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"] || execution["ESCREVECORTES"] || execution["PLOTACORTES"]
+    if execution["ESCREVEOPERACAO"] ||
+        execution["PLOTAOPERACAO"] ||
+        execution["ESCREVECORTES"] ||
+        execution["PLOTACORTES"]
         @info "Escrevendo eco dos arquivos de entrada em " * execution["OUTDIR"]
-        cp(joinpath(execution["INDIR"], "config.json"), joinpath(execution["OUTDIR"], "config.json"), force=true)
-        cp(joinpath(execution["INDIR"], "ena.csv"), joinpath(execution["OUTDIR"], "ena.csv"), force=true)
+        cp(
+            joinpath(execution["INDIR"], "config.json"),
+            joinpath(execution["OUTDIR"], "config.json");
+            force = true,
+        )
+        cp(
+            joinpath(execution["INDIR"], "ena.csv"),
+            joinpath(execution["OUTDIR"], "ena.csv");
+            force = true,
+        )
     end
 
     @info "Execucao completa"
