@@ -6,18 +6,9 @@ struct Bus <: SystemEntity
     deficit_cost::Real
 end
 
-function Bus(d::Dict{String,Any})
-    # Key and type validation
-    e = CompositeException()
-    __validate_keys!(d, ["id", "name", "deficit_cost"], e)
-    __validate_key_types!(d, ["id", "name", "deficit_cost"], [Integer, String, Real], e)
-    throw_composite_exception_if_any(e)
-
-    # Content validation
-    __validate_bus_id!(d["id"], e)
-    __validate_bus_name!(d["name"], e)
-    __validate_bus_deficit_cost!(d["deficit_cost"], e)
-    throw_composite_exception_if_any(e)
+function Bus(d::Dict{String,Any}; e::CompositeException = CompositeException())
+    __validate_bus_keys_types!(d, e)
+    __validate_bus_content!(d, e)
 
     return Bus(d["id"], d["name"], d["deficit_cost"])
 end
@@ -28,21 +19,22 @@ struct Buses <: SystemEntitySet
     entities::Vector{Bus}
 end
 
-function Buses(d::Vector{Dict{String,Any}})
+function Buses(d::Vector{Dict{String,Any}}; e::CompositeException = CompositeException())
     # Constructs each Bus
     entities = Bus[]
     for i in 1:length(d)
-        push!(entities, Bus(d[i]))
+        push!(entities, Bus(d[i]; e = e))
     end
 
     # Consistency validation
-    e = CompositeException()
-    __validate_buses_unique_ids!(entities, e)
-    __validate_buses_unique_names!(entities, e)
-    throw_composite_exception_if_any(e)
+    __validate_buses_consistency!(
+        [bus.id for bus in entities], [bus.name for bus in entities], e
+    )
 
     return Buses(entities)
 end
+
+# SDDP METHODS -----------------------------------------------------------------------------
 
 # GENERAL METHODS --------------------------------------------------------------------------
 
@@ -58,4 +50,8 @@ end
 
 function get_ids(ses::Buses)
     return [get_id(b) for b in ses.entities]
+end
+
+function length(ses::Buses)
+    return length(get_ids(ses))
 end
