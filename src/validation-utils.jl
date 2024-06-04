@@ -23,6 +23,13 @@ function __validate_key_types!(
     return nothing
 end
 
+# FILE VALIDATORS --------------------------------------------------------------------------
+
+function __validate_file!(filename::String, e::CompositeException)
+    isfile(filename) || push!(e, ErrorException("$filename not found!"))
+    return nothing
+end
+
 # HELPERS ----------------------------------------------------------------------------------
 
 function __parse_as_type!(d::Dict, k::String, t::DataType)
@@ -61,8 +68,18 @@ function __valid_name_regex_match(name::String)
     return false
 end
 
-function throw_composite_exception_if_any(e::CompositeException)
+function __throw_composite_exception_if_any(e::CompositeException)
     if length(e) > 0
         throw(e)
     end
+end
+
+function __dataframe_to_dict(df::DataFrame)::Vector{Dict{String,Any}}
+    columns = names(df)
+    d::Vector{Dict{String,Any}} = []
+    for i in 1:nrow(df)
+        push!(d, Dict{String,Any}(name => df[i, name] for name in columns))
+    end
+
+    return d
 end
