@@ -32,7 +32,7 @@
             "file": "hydros.csv"
         },
         "params": {
-            "downstream_id": null,
+            "downstream_id": 0,
             "productivity": 1.0,
             "spillage_penalty": 0.01
         }
