@@ -1,3 +1,44 @@
+# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
+
+function __validate_hydro_keys_types!(d::Dict{String,Any}, e::CompositeException)
+    __validate_keys!(
+        d,
+        [
+            "id",
+            "downstream_id",
+            "name",
+            "bus_id",
+            "productivity",
+            "initial_storage",
+            "min_storage",
+            "max_storage",
+            "min_generation",
+            "max_generation",
+            "spillage_penalty",
+        ],
+        e,
+    )
+    __validate_key_types!(
+        d,
+        [
+            "id",
+            "downstream_id",
+            "name",
+            "bus_id",
+            "productivity",
+            "initial_storage",
+            "min_storage",
+            "max_storage",
+            "min_generation",
+            "max_generation",
+            "spillage_penalty",
+        ],
+        [Integer, Integer, String, Integer, Real, Real, Real, Real, Real, Real, Real],
+        e,
+    )
+    return __throw_composite_exception_if_any(e)
+end
+
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_hydro_id(id::Integer, e::CompositeException)
@@ -24,9 +65,12 @@ function __validate_hydro_name(name::String, e::CompositeException)
     return nothing
 end
 
-function __validate_hydro_bus_id(bus_id::Integer, e::CompositeException)
-    bus_id > 0 || push!(e, AssertionError("Hydro bus_id ($bus_id) must be positive"))
-    return nothing
+function __validate_hydro_bus_id(bus_id::Integer, buses::Buses, e::CompositeException)
+    existing_bus_ids = get_ids(buses)
+    bus_index = findfirst(==(bus_id), existing_bus_ids)
+    bus_index !== nothing ||
+        push!(e, AssertionError("Hydro bus_id ($bus_id) not found in buses"))
+    return bus_index
 end
 
 function __validate_hydro_productivity(productivity::Real, e::CompositeException)
@@ -85,18 +129,49 @@ function __validate_hydro_spillage_penalty(spillage_penalty::Real, e::CompositeE
     return nothing
 end
 
+function __validate_hydro_content!(
+    d::Dict{String,Any}, buses::Buses, e::CompositeException
+)::Ref{Bus}
+    __validate_hydro_id(d["id"], e)
+    __validate_hydro_downstream_id(d["downstream_id"], e)
+    __validate_hydro_name(d["name"], e)
+    bus_index = __validate_hydro_bus_id(d["bus_id"], buses, e)
+    __validate_hydro_productivity(d["productivity"], e)
+    __validate_hydro_storage(d["initial_storage"], d["min_storage"], d["max_storage"], e)
+    __validate_hydro_generation(d["min_generation"], d["max_generation"], e)
+    __validate_hydro_spillage_penalty(d["spillage_penalty"], e)
+    __throw_composite_exception_if_any(e)
+    return Ref(buses.entities[bus_index])
+end
+
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
 
-function __validate_hydros_unique_ids!(hydros::Vector{Hydro}, e::CompositeException)
-    ids = [b.id for b in hydros]
-    length(unique(ids)) == length(ids) ||
+function __validate_hydros_unique_ids!(hydro_ids::Vector{<:Integer}, e::CompositeException)
+    length(unique(hydro_ids)) == length(hydro_ids) ||
         push!(e, AssertionError("Hydro ids must be unique"))
     return nothing
 end
 
-function __validate_hydros_unique_names!(hydros::Vector{Hydro}, e::CompositeException)
-    names = [b.name for b in hydros]
-    length(unique(names)) == length(names) ||
+function __validate_hydros_unique_names!(hydro_names::Vector{String}, e::CompositeException)
+    length(unique(hydro_names)) == length(hydro_names) ||
         push!(e, AssertionError("Hydro names must be unique"))
     return nothing
+end
+
+function __validate_hydro_topology(topology_graph::DiGraph, e::CompositeException)
+    # Check if the graph ia a DAG
+    !is_cyclic(topology_graph) || push!(e, AssertionError("Hydro topology must be a DAG"))
+    return nothing
+end
+
+function __validate_hydros_consistency!(
+    hydro_ids::Vector{<:Integer},
+    hydro_names::Vector{String},
+    topology_graph::DiGraph,
+    e::CompositeException,
+)
+    __validate_hydros_unique_ids!(hydro_ids, e)
+    __validate_hydros_unique_names!(hydro_names, e)
+    __validate_hydro_topology(topology_graph, e)
+    return __throw_composite_exception_if_any(e)
 end

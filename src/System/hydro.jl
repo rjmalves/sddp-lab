@@ -12,59 +12,19 @@ struct Hydro <: SystemEntity
     min_generation::Real
     max_generation::Real
     spillage_penalty::Real
+    # Reference to other system elements
+    bus::Ref{Bus}
 end
 
-function Hydro(d::Dict{String,Any})
+function Hydro(
+    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
+)
 
     # Key and type validation
-    e = CompositeException()
-    __validate_keys!(
-        d,
-        [
-            "id",
-            "downstream_id",
-            "name",
-            "bus_id",
-            "productivity",
-            "initial_storage",
-            "min_storage",
-            "max_storage",
-            "min_generation",
-            "max_generation",
-            "spillage_penalty",
-        ],
-        e,
-    )
-    __validate_key_types!(
-        d,
-        [
-            "id",
-            "downstream_id",
-            "name",
-            "bus_id",
-            "productivity",
-            "initial_storage",
-            "min_storage",
-            "max_storage",
-            "min_generation",
-            "max_generation",
-            "spillage_penalty",
-        ],
-        [Integer, Integer, String, Integer, Real, Real, Real, Real, Real, Real, Real],
-        e,
-    )
-    throw_composite_exception_if_any(e)
+    __validate_hydro_keys_types!(d, e)
 
     # Content validation
-    __validate_hydro_id(d["id"], e)
-    __validate_hydro_downstream_id(d["downstream_id"], e)
-    __validate_hydro_name(d["name"], e)
-    __validate_hydro_bus_id(d["bus_id"], e)
-    __validate_hydro_productivity(d["productivity"], e)
-    __validate_hydro_storage(d["initial_storage"], d["min_storage"], d["max_storage"], e)
-    __validate_hydro_generation(d["min_generation"], d["max_generation"], e)
-    __validate_hydro_spillage_penalty(d["spillage_penalty"], e)
-    throw_composite_exception_if_any(e)
+    bus_ref = __validate_hydro_content!(d, buses, e)
 
     return Hydro(
         d["id"],
@@ -78,6 +38,7 @@ function Hydro(d::Dict{String,Any})
         d["min_generation"],
         d["max_generation"],
         d["spillage_penalty"],
+        bus_ref,
     )
 end
 
@@ -85,22 +46,46 @@ end
 
 struct Hydros <: SystemEntitySet
     entities::Vector{Hydro}
+    topology::DiGraph
 end
 
-function Hydros(d::Vector{Dict{String,Any}})
-    # Constructs each Hydro
+function Hydros(
+    d::Vector{Dict{String,Any}}, buses::Buses; e::CompositeException = CompositeException()
+)
+    # Constructs each Hydro and the topology graph
     entities = Hydro[]
     for i in 1:length(d)
-        push!(entities, Hydro(d[i]))
+        push!(entities, Hydro(d[i], buses; e = e))
     end
+    topology_graph = __build_hydro_dag(entities)
 
     # Consistency validation
-    e = CompositeException()
-    __validate_hydros_unique_ids!(entities, e)
-    __validate_hydros_unique_names!(entities, e)
-    throw_composite_exception_if_any(e)
+    __validate_hydros_consistency!(
+        [hydro.id for hydro in entities],
+        [hydro.name for hydro in entities],
+        topology_graph,
+        e,
+    )
 
-    return Hydros(entities)
+    return Hydros(entities, topology_graph)
+end
+
+function __build_hydro_dag(entities::Vector{Hydro})
+    g = DiGraph(length(entities))
+    for hydro in entities
+        hydro_id = hydro.id
+        downstream_id = hydro.downstream_id
+        if downstream_id !== 0
+            add_edge!(g, hydro_id, downstream_id)
+        end
+    end
+    return g
+end
+
+function Hydros(
+    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
+)
+    return Hydros(__read_replacing_default_values(d), buses; e = e)
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------
@@ -127,4 +112,22 @@ end
 
 function get_ids(ses::Hydros)
     return [get_id(b) for b in ses.entities]
+end
+
+function length(ses::Hydros)
+    return length(get_ids(ses))
+end
+
+# SDDP METHODS -----------------------------------------------------------------------------
+
+# HELPER METHODS ---------------------------------------------------------------------------
+
+function upstream(id::Integer, hydros::Hydros)
+    upstream_ids = inneighbors(hydros.topology, id)
+    return length(upstream_ids) == 0 ? nothing : @view hydros.entities[upstream_ids]
+end
+
+function downstream(id::Integer, hydros::Hydros)
+    downstream_id = outneighbors(hydros.topology, id)
+    return length(downstream_id) == 0 ? nothing : @view hydros.entities[downstream_id[1]]
 end
