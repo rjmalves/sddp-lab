@@ -12,25 +12,26 @@ struct Line <: SystemEntity
     target_bus::Ref{Bus}
 end
 
-function Line(
-    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
-)
-    # Key and type validation
-    __validate_line_keys_types!(d, e)
+function Line(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid_keys_types = __validate_line_keys_types!(d, e)
+    bus_refs = valid_keys_types ? __validate_line_content!(d, buses, e) : nothing
+    valid_content = bus_refs !== nothing
+    valid = valid_keys_types && valid_content
 
-    # Content and consistency validation
-    bus_refs = __validate_line_content!(d, buses, e)
-
-    return Line(
-        d["id"],
-        d["name"],
-        d["source_bus_id"],
-        d["target_bus_id"],
-        d["capacity"],
-        d["exchange_penalty"],
-        bus_refs[:source],
-        bus_refs[:target],
-    )
+    return if valid
+        Line(
+            d["id"],
+            d["name"],
+            d["source_bus_id"],
+            d["target_bus_id"],
+            d["capacity"],
+            d["exchange_penalty"],
+            bus_refs[:source],
+            bus_refs[:target],
+        )
+    else
+        nothing
+    end
 end
 
 # CLASS Lines -----------------------------------------------------------------------
@@ -38,36 +39,36 @@ struct Lines <: SystemEntitySet
     entities::Vector{Line}
 end
 
-function Lines(
-    d::Vector{Dict{String,Any}}, buses::Buses; e::CompositeException = CompositeException()
-)
+function Lines(d::Vector{Dict{String,Any}}, buses::Buses, e::CompositeException)
     # Constructs each Line
     entities = Line[]
     for i in 1:length(d)
-        push!(entities, Line(d[i], buses; e = e))
+        entity = Line(d[i], buses, e)
+        if entity !== nothing
+            push!(entities, entity)
+        end
     end
 
     # Consistency validation
-    __validate_lines_consistency!(
+    valid = __validate_lines_consistency!(
         [line.id for line in entities], [line.name for line in entities], e
     )
 
-    return Lines(entities)
+    return valid ? Lines(entities) : Lines([])
 end
 
-function Lines(
-    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
-)
-    return Lines(__read_replacing_default_values(d), buses; e = e)
-end
+# SDDP METHODS -----------------------------------------------------------------------------
+
+# TODO
+function add_system_elements!(m::JuMP.Model, ses::Lines) end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 
-function get_id(s::Bus)
+function get_id(s::Bus)::Integer
     return s.id
 end
 
-function get_params(s::Line)
+function get_params(s::Line)::Dict{String,Any}
     return Dict{String,Any}(
         "id" => s.id,
         "name" => s.name,
@@ -78,12 +79,10 @@ function get_params(s::Line)
     )
 end
 
-function get_ids(ses::Lines)
+function get_ids(ses::Lines)::Vector{Integer}
     return [get_id(b) for b in ses.entities]
 end
 
-function length(ses::Lines)
+function length(ses::Lines)::Integer
     return length(get_ids(ses))
 end
-
-# SDDP METHODS -----------------------------------------------------------------------------

@@ -16,30 +16,30 @@ struct Hydro <: SystemEntity
     bus::Ref{Bus}
 end
 
-function Hydro(
-    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
-)
-
-    # Key and type validation
-    __validate_hydro_keys_types!(d, e)
-
-    # Content validation
+function Hydro(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid_keys_types = __validate_hydro_keys_types!(d, e)
     bus_ref = __validate_hydro_content!(d, buses, e)
+    valid_content = bus_ref !== nothing
+    valid = valid_keys_types && valid_content
 
-    return Hydro(
-        d["id"],
-        d["downstream_id"],
-        d["name"],
-        d["bus_id"],
-        d["productivity"],
-        d["initial_storage"],
-        d["min_storage"],
-        d["max_storage"],
-        d["min_generation"],
-        d["max_generation"],
-        d["spillage_penalty"],
-        bus_ref,
-    )
+    return if valid
+        Hydro(
+            d["id"],
+            d["downstream_id"],
+            d["name"],
+            d["bus_id"],
+            d["productivity"],
+            d["initial_storage"],
+            d["min_storage"],
+            d["max_storage"],
+            d["min_generation"],
+            d["max_generation"],
+            d["spillage_penalty"],
+            bus_ref,
+        )
+    else
+        nothing
+    end
 end
 
 # CLASS Hydros -----------------------------------------------------------------------
@@ -49,28 +49,29 @@ struct Hydros <: SystemEntitySet
     topology::DiGraph
 end
 
-function Hydros(
-    d::Vector{Dict{String,Any}}, buses::Buses; e::CompositeException = CompositeException()
-)
+function Hydros(d::Vector{Dict{String,Any}}, buses::Buses, e::CompositeException)
     # Constructs each Hydro and the topology graph
     entities = Hydro[]
     for i in 1:length(d)
-        push!(entities, Hydro(d[i], buses; e = e))
+        entity = Hydro(d[i], buses, e)
+        if entity !== nothing
+            push!(entities, entity)
+        end
     end
     topology_graph = __build_hydro_dag(entities)
 
     # Consistency validation
-    __validate_hydros_consistency!(
+    valid = __validate_hydros_consistency!(
         [hydro.id for hydro in entities],
         [hydro.name for hydro in entities],
         topology_graph,
         e,
     )
 
-    return Hydros(entities, topology_graph)
+    return valid ? Hydros(entities, topology_graph) : Hydros([], DiGraph(0))
 end
 
-function __build_hydro_dag(entities::Vector{Hydro})
+function __build_hydro_dag(entities::Vector{Hydro})::DiGraph
     g = DiGraph(length(entities))
     for hydro in entities
         hydro_id = hydro.id
@@ -82,19 +83,13 @@ function __build_hydro_dag(entities::Vector{Hydro})
     return g
 end
 
-function Hydros(
-    d::Dict{String,Any}, buses::Buses; e::CompositeException = CompositeException()
-)
-    return Hydros(__read_replacing_default_values(d), buses; e = e)
-end
-
 # GENERAL METHODS --------------------------------------------------------------------------
 
-function get_id(s::Hydro)
+function get_id(s::Hydro)::Integer
     return s.id
 end
 
-function get_params(s::Hydro)
+function get_params(s::Hydro)::Dict{String,Any}
     return Dict{String,Any}(
         "id" => s.id,
         "downstream_id" => s.downstream_id,
@@ -110,15 +105,18 @@ function get_params(s::Hydro)
     )
 end
 
-function get_ids(ses::Hydros)
+function get_ids(ses::Hydros)::Vector{Integer}
     return [get_id(b) for b in ses.entities]
 end
 
-function length(ses::Hydros)
+function length(ses::Hydros)::Integer
     return length(get_ids(ses))
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
+
+# TODO
+function add_system_elements!(m::JuMP.Model, ses::Hydros) end
 
 # HELPER METHODS ---------------------------------------------------------------------------
 
