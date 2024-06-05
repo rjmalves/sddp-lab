@@ -1,11 +1,14 @@
 # FORM VALIDATORS --------------------------------------------------------------------------
 
-function __validate_keys!(d::Dict, keys::Vector{String}, e::CompositeException)
+function __validate_keys!(d::Dict, keys::Vector{String}, e::CompositeException)::Bool
+    valid = true
     for k in keys
-        haskey(d, k) || push!(e, ErrorException("Key '$k' not found in dictionary"))
+        valid_k = haskey(d, k)
+        valid_k || push!(e, ErrorException("Key '$k' not found in dictionary"))
+        valid = valid && valid_k
     end
 
-    return nothing
+    return valid
 end
 
 function __validate_key_length(
@@ -14,20 +17,24 @@ function __validate_key_length(
 
 function __validate_key_types!(
     d::Dict, keys::Vector{String}, types::Vector{DataType}, e::CompositeException
-)
+)::Bool
+    valid = true
     for (k, t) in zip(keys, types)
         aux = __parse_as_type!(d, k, t)
-        typeof(aux) <: Exception ? push!(e, aux) : nothing
+        valid_t = !(typeof(aux) <: Exception)
+        valid_t || push!(e, aux)
+        valid = valid && valid_t
     end
 
-    return nothing
+    return valid
 end
 
 # FILE VALIDATORS --------------------------------------------------------------------------
 
-function __validate_file!(filename::String, e::CompositeException)
-    isfile(filename) || push!(e, ErrorException("$filename not found!"))
-    return nothing
+function __validate_file!(filename::String, e::CompositeException)::Bool
+    valid = isfile(filename)
+    valid || push!(e, ErrorException("$filename not found!"))
+    return valid
 end
 
 # HELPERS ----------------------------------------------------------------------------------
@@ -66,20 +73,4 @@ function __valid_name_regex_match(name::String)
         return regex_match.match == name
     end
     return false
-end
-
-function __throw_composite_exception_if_any(e::CompositeException)
-    if length(e) > 0
-        throw(e)
-    end
-end
-
-function __dataframe_to_dict(df::DataFrame)::Vector{Dict{String,Any}}
-    columns = names(df)
-    d::Vector{Dict{String,Any}} = []
-    for i in 1:nrow(df)
-        push!(d, Dict{String,Any}(name => df[i, name] for name in columns))
-    end
-
-    return d
 end
