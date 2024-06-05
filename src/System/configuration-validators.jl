@@ -57,9 +57,13 @@ function __validate_required_default_values!(
     valid_column_keys = __validate_keys!(
         default_values, columns_requiring_default_values, e
     )
-    valid_column_types = __validate_key_types!(
+    valid_column_types = if valid_column_keys
+        __validate_key_types!(
         default_values, columns_requiring_default_values, columns_data_types, e
     )
+    else
+        false
+    end
     columns_in_dataframe = __validate_columns_in_dataframe!(
         df, collect(keys(default_values)), e
     )
