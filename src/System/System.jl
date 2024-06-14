@@ -66,8 +66,8 @@ include("line.jl")
 include("hydro-validators.jl")
 include("hydro.jl")
 
-# include("thermal-validators.jl")
-# include("thermal.jl")
+include("thermal-validators.jl")
+include("thermal.jl")
 
 include("configuration-validators.jl")
 include("configuration.jl")

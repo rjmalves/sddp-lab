@@ -5,7 +5,7 @@ struct Configuration
     buses::Buses
     lines::Lines
     hydros::Hydros
-    # thermals::Thermals
+    thermals::Thermals
 end
 
 function Configuration(d::Dict{String,Any}, e::CompositeException)
@@ -16,13 +16,13 @@ function Configuration(d::Dict{String,Any}, e::CompositeException)
     buses_d = __validate_system_entities_content!(d["buses"], e)
     lines_d = __validate_system_entities_content!(d["lines"], e)
     hydros_d = __validate_system_entities_content!(d["hydros"], e)
-    # thermals_d = __validate_system_entities_content!(d["thermals"], e)
+    thermals_d = __validate_system_entities_content!(d["thermals"], e)
 
     buses = Buses(buses_d, e)
     lines = Lines(lines_d, buses, e)
     hydros = Hydros(hydros_d, buses, e)
-    # thermals = Thermals(__read_replacing_default_values(d["thermals"]), buses, e)
-    return Configuration(buses, lines, hydros)
+    thermals = Thermals(thermals_d, buses, e)
+    return Configuration(buses, lines, hydros, thermals)
 end
 
 function Configuration(filename::String, e::CompositeException)
