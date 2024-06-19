@@ -1,0 +1,17 @@
+{
+    "solver": {
+        // CLP | GLPK | HiGHS | CPLEX | Gurobi | ...
+        "name": "CLP",
+        "params": {
+            "time_limit": 60,
+            "threads": 1
+        }
+    },
+    // serial | parallel  
+    "strategy": "serial",
+    "processes": 1,
+    // TCP/IP (Distributed) | MPI (MPI.jl)
+    "communication": "TCP/IP",
+    // slurm | pbs | local (ClusterManagers.jl)
+    "manager": "slurm"
+}
