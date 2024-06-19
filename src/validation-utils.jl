@@ -57,7 +57,7 @@ function __parse_as_type!(d::Dict, k::String, t::DataType)
             return nothing
         catch
             v = d[k]
-            err = ErrorException("Value '$v' can't be converted to $t")
+            err = ErrorException("Key '$k' can't be converted to $t")
             return err
         end
     end
@@ -72,7 +72,7 @@ function __try_conversion!(d::Dict, k::String, t::Type{String})
 end
 
 function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
-    aux = stack(d[k])
+    aux = stack(d[k], dims=1)
     return d[k] = convert(t, aux)
 end
 
