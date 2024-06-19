@@ -11,9 +11,18 @@ function __validate_keys!(d::Dict, keys::Vector{String}, e::CompositeException):
     return valid
 end
 
-function __validate_key_length(
+function __validate_key_lengths!(
     d::Dict, keys::Vector{String}, sizes::Vector{Int}, e::CompositeException
-) end
+)::Bool
+    valid = true
+    for (k, s) in zip(keys, sizes)
+        valid_l = length(d[k]) == s
+        valid_l || push!(e, ErrorException("Key '$k' has length =/= $s"))
+        valid = valid && valid_l
+    end
+
+    return valid
+end
 
 function __validate_key_types!(
     d::Dict, keys::Vector{String}, types::Vector{DataType}, e::CompositeException
