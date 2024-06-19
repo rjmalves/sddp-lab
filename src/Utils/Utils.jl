@@ -1,5 +1,7 @@
 module Utils
 
+using DataFrames
+
 include("validation-utils.jl")
 include("reading-utils.jl")
 
