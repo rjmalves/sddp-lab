@@ -23,9 +23,9 @@
         "min_iterations": 10,
         "max_iterations": 50,
         // Early stopping criteria and params
-        "early_stopping": {
-            // zinf | statistical | gap | ...
-            "kind": "zinf",
+        "stopping_criteria": {
+            // lower_bound_stability | statistical | gap | ...
+            "kind": "lower_bound_stability",
             "params": {
                 // Threshold for the early
                 // stopping in % of zinf delta
