@@ -11,9 +11,18 @@ function __validate_keys!(d::Dict, keys::Vector{String}, e::CompositeException):
     return valid
 end
 
-function __validate_key_length(
+function __validate_key_lengths!(
     d::Dict, keys::Vector{String}, sizes::Vector{Int}, e::CompositeException
-) end
+)::Bool
+    valid = true
+    for (k, s) in zip(keys, sizes)
+        valid_l = length(d[k]) == s
+        valid_l || push!(e, ErrorException("Key '$k' has length =/= $s"))
+        valid = valid && valid_l
+    end
+
+    return valid
+end
 
 function __validate_key_types!(
     d::Dict, keys::Vector{String}, types::Vector{DataType}, e::CompositeException
@@ -48,7 +57,7 @@ function __parse_as_type!(d::Dict, k::String, t::DataType)
             return nothing
         catch
             v = d[k]
-            err = ErrorException("Value '$v' can't be converted to $t")
+            err = ErrorException("Key '$k' can't be converted to $t")
             return err
         end
     end
@@ -63,7 +72,7 @@ function __try_conversion!(d::Dict, k::String, t::Type{String})
 end
 
 function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
-    aux = stack(d[k])
+    aux = stack(d[k], dims=1)
     return d[k] = convert(t, aux)
 end
 
