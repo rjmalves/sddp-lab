@@ -12,14 +12,18 @@ function Configuration(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
     d["buses"] = Buses(d["buses"], e)
-    d["lines"] = Lines(d["lines"], buses, e)
-    d["hydros"] = Hydros(d["hydros"], buses, e)
-    d["thermals"] = Thermals(d["thermals"], buses, e)
+    d["lines"] = Lines(d["lines"], d["buses"], e)
+    d["hydros"] = Hydros(d["hydros"], d["buses"], e)
+    d["thermals"] = Thermals(d["thermals"], d["buses"], e)
 
     # Keys and types validation
-    __validate_configuration_keys_types!(d, e)
+    valid = __validate_configuration_keys_types!(d, e)
 
-    return Configuration(d["buses"], d["lines"], d["hydros"], d["thermals"])
+    return if valid
+        Configuration(d["buses"], d["lines"], d["hydros"], d["thermals"])
+    else
+        nothing
+    end
 end
 
 function Configuration(filename::String, e::CompositeException)
