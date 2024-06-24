@@ -64,7 +64,7 @@ function add_system_elements!(m::JuMP.Model, ses::Lines) end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 
-function get_id(s::Bus)::Integer
+function get_id(s::Line)::Integer
     return s.id
 end
 

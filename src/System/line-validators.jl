@@ -62,7 +62,7 @@ end
 
 function __validate_line_content!(
     d::Dict{String,Any}, buses::Buses, e::CompositeException
-)::Union{Ref{Bus},Nothing}
+)::Union{Dict{Symbol,Ref{Bus}},Nothing}
     valid_id = __validate_line_id!(d, e)
     valid_name = __validate_line_name!(d, e)
     source_bus_index = __validate_line_bus!(d, "source_bus_id", buses, e)
