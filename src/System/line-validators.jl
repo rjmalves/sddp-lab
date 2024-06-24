@@ -1,17 +1,13 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_line_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_keys = __validate_keys!(
-        d,
-        ["id", "name", "source_bus_id", "target_bus_id", "capacity", "exchange_penalty"],
-        e,
-    )
-    valid_types = __validate_key_types!(
-        d,
-        ["id", "name", "source_bus_id", "target_bus_id", "capacity", "exchange_penalty"],
-        [Integer, String, Integer, Integer, Real, Real],
-        e,
-    )
+    keys = ["id", "name", "source_bus_id", "target_bus_id", "capacity", "exchange_penalty"]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = if valid_keys
+        __validate_key_types!(d, keys, [Integer, String, Integer, Integer, Real, Real], e)
+    else
+        false
+    end
     return valid_keys && valid_types
 end
 

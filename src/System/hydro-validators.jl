@@ -1,41 +1,30 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_hydro_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_keys = __validate_keys!(
+    keys = [
+        "id",
+        "downstream_id",
+        "name",
+        "bus_id",
+        "productivity",
+        "initial_storage",
+        "min_storage",
+        "max_storage",
+        "min_generation",
+        "max_generation",
+        "spillage_penalty",
+    ]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = if valid_keys
+        __validate_key_types!(
         d,
-        [
-            "id",
-            "downstream_id",
-            "name",
-            "bus_id",
-            "productivity",
-            "initial_storage",
-            "min_storage",
-            "max_storage",
-            "min_generation",
-            "max_generation",
-            "spillage_penalty",
-        ],
-        e,
-    )
-    valid_types = __validate_key_types!(
-        d,
-        [
-            "id",
-            "downstream_id",
-            "name",
-            "bus_id",
-            "productivity",
-            "initial_storage",
-            "min_storage",
-            "max_storage",
-            "min_generation",
-            "max_generation",
-            "spillage_penalty",
-        ],
+        keys,
         [Integer, Integer, String, Integer, Real, Real, Real, Real, Real, Real, Real],
         e,
     )
+    else
+        false
+    end
     return valid_keys && valid_types
 end
 

@@ -18,7 +18,7 @@ end
 
 function Hydro(d::Dict{String,Any}, buses::Buses, e::CompositeException)
     valid_keys_types = __validate_hydro_keys_types!(d, e)
-    bus_ref = __validate_hydro_content!(d, buses, e)
+    bus_ref = valid_keys_types ? __validate_hydro_content!(d, buses, e) : nothing
     valid_content = bus_ref !== nothing
     valid = valid_keys_types && valid_content
 

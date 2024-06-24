@@ -3,10 +3,13 @@
 function __validate_configuration_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_keys = __validate_keys!(d, ["buses", "lines", "hydros", "thermals"], e)
-    valid_types = __validate_key_types!(
-        d, ["buses", "lines", "hydros", "thermals"], [Buses, Lines, Hydros, Thermals], e
-    )
+    keys = ["buses", "lines", "hydros", "thermals"]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = if valid_keys
+        __validate_key_types!(d, keys, [Buses, Lines, Hydros, Thermals], e)
+    else
+        false
+    end
     return valid_keys && valid_types
 end
 
