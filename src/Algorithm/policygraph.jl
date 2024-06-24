@@ -30,7 +30,7 @@ function __build_policy_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
     params = policy_graph_d["params"]
 
     supported_kinds = Dict{String,Type{T} where {T<:PolicyGraph}}(
-        "regular" => RegularPolicyGraph
+        "RegularPolicyGraph" => RegularPolicyGraph
     )
     supported =
         haskey(supported_kinds, kind) ||

@@ -6,6 +6,8 @@ using DataFrames
 using JuMP
 using Graphs
 
+using ..Utils
+
 import Base: length
 
 abstract type SystemEntity end
@@ -53,9 +55,6 @@ add_system_elements!(m, ses)
 Add state variables, decision variables and constraints to a JuMP model `m`
 """
 function add_system_elements!(m::JuMP.Model, ses::SystemEntitySet) end
-
-include("../reading-utils.jl")
-include("../validation-utils.jl")
 
 include("bus-validators.jl")
 include("bus.jl")

@@ -11,7 +11,8 @@ end
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_bus_id!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid = d["id"] > 0
+    id = d["id"]
+    valid = id > 0
     valid || push!(e, AssertionError("Bus id ($id) must be positive"))
     return valid
 end

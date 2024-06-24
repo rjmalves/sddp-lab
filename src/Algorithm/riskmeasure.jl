@@ -27,7 +27,7 @@ function __build_risk_measure!(d::Dict{String,Any}, e::CompositeException)::Bool
     params = risk_measure_d["params"]
 
     supported_kinds = Dict{String,Type{T} where {T<:RiskMeasure}}(
-        "expectation" => Expectation
+        "Expectation" => Expectation
     )
     supported =
         haskey(supported_kinds, kind) ||

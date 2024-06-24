@@ -31,7 +31,7 @@ function __build_stopping_criteria!(d::Dict{String,Any}, e::CompositeException):
     params = stopping_criteria_d["params"]
 
     supported_kinds = Dict{String,Type{T} where {T<:StoppingCriteria}}(
-        "lower_bound_stability" => LowerBoundStability
+        "LowerBoundStability" => LowerBoundStability
     )
     supported =
         haskey(supported_kinds, kind) ||

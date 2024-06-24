@@ -18,7 +18,8 @@ end
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_line_id!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid = d["id"] > 0
+    id = d["id"]
+    valid = id > 0
     valid || push!(e, AssertionError("Line id ($id) must be positive"))
     return valid
 end
@@ -61,7 +62,7 @@ end
 
 function __validate_line_content!(
     d::Dict{String,Any}, buses::Buses, e::CompositeException
-)::Dict{Symbol,Ref{Bus}}
+)::Union{Ref{Bus},Nothing}
     valid_id = __validate_line_id!(d, e)
     valid_name = __validate_line_name!(d, e)
     source_bus_index = __validate_line_bus!(d, "source_bus_id", buses, e)
