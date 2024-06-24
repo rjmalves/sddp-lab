@@ -26,4 +26,10 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
         d = __modif_key(d, "id", 0)
         @test System.Line(d, BUSES, e) === nothing
     end
+
+    @testset "line-nonexistent-name" begin
+        d, e = __renew(DICT)
+        d = __remove_key(d, "name")
+        @test System.Line(d, BUSES, e) === nothing
+    end
 end

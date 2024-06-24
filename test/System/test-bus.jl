@@ -13,4 +13,10 @@ DICT = Dict("id" => 1, "name" => "SIN", "deficit_cost" => 1000.0)
         d = __modif_key(d, "id", 0)
         @test System.Bus(d, e) === nothing
     end
+
+    @testset "bus-nonexistent-name" begin
+        d, e = __renew(DICT)
+        d = __remove_key(d, "name")
+        @test System.Bus(d, e) === nothing
+    end
 end
