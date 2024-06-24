@@ -6,6 +6,7 @@ using SDDP, GLPK
 using Plots
 using Logging
 
+include("Utils/Utils.jl")
 include("Config.jl")
 include("Reader.jl")
 include("Writer.jl")
