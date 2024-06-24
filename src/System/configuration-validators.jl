@@ -5,10 +5,7 @@ function __validate_configuration_keys_types!(
 )::Bool
     valid_keys = __validate_keys!(d, ["buses", "lines", "hydros", "thermals"], e)
     valid_types = __validate_key_types!(
-        d,
-        ["buses", "lines", "hydros", "thermals"],
-        [Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}],
-        e,
+        d, ["buses", "lines", "hydros", "thermals"], [Buses, Lines, Hydros, Thermals], e
     )
     return valid_keys && valid_types
 end
@@ -59,8 +56,8 @@ function __validate_required_default_values!(
     )
     valid_column_types = if valid_column_keys
         __validate_key_types!(
-        default_values, columns_requiring_default_values, columns_data_types, e
-    )
+            default_values, columns_requiring_default_values, columns_data_types, e
+        )
     else
         false
     end
@@ -95,11 +92,41 @@ function __validate_system_entity_content!(
 end
 
 function __validate_system_entities_content!(
+    d::Dict{String,Any}, key::String, e::CompositeException
+)::Bool
+    entities = d[key]
+    df = __read_entity_dataframe!(entities, e)
+    valid = __validate_system_entity_content!(df, entities, e)
+    if valid
+        d[key] = __dataframe_to_dict(df)
+    else
+        d[key] = []
+    end
+    return valid
+end
+
+function __validate_buses_content!(
     d::Dict{String,Any}, e::CompositeException
 )::Vector{Dict{String,Any}}
-    df = __read_entity_dataframe!(d, e)
-    valid = __validate_system_entity_content!(df, d, e)
-    return valid ? __dataframe_to_dict(df) : []
+    return __validate_system_entities_content!(d, "buses", e)
+end
+
+function __validate_lines_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Vector{Dict{String,Any}}
+    return __validate_system_entities_content!(d, "lines", e)
+end
+
+function __validate_hydros_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Vector{Dict{String,Any}}
+    return __validate_system_entities_content!(d, "hydros", e)
+end
+
+function __validate_thermals_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Vector{Dict{String,Any}}
+    return __validate_system_entities_content!(d, "thermals", e)
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------
