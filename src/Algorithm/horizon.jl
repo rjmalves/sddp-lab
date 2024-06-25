@@ -19,6 +19,13 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_horizon!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_horizon_key = __validate_keys!(d, ["horizon"], e)
+    valid_horizon_type =
+        valid_horizon_key && __validate_key_types!(d, ["horizon"], [Dict{String,Any}], e)
+    if !valid_horizon_type
+        return false
+    end
+
     horizon_d = d["horizon"]
     valid_keys = __validate_keys!(horizon_d, ["kind", "params"], e)
     valid_types = __validate_key_types!(

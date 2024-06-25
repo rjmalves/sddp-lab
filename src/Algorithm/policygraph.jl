@@ -16,6 +16,14 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_policy_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_policy_graph_key = __validate_keys!(d, ["policy_graph"], e)
+    valid_policy_graph_type =
+        valid_policy_graph_key &&
+        __validate_key_types!(d, ["policy_graph"], [Dict{String,Any}], e)
+    if !valid_policy_graph_type
+        return false
+    end
+
     policy_graph_d = d["policy_graph"]
     valid_keys = __validate_keys!(policy_graph_d, ["kind", "params"], e)
     valid_types = __validate_key_types!(

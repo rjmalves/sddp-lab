@@ -1,4 +1,3 @@
-
 # CLASS Strategy -----------------------------------------------------------------------
 
 struct Strategy
@@ -34,8 +33,8 @@ end
 function Strategy(filename::String, e::CompositeException)
     d = read_jsonc(filename)
 
-    # Content validation for internals that depend on files
-    valid_horizon = __validate_horizon_content!(d, e)
+    # Content validation and casting for internals that depend on files
+    valid_horizon = __validate_cast_horizon_stage_content!(d, e)
     valid = valid_horizon
 
     return valid ? Strategy(d, e) : nothing

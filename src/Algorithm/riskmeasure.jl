@@ -13,6 +13,14 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_risk_measure!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_risk_measure_key = __validate_keys!(d, ["risk_measure"], e)
+    valid_risk_measure_type =
+        valid_risk_measure_key &&
+        __validate_key_types!(d, ["risk_measure"], [Dict{String,Any}], e)
+    if !valid_risk_measure_type
+        return false
+    end
+
     risk_measure_d = d["risk_measure"]
     valid_keys = __validate_keys!(risk_measure_d, ["kind", "params"], e)
     valid_types = __validate_key_types!(

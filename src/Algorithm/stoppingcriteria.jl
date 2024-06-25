@@ -17,6 +17,14 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_stopping_criteria!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_stopping_criteria_key = __validate_keys!(d, ["stopping_criteria"], e)
+    valid_stopping_criteria_type =
+        valid_stopping_criteria_key &&
+        __validate_key_types!(d, ["stopping_criteria"], [Dict{String,Any}], e)
+    if !valid_stopping_criteria_type
+        return false
+    end
+
     stopping_criteria_d = d["stopping_criteria"]
     valid_keys = __validate_keys!(stopping_criteria_d, ["kind", "params"], e)
     valid_types = __validate_key_types!(

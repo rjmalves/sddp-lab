@@ -1,6 +1,9 @@
 import SDDPlab: Algorithm
+import SDDPlab: Utils
 
 using Dates
+using DataFrames
+using JSON
 
 DICT::Dict{String,Any} = Dict(
     "policy_graph" =>
@@ -29,9 +32,22 @@ DICT::Dict{String,Any} = Dict(
     ),
 )
 
+DF = DataFrame(;
+    index = [1, 2],
+    start_date = [DateTime(2020, 1, 1), DateTime(2020, 2, 1)],
+    end_date = [DateTime(2020, 2, 1), DateTime(2020, 3, 1)],
+)
+
 @testset "algorithm-strategy" begin
     @testset "strategy-valid" begin
         d, e = __renew(DICT)
         @test typeof(Algorithm.Strategy(d, e)) === Algorithm.Strategy
+    end
+    @testset "strategy-valid-from-file" begin
+        d, e = __renew(DICT)
+
+        cd(example_data_dir)
+        s = Algorithm.Strategy("algorithm.jsonc", e)
+        @test typeof(s) === Algorithm.Strategy
     end
 end

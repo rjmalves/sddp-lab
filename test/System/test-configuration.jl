@@ -56,4 +56,12 @@ CFG_DICT = Dict(
         # d = __remove_key(d, "thermals")
         # @test System.Configuration(d, e) === nothing
     end
+
+    @testset "configuration-valid-from-file" begin
+        d, e = __renew(DICT)
+
+        cd(example_data_dir)
+        s = System.Configuration("system.jsonc", e)
+        @test typeof(s) === System.Configuration
+    end
 end

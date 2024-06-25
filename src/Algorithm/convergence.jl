@@ -21,6 +21,14 @@ function Convergence(d::Dict{String,Any}, e::CompositeException)
 end
 
 function __build_convergence!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_convergence_key = __validate_keys!(d, ["convergence"], e)
+    valid_convergence_type =
+        valid_convergence_key &&
+        __validate_key_types!(d, ["convergence"], [Dict{String,Any}], e)
+    if !valid_convergence_type
+        return false
+    end
+
     convergence_d = d["convergence"]
     convergence_obj = Convergence(convergence_d, e)
     d["convergence"] = convergence_obj

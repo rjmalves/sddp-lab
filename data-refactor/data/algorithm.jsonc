@@ -10,7 +10,7 @@
     },
     "horizon": {
         // explicit | daily | weekly | monthly | yearly
-        "kind": "ExplicitPlanningHorizon",
+        "kind": "ExplicitHorizon",
         "params": {
             "file": "stages.csv"
         }
