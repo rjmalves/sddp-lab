@@ -8,6 +8,7 @@ using Logging
 
 include("Utils/Utils.jl")
 include("Algorithm/Algorithm.jl")
+include("Resources/Resources.jl")
 include("System/System.jl")
 include("Config.jl")
 include("Reader.jl")
