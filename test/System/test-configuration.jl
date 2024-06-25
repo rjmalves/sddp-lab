@@ -44,7 +44,7 @@ CFG_DICT = Dict(
     "thermals" => [THERMAL_DICT],
 )
 
-@testset "system" begin
+@testset "system-configuration" begin
     @testset "configuration-valid" begin
         d, e = __renew(convert(Dict{String,Any}, CFG_DICT))
         @test typeof(System.Configuration(d, e)) === System.Configuration

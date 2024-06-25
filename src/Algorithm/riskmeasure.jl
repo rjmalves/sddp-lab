@@ -26,13 +26,13 @@ function __build_risk_measure!(d::Dict{String,Any}, e::CompositeException)::Bool
     kind = risk_measure_d["kind"]
     params = risk_measure_d["params"]
 
-    supported_kinds = Dict{String,Type{T} where {T<:RiskMeasure}}(
-        "Expectation" => Expectation
-    )
-    supported =
-        haskey(supported_kinds, kind) ||
+    risk_measure_obj = nothing
+    try
+        kind_type = getfield(@__MODULE__, Symbol(kind))
+        risk_measure_obj = kind_type(params, e)
+    catch
         push!(e, AssertionError("Risk measure kind ($kind) not recognized"))
-    risk_measure_obj = supported ? supported_kinds[kind](params, e) : nothing
+    end
     d["risk_measure"] = risk_measure_obj
 
     return risk_measure_obj !== nothing

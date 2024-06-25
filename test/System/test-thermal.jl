@@ -15,7 +15,7 @@ BUSES_DICT = [
 ]
 BUSES = System.Buses(BUSES_DICT, CompositeException())
 
-@testset "system" begin
+@testset "system-thermal" begin
     @testset "thermal-valid" begin
         d, e = __renew(DICT)
         @test typeof(System.Thermal(d, BUSES, e)) === System.Thermal

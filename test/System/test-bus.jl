@@ -2,7 +2,7 @@ import SDDPlab: System
 
 DICT = Dict("id" => 1, "name" => "SIN", "deficit_cost" => 1000.0)
 
-@testset "system" begin
+@testset "system-bus" begin
     @testset "bus-valid" begin
         d, e = __renew(DICT)
         @test typeof(System.Bus(d, e)) === System.Bus

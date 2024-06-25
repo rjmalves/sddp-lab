@@ -15,7 +15,7 @@ BUSES_DICT = [
 ]
 BUSES = System.Buses(BUSES_DICT, CompositeException())
 
-@testset "system" begin
+@testset "system-line" begin
     @testset "line-valid" begin
         d, e = __renew(DICT)
         @test typeof(System.Line(d, BUSES, e)) === System.Line

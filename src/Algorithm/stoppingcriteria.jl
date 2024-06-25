@@ -30,14 +30,14 @@ function __build_stopping_criteria!(d::Dict{String,Any}, e::CompositeException):
     kind = stopping_criteria_d["kind"]
     params = stopping_criteria_d["params"]
 
-    supported_kinds = Dict{String,Type{T} where {T<:StoppingCriteria}}(
-        "LowerBoundStability" => LowerBoundStability
-    )
-    supported =
-        haskey(supported_kinds, kind) ||
+    stopping_criteria_obj = nothing
+    try
+        kind_type = getfield(@__MODULE__, Symbol(kind))
+        stopping_criteria_obj = kind_type(params, e)
+    catch
         push!(e, AssertionError("Stopping criteria kind ($kind) not recognized"))
+    end
 
-    stopping_criteria_obj = supported ? supported_kinds[kind](params, e) : nothing
     d["stopping_criteria"] = stopping_criteria_obj
 
     return stopping_criteria_obj !== nothing
