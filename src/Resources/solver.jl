@@ -12,8 +12,8 @@ function CLP(d::Dict{String,Any}, e::CompositeException)
 end
 
 function GLPK(d::Dict{String,Any}, e::CompositeException)
-    valid_keys_types = __validate_clp_keys_types!(d, e)
-    valid_content = valid_keys_types ? __validate_clp_content!(d, e) : false
+    valid_keys_types = __validate_glpk_keys_types!(d, e)
+    valid_content = valid_keys_types ? __validate_glpk_content!(d, e) : false
     valid = valid_keys_types && valid_content
 
     return valid ? GLPK() : nothing
@@ -23,12 +23,11 @@ end
 
 function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool
     solver_d = d["solver"]
-    valid_keys = __validate_keys!(solver_d, ["name", "params"], e)
-    valid_types = if valid_keys
-        __validate_key_types!(risk_measure_d, ["name", "params"], [String, Dict{String,Any}], e)
-    else
-        false
-    end
+    keys = ["name", "params"]
+    keys_types = [String, Dict{String,Any}]
+    valid_keys = __validate_keys!(solver_d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(solver_d, keys, keys_types, e)
+
     valid = valid_keys && valid_types
     if !valid
         return nothing
