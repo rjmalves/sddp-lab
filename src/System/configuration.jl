@@ -27,13 +27,14 @@ function Configuration(d::Dict{String,Any}, e::CompositeException)
 end
 
 function Configuration(filename::String, e::CompositeException)
-    d = read_jsonc(filename)
+    d = read_jsonc(filename, e)
+    valid_jsonc = d !== nothing
 
     # Content validation and casting for internals that depend on files
-    valid_buses = __validate_cast_buses_content!(d, e)
-    valid_lines = __validate_cast_lines_content!(d, e)
-    valid_hydros = __validate_cast_hydros_content!(d, e)
-    valid_thermals = __validate_cast_thermals_content!(d, e)
+    valid_buses = valid_jsonc && __validate_cast_buses_content!(d, e)
+    valid_lines = valid_jsonc && __validate_cast_lines_content!(d, e)
+    valid_hydros = valid_jsonc && __validate_cast_hydros_content!(d, e)
+    valid_thermals = valid_jsonc && __validate_cast_thermals_content!(d, e)
 
     valid = valid_buses && valid_lines && valid_hydros && valid_thermals
 

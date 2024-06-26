@@ -32,7 +32,7 @@ end
 function __validate_cast_system_entity_content!(
     filename::String, default_values::Dict{String,Any}, e::CompositeException
 )::Union{Vector{Dict{String,Any}},Nothing}
-    df = __read_dataframe!(filename, e)
+    df = read_csv(filename, e)
     valid_df = df !== nothing
     empty_df = valid_df && (nrow(df) == 0)
     # Fast check for empty dataframe
@@ -41,17 +41,11 @@ function __validate_cast_system_entity_content!(
     end
 
     # Checks which columns demand default values
-    columns_requiring_default_values::Vector{String} = []
-    columns_data_types::Vector{DataType} = []
-    __extract_dataframe_columns_for_inserting_default_values!(
-        df, columns_requiring_default_values, columns_data_types
-    )
+    columns, data_types = __get_dataframe_columns_for_default_value_fill(df)
 
     # Replaces missing values with default values
-    valid = __validate_required_default_values!(
-        default_values, columns_requiring_default_values, columns_data_types, df, e
-    )
-    !valid || __insert_default_values_in_dataframe!(df, default_values)
+    valid = __validate_required_default_values!(default_values, columns, data_types, df, e)
+    !valid || __fill_default_values!(df, default_values)
     return valid ? __dataframe_to_dict(df) : nothing
 end
 
@@ -115,111 +109,3 @@ function __validate_cast_thermals_content!(d::Dict{String,Any}, e::CompositeExce
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------
-
-function __read_dataframe!(
-    filename::String, e::CompositeException
-)::Union{DataFrame,Nothing}
-    valid_file = __validate_file!(filename, e)
-    return valid_file ? read_csv(filename) : nothing
-end
-
-function __read_validate_dataframe!(
-    filename::String, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
-)::Union{DataFrame,Nothing}
-    valid_file = __validate_file!(filename, e)
-    df = valid_file ? read_csv(filename) : DataFrame()
-    valid_df = __validate_columns_types_in_dataframe!(df, cols, types, e)
-    return valid_df ? df : nothing
-end
-
-function __validate_dataframe_content_and_cast!(
-    filename::String, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
-)::Union{Vector{Dict{String,Any}},Nothing}
-    df = __read_validate_dataframe!(filename, cols, types, e)
-    valid = df !== nothing
-    return valid ? __dataframe_to_dict(df) : nothing
-end
-
-function __validate_columns_in_dataframe!(
-    df::DataFrame, columns::Vector{String}, e::CompositeException
-)::Bool
-    valid = true
-    df_columns = names(df)
-    for col in columns
-        column_in_df = findfirst(==(col), df_columns) !== nothing
-        column_in_df ||
-            push!(e, AssertionError("Column $col not found in DataFrame ($df_columns)"))
-        valid = valid && column_in_df
-    end
-    return valid
-end
-
-function __validate_columns_types_in_dataframe!(
-    df::DataFrame, columns::Vector{String}, types::Vector{DataType}, e::CompositeException
-)::Bool
-    valid = true
-    df_columns = names(df)
-    for (col, col_type) in zip(columns, types)
-        column_in_df = findfirst(==(col), df_columns) !== nothing
-        column_in_df ||
-            push!(e, AssertionError("Column $col not found in DataFrame ($df_columns)"))
-        valid = valid && column_in_df
-        if column_in_df
-            df_col_type = eltype(df[!, col])
-            col_type_in_df = df_col_type <: col_type
-            col_type_in_df || push!(
-                e, AssertionError("Column $col ($df_col_type) not of type ($col_type)")
-            )
-            valid = valid && col_type_in_df
-        end
-    end
-    return valid
-end
-
-function __extract_dataframe_columns_for_inserting_default_values!(
-    df::DataFrame,
-    columns_requiring_default_values::Vector{String},
-    columns_data_types::Vector{DataType},
-)
-    for col in names(df)
-        col_type = eltype(df[!, col])
-        actual_type = nonmissingtype(col_type)
-        if col_type !== actual_type
-            push!(columns_requiring_default_values, col)
-            real_type = actual_type === Union{} ? Any : actual_type
-            push!(columns_data_types, real_type)
-        end
-    end
-end
-
-function __validate_required_default_values!(
-    default_values::Dict{String,Any},
-    columns_requiring_default_values::Vector{String},
-    columns_data_types::Vector{DataType},
-    df::DataFrame,
-    e::CompositeException,
-)::Bool
-    valid_column_keys = __validate_keys!(
-        default_values, columns_requiring_default_values, e
-    )
-    valid_column_types = if valid_column_keys
-        __validate_key_types!(
-            default_values, columns_requiring_default_values, columns_data_types, e
-        )
-    else
-        false
-    end
-    columns_in_dataframe = __validate_columns_in_dataframe!(
-        df, collect(keys(default_values)), e
-    )
-    return valid_column_keys && valid_column_types && columns_in_dataframe
-end
-
-function __insert_default_values_in_dataframe!(
-    df::DataFrame, default_values::Dict{String,Any}
-)
-    for (col, value) in default_values
-        df[!, col] = replace(df[!, col], missing => value)
-        disallowmissing!(df, col)
-    end
-end

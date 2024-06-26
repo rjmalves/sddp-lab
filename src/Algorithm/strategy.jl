@@ -31,10 +31,11 @@ function Strategy(d::Dict{String,Any}, e::CompositeException)
 end
 
 function Strategy(filename::String, e::CompositeException)
-    d = read_jsonc(filename)
+    d = read_jsonc(filename, e)
+    valid_jsonc = d !== nothing
 
     # Content validation and casting for internals that depend on files
-    valid_horizon = __validate_cast_horizon_stage_content!(d, e)
+    valid_horizon = valid_jsonc && __validate_cast_horizon_stage_content!(d, e)
     valid = valid_horizon
 
     return valid ? Strategy(d, e) : nothing
