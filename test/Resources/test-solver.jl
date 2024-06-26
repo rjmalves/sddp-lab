@@ -7,10 +7,10 @@ DICT = Dict("name" => "CLP", "params" => Dict())
         d, e = __renew(DICT)
         @test typeof(Resources.CLP(d, e)) === Resources.CLP
     end
-    @testset "clp-invalid-name" begin
+
+    @testset "glpk-valid" begin
         d, e = __renew(DICT)
         d = __modif_key(d, "name", "GLPK")
-        # TODO
-        # @test Resources.CLP(d, e) === nothing
+        @test typeof(Resources.GLPK(d, e)) === Resources.GLPK
     end
 end
