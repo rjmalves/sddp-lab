@@ -46,6 +46,90 @@ function __validate_file!(filename::String, e::CompositeException)::Bool
     return valid
 end
 
+# DATAFRAME VALIDATORS ---------------------------------------------------------------------
+
+function __dataframe_to_dict(df::DataFrame)::Vector{Dict{String,Any}}
+    columns = names(df)
+    d::Vector{Dict{String,Any}} = []
+    for i in 1:nrow(df)
+        push!(d, Dict{String,Any}(name => df[i, name] for name in columns))
+    end
+
+    return d
+end
+
+function __validate_columns_in_dataframe!(
+    df::DataFrame, columns::Vector{String}, e::CompositeException
+)::Bool
+    valid = true
+    df_columns = names(df)
+    for col in columns
+        column_in_df = findfirst(==(col), df_columns) !== nothing
+        column_in_df ||
+            push!(e, AssertionError("Column $col not found in DataFrame ($df_columns)"))
+        valid = valid && column_in_df
+    end
+    return valid
+end
+
+function __validate_column_types_in_dataframe!(
+    df::DataFrame, columns::Vector{String}, types::Vector{DataType}, e::CompositeException
+)::Bool
+    valid = true
+    df_columns = names(df)
+    for (col, col_type) in zip(columns, types)
+        column_in_df = findfirst(==(col), df_columns) !== nothing
+        if column_in_df
+            df_col_type = eltype(df[!, col])
+            col_type_in_df = df_col_type <: col_type
+            col_type_in_df || push!(
+                e, AssertionError("Column $col ($df_col_type) not of type ($col_type)")
+            )
+            valid = valid && col_type_in_df
+        end
+    end
+    return valid
+end
+
+function __validate_dataframe!(
+    df::DataFrame, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
+)::Union{DataFrame,Nothing}
+    valid_cols = __validate_columns_in_dataframe!(df, cols, e)
+    valid_df = valid_cols && __validate_column_types_in_dataframe!(df, cols, types, e)
+    return valid_df ? df : nothing
+end
+
+function __validate_dataframe_content_and_cast!(
+    df::DataFrame, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
+)::Union{Vector{Dict{String,Any}},Nothing}
+    df = __validate_dataframe!(df, cols, types, e)
+    valid = df !== nothing
+    return valid ? __dataframe_to_dict(df) : nothing
+end
+
+function __validate_required_default_values!(
+    default_values::Dict{String,Any},
+    columns_requiring_default_values::Vector{String},
+    columns_data_types::Vector{DataType},
+    df::DataFrame,
+    e::CompositeException,
+)::Bool
+    valid_column_keys = __validate_keys!(
+        default_values, columns_requiring_default_values, e
+    )
+    valid_column_types = if valid_column_keys
+        __validate_key_types!(
+            default_values, columns_requiring_default_values, columns_data_types, e
+        )
+    else
+        false
+    end
+    columns_in_dataframe = __validate_columns_in_dataframe!(
+        df, collect(keys(default_values)), e
+    )
+    return valid_column_keys && valid_column_types && columns_in_dataframe
+end
+
 # HELPERS ----------------------------------------------------------------------------------
 
 function __parse_as_type!(d::Dict, k::String, t::DataType)
@@ -72,7 +156,7 @@ function __try_conversion!(d::Dict, k::String, t::Type{String})
 end
 
 function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
-    aux = stack(d[k], dims=1)
+    aux = stack(d[k]; dims = 1)
     return d[k] = convert(t, aux)
 end
 
