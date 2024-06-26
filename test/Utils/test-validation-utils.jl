@@ -65,8 +65,10 @@ DICT = Dict("a" => 1, "b" => "string", "c" => [[1, 2], [3, 4]])
     end
 
     @testset "validate_file" begin
+        cd(example_dir)
+
         e = CompositeException()
-        filename = "runtests.jl"
+        filename = "main.jsonc"
         @test Utils.__validate_file!(filename, e) == true
 
         filename = "non-existent-file"
