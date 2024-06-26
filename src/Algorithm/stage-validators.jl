@@ -1,11 +1,11 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_stage_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_keys = __validate_keys!(d, ["index", "start_date", "end_date"], e)
-    valid_types = __validate_key_types!(
-        d, ["index", "start_date", "end_date"], [Integer, DateTime, DateTime], e
-    )
-    return valid_keys && valid_types
+    keys = ["index", "start_date", "end_date"]
+    keys_types = [Integer, DateTime, DateTime]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

@@ -14,18 +14,13 @@ function __validate_hydro_keys_types!(d::Dict{String,Any}, e::CompositeException
         "max_generation",
         "spillage_penalty",
     ]
+    keys_types = [
+        Integer, Integer, String, Integer, Real, Real, Real, Real, Real, Real, Real
+    ]
     valid_keys = __validate_keys!(d, keys, e)
-    valid_types = if valid_keys
-        __validate_key_types!(
-        d,
-        keys,
-        [Integer, Integer, String, Integer, Real, Real, Real, Real, Real, Real, Real],
-        e,
-    )
-    else
-        false
-    end
-    return valid_keys && valid_types
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

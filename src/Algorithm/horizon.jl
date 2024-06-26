@@ -11,9 +11,8 @@ function ExplicitHorizon(d::Dict{String,Any}, e::CompositeException)
     valid_keys_types = valid_internals && __validate_explict_horizon_keys_types!(d, e)
     valid_content = valid_keys_types && __validate_explict_horizon_content!(d, e)
     valid_consistency = valid_content && __validate_explict_horizon_consistency!(d, e)
-    valid = valid_keys_types && valid_content && valid_consistency
 
-    return valid ? ExplicitHorizon(d["stages"]) : nothing
+    return valid_consistency ? ExplicitHorizon(d["stages"]) : nothing
 end
 
 # HELPERS -------------------------------------------------------------------------------------
@@ -27,12 +26,11 @@ function __build_horizon!(d::Dict{String,Any}, e::CompositeException)::Bool
     end
 
     horizon_d = d["horizon"]
-    valid_keys = __validate_keys!(horizon_d, ["kind", "params"], e)
-    valid_types = __validate_key_types!(
-        horizon_d, ["kind", "params"], [String, Dict{String,Any}], e
-    )
-    valid = valid_keys && valid_types
-    if !valid
+    keys = ["kind", "params"]
+    keys_types = [String, Dict{String,Any}]
+    valid_keys = __validate_keys!(horizon_d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(horizon_d, keys, keys_types, e)
+    if !valid_types
         return false
     end
 

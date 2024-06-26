@@ -3,17 +3,11 @@
 function __validate_convergence_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_keys = __validate_keys!(
-        d, ["min_iterations", "max_iterations", "stopping_criteria"], e
-    )
-    valid_types =
-        valid_keys || __validate_key_types!(
-            d,
-            ["min_iterations", "max_iterations", "stopping_criteria"],
-            [Integer, Integer, <:StoppingCriteria],
-            e,
-        )
-    return valid_keys && valid_types
+    keys = ["min_iterations", "max_iterations", "stopping_criteria"]
+    keys_types = [Integer, Integer, T where {T<:StoppingCriteria}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

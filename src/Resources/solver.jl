@@ -28,9 +28,8 @@ function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(solver_d, keys, e)
     valid_types = valid_keys && __validate_key_types!(solver_d, keys, keys_types, e)
 
-    valid = valid_keys && valid_types
-    if !valid
-        return nothing
+    if !valid_types
+        return false
     end
 
     name = solver_d["name"]

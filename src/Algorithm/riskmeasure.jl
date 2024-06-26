@@ -22,13 +22,12 @@ function __build_risk_measure!(d::Dict{String,Any}, e::CompositeException)::Bool
     end
 
     risk_measure_d = d["risk_measure"]
-    valid_keys = __validate_keys!(risk_measure_d, ["kind", "params"], e)
-    valid_types = __validate_key_types!(
-        risk_measure_d, ["kind", "params"], [String, Dict{String,Any}], e
-    )
-    valid = valid_keys && valid_types
-    if !valid
-        return nothing
+    keys = ["kind", "params"]
+    keys_types = [String, Dict{String,Any}]
+    valid_keys = __validate_keys!(risk_measure_d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(risk_measure_d, keys, keys_types, e)
+    if !valid_types
+        return valid_types
     end
 
     kind = risk_measure_d["kind"]

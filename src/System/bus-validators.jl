@@ -2,10 +2,10 @@
 
 function __validate_bus_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = ["id", "name", "deficit_cost"]
+    keys_types = [Integer, String, Real]
     valid_keys = __validate_keys!(d, keys, e)
-    valid_types =
-        valid_keys ? __validate_key_types!(d, keys, [Integer, String, Real], e) : false
-    return valid_keys && valid_types
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

@@ -4,8 +4,8 @@ function __validate_explict_horizon_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_keys = __validate_keys!(d, ["stages"], e)
-    valid_types = __validate_key_types!(d, ["stages"], [Vector{Stage}], e)
-    return valid_keys && valid_types
+    valid_types = valid_keys && __validate_key_types!(d, ["stages"], [Vector{Stage}], e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

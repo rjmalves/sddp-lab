@@ -1,21 +1,16 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_strategy_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_keys = __validate_keys!(
-        d, ["policy_graph", "horizon", "risk_measure", "convergence"], e
-    )
-    valid_types = __validate_key_types!(
-        d,
-        ["policy_graph", "horizon", "risk_measure", "convergence"],
-        [
-            T where {T<:PolicyGraph},
-            T where {T<:Horizon},
-            T where {T<:RiskMeasure},
-            Convergence,
-        ],
-        e,
-    )
-    return valid_keys && valid_types
+    keys = ["policy_graph", "horizon", "risk_measure", "convergence"]
+    keys_types = [
+        T where {T<:PolicyGraph},
+        T where {T<:Horizon},
+        T where {T<:RiskMeasure},
+        Convergence,
+    ]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

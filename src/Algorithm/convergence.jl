@@ -12,8 +12,7 @@ function Convergence(d::Dict{String,Any}, e::CompositeException)
     # Content validation
     valid_content = valid_keys_types && __validate_convergence_content!(d, e)
 
-    valid = valid_internals && valid_keys_types && valid_content
-    return if valid
+    return if valid_content
         Convergence(d["min_iterations"], d["max_iterations"], d["stopping_criteria"])
     else
         nothing

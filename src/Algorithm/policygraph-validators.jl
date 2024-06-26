@@ -4,8 +4,8 @@ function __validate_regular_policy_graph_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_keys = __validate_keys!(d, ["discount_rate"], e)
-    valid_types = __validate_key_types!(d, ["discount_rate"], [Real], e)
-    return valid_keys && valid_types
+    valid_types = valid_keys && __validate_key_types!(d, ["discount_rate"], [Real], e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

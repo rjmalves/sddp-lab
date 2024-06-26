@@ -4,27 +4,21 @@ function __validate_configuration_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     keys = ["buses", "lines", "hydros", "thermals"]
+    keys_types = [Buses, Lines, Hydros, Thermals]
     valid_keys = __validate_keys!(d, keys, e)
-    valid_types = if valid_keys
-        __validate_key_types!(d, keys, [Buses, Lines, Hydros, Thermals], e)
-    else
-        false
-    end
-    return valid_keys && valid_types
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 function __validate_system_entity_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_entity_keys = __validate_keys!(d, ["entities"], e)
-    valid_file_keys =
-        valid_entity_keys ? __validate_keys!(d["entities"], ["file"], e) : false
-    valid_file_types = if valid_file_keys
-        __validate_key_types!(d["entities"], ["file"], [String], e)
-    else
-        false
-    end
-    return valid_entity_keys && valid_file_keys && valid_file_types
+    valid_file_keys = valid_entity_keys && __validate_keys!(d["entities"], ["file"], e)
+    valid_file_types =
+        valid_file_keys && __validate_key_types!(d["entities"], ["file"], [String], e)
+
+    return valid_file_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------

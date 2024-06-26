@@ -3,11 +3,11 @@
 function __validate_lower_bound_stability_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_keys = __validate_keys!(d, ["threshold", "num_iterations"], e)
-    valid_types = __validate_key_types!(
-        d, ["threshold", "num_iterations"], [Real, Integer], e
-    )
-    return valid_keys && valid_types
+    keys = ["threshold", "num_iterations"]
+    keys_types = [Real, Integer]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
