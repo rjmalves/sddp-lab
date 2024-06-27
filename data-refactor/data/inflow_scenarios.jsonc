@@ -75,79 +75,96 @@
         }
     ],
 
-    // correlation matrices R for the gaussian copula simulation
-    "correlation_matrices": [
+    // defines the copulas used for multivariate simulation
+    // to achieve independent models one may use GaussianCopula with identity R matrix
+    "copulas": [
         {
             "season": 1,
-            // covariance matrix (row-major), each row/column in the order of 'id's declared
-            // in 'marginal_models'
-            "matrix": [
+            // copula name, should be one implemented by Copulas.jl
+            "name": "GaussianCopula",
+            // copula parameters, check the individual documentations for how each copula is
+            // parametrized
+            // In the case of matrix parameters, supply an array of arrays which will be 
+            // used to construct the matrix IN A ROW MAJOR FASHION, i.e. each sub-array
+            // will become an individual row
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 2,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 3,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 4,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 5,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 6,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 7,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 8,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 9,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 10,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 11,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 12,
-            "matrix": [
+            "name": "GaussianCopula",
+            "parameters": [
                 [1.0]
             ]
         }
