@@ -28,8 +28,13 @@ function run(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
     # Calls build_model and train_model 
 end
 
-function write(a::PolicyArtifact)
+function write(a::PolicyArtifact, configuration::Configuration, output::Outputs)
     # Write cuts to file
+    cuts = get_model_cuts(a.policy)
+    outdir = output.path
+    write_model_cuts(cuts, outdir)
+    plot_model_cuts(cuts, configuration, outdir)
+    return true
 end
 
 struct Simulation <: Task
@@ -43,8 +48,13 @@ function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,N
     # Calls simulate_model
 end
 
-function write(a::SimulationArtifact)
+function write(a::SimulationArtifact, configuration::Configuration, output::Outputs)
     # Write simulation results to file
+    sims = simulate_model(a.policy)
+    outdir = Outputs.path
+    write_simulation_results(sims, configuration, outdir)
+    plot_simulation_results(sims, configuration, outdir)
+    return true
 end
 
 function read_validate_tasks!(
