@@ -1,6 +1,6 @@
 {
     // policy | simulation - lower_simulation | upper_simulation
-    "task": "policy",
+    "task": "Policy",
     "inputs": {
         "path": "data",
         // Each file defines settings for a specific

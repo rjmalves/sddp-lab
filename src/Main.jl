@@ -53,3 +53,13 @@ function compute_simulate_policy(execution::Dict{String,Any})
 
     @info "Execucao completa"
 end
+
+function main()
+    e = CompositeException()
+    d = read_validate_entrypoint("data-refactor/main.jsonc", e)
+    inputs = read_validate_inputs!(d["inputs"], e)
+    outputs = read_validate_outputs!(d["outputs"], e)
+    task = read_validate_task!(d["task"], inputs, outputs, e)
+    # TODO - better support other tasks
+    return run(task)
+end

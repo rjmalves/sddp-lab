@@ -41,9 +41,7 @@ end
 
 function __validate_inputs!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_key_types = __validate_inputs_keys_types!(d, e)
-    valid_file_key_types =
-        valid_key_types && __validate_input_files_keys_types!(d["files"], e)
-    valid_directory = valid_file_key_types && __validate_directory!(d["path"], e)
+    valid_directory = valid_key_types && __validate_directory!(d["path"], e)
     valid_directory && cd(d["path"])
 
     return valid_directory
