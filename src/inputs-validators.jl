@@ -31,8 +31,8 @@ function __validate_entrypoint!(
 )::Bool
     read_success = d !== nothing
 
-    keys = ["task", "inputs", "outputs"]
-    types = [String, Dict{String,Any}, Dict{String,Any}]
+    keys = ["tasks", "inputs", "outputs"]
+    types = [Vector{String}, Dict{String,Any}, Dict{String,Any}]
 
     valid_keys = read_success && __validate_keys!(d, keys, e)
     valid_key_types = valid_keys && __validate_key_types!(d, keys, types, e)

@@ -59,7 +59,7 @@ function main()
     d = read_validate_entrypoint("data-refactor/main.jsonc", e)
     inputs = read_validate_inputs!(d["inputs"], e)
     outputs = read_validate_outputs!(d["outputs"], e)
-    task = read_validate_task!(d["task"], inputs, outputs, e)
-    # TODO - better support other tasks
-    return run(task)
+    tasks = read_validate_tasks!(d["tasks"], inputs, e)
+    artifacts = run_tasks(tasks, e)
+    return write_outputs(outputs, artifacts)
 end

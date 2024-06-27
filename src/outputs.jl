@@ -5,7 +5,6 @@ struct Outputs
     path::String
     policy::Bool
     simulation::Bool
-    plots::Bool
 end
 
 function read_validate_outputs!(
@@ -16,5 +15,22 @@ function read_validate_outputs!(
         return nothing
     end
 
-    return valid ? Outputs(d["path"], d["policy"], d["simulation"], d["plots"]) : nothing
+    return valid ? Outputs(d["path"], d["policy"], d["simulation"]) : nothing
+end
+
+function write_outputs(o::Outputs, artifacts::Vector{TaskArtifact})
+    curdir = pwd()
+    directory_exists = __validate_directory!(o.path, e)
+    directory_exists || mkdir(o.path)
+    cd(o.path)
+
+    for a in artifacts
+        if a isa PolicyArtifact && o.policy
+            write(a)
+        elseif a isa SimulationArtifact && o.simulation
+            write(a)
+        end
+    end
+
+    return cd(curdir)
 end

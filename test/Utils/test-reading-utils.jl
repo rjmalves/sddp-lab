@@ -7,7 +7,7 @@ using DataFrames
         cd(example_dir)
         e = CompositeException()
         d = Utils.read_jsonc("main.jsonc", e)
-        @test haskey(d, "task")
+        @test haskey(d, "tasks")
         @test haskey(d, "inputs")
         @test haskey(d, "outputs")
     end

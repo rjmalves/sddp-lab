@@ -1,6 +1,6 @@
 {
     // policy | simulation - lower_simulation | upper_simulation
-    "task": "Policy",
+    "tasks": ["Policy", "Simulation"],
     "inputs": {
         "path": "data",
         // Each file defines settings for a specific
@@ -30,7 +30,6 @@
         "path": "out",
         // can disable some of the outputs
         "policy": true,
-        "simulation": true,
-        "plots": true
+        "simulation": true
     }
 }
