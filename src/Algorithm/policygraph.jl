@@ -36,14 +36,14 @@ function __build_policy_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
     kind = policy_graph_d["kind"]
     params = policy_graph_d["params"]
 
-    supported_kinds = Dict{String,Type{T} where {T<:PolicyGraph}}(
-        "RegularPolicyGraph" => RegularPolicyGraph
-    )
-    supported =
-        haskey(supported_kinds, kind) ||
-        push!(e, AssertionError("Policy graph kind ($kind) not recognized"))
+    policy_graph_obj = nothing
 
-    policy_graph_obj = supported ? supported_kinds[kind](params, e) : nothing
+    try
+        kind_type = getfield(@__MODULE__, Symbol(kind))
+        policy_graph_obj = kind_type(params, e)
+    catch
+        push!(e, AssertionError("Policy graph kind ($kind) not recognized"))
+    end
     d["policy_graph"] = policy_graph_obj
 
     return policy_graph_obj !== nothing
