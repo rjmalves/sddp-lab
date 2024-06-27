@@ -12,21 +12,11 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
 function build_model(inputs::Inputs)::SDDP.PolicyGraph
     @info "Compilando modelo"
 
-    graph = __build_graph(inputs.strategy)
+    graph = __build_graph(inputs.files.strategy)
 
-    # sampled_enas = __sample_enas(
-    #     stages,
-    #     cfg.initial_month,
-    #     cfg.scenarios_by_stage,
-    #     cfg.parque_uhe.n_uhes,
-    #     cfg.cycle_lenght,
-    #     ena_dist,
-    # )
-
-    # TODO - read SAA from scenarios
-    SAA = nothing
-
-    sp_builder = __generate_subproblem_builder(cfg, sampled_enas)
+    sp_builder = __generate_subproblem_builder(
+        inputs.files.configuration, inputs.files.strategy, inputs.files.inflow_scenarios
+    )
 
     # TODO - support multiple solvers
     model = SDDP.PolicyGraph(
@@ -37,18 +27,22 @@ function build_model(inputs::Inputs)::SDDP.PolicyGraph
 end
 
 function __generate_subproblem_builder(
-    cfg::Configuration, SAA::Vector{Vector{Vector{Float64}}}
+    cfg::Configuration, strategy::Strategy, s::AbstractStochasticProcess
 )::Function
     num_hydros = length(cfg.hydros)
     num_thermals = length(cfg.thermals)
+    num_stages = length(strategy.horizon)
+
+    SAA = generate_saa(s, 1, num_stages, 1)
 
     function fun_sp_build(m::JuMP.Model, node::Int)
         add_system_elements!(m, cfg)
-        __add_inflow!(m, cfg)
+        add_inflow_uncertainty!(m, s)
         __add_hydro_balance!(m, cfg)
         __add_load_balance!(m, cfg)
 
-        Ω_node = SAA[node]
+        Ω_node = vec(SAA[node])
+        @info size(Ω_node)
         SDDP.parameterize(m, Ω_node) do ω
             return JuMP.fix.(m[:ω_inflow], ω)
         end
@@ -58,10 +52,7 @@ function __generate_subproblem_builder(
 
         @stageobjective(
             m,
-            sum(
-                    cfg.thermals.entities[n].generation_cost * m[:gt][n] for
-                    n in 1:num_thermals
-                ) +
+            sum(cfg.thermals.entities[n].cost * m[:gt][n] for n in 1:num_thermals) +
                 deficit_cost * m[:deficit] +
                 sum(deficit_cost * 1.0001 * m[:slack_ghmin][n] for n in 1:num_hydros) +
                 sum(
@@ -74,17 +65,9 @@ function __generate_subproblem_builder(
     return fun_sp_build
 end
 
-function __add_inflow!(m::JuMP.Model, hydros::Hydros)
+function __add_hydro_balance!(m::JuMP.Model, cfg::Configuration)
+    hydros = cfg.hydros
     num_hydros = length(hydros)
-
-    @variable(m, ena[1:num_hydros])
-    @variable(m, ω_inflow[1:num_hydros])
-
-    @constraint(m, inflow_model, ena .== ω_inflow)
-end
-
-function __add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
-    num_hydros = length(cfg.hydros)
 
     @constraint(
         m,
@@ -105,7 +88,7 @@ end
 
 # TODO - read load from scenarios
 function __add_load_balance!(m::JuMP.Model, cfg::Configuration)
-    @constraint(m, balanco_energetico, sum(m[:gh]) + sum(m[:gt]) + m[:deficit] == 50.0)
+    @constraint(m, balanco_energetico, sum(m[:gh]) + sum(m[:gt]) + m[:deficit] == 60.0)
 end
 
 """

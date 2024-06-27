@@ -18,7 +18,7 @@ function read_validate_outputs!(
     return valid ? Outputs(d["path"], d["policy"], d["simulation"]) : nothing
 end
 
-function write_outputs(o::Outputs, artifacts::Vector{TaskArtifact})
+function write_outputs(o::Outputs, artifacts::Vector{TaskArtifact}, e::CompositeException)
     curdir = pwd()
     directory_exists = __validate_directory!(o.path, e)
     directory_exists || mkdir(o.path)

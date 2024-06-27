@@ -3,6 +3,7 @@ module StochasticProcess
 using Random, Distributions, Copulas
 using LinearAlgebra
 using JuMP
+using ..Utils
 
 import Copulas: Copula
 import Base: length, size
@@ -38,7 +39,7 @@ size(s::AbstractStochasticProcess)
 
 Generate a Sample Average Approximation of the noise (uncertainty) terms in model `s`
 """
-generate_saa(
+__generate_saa(
     rng::AbstractRNG,
     s::AbstractStochasticProcess,
     initial_season::Integer,
@@ -49,13 +50,7 @@ generate_saa(
 function generate_saa(
     s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
 )
-    return generate_saa(
-        Random.default_rng(),
-        s::AbstractStochasticProcess,
-        initial_season::Integer,
-        N::Integer,
-        B::Integer,
-    )
+    return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
 """
@@ -73,5 +68,7 @@ Return `true` if `s` is a valid instance of stochastic process; raise errors oth
 __validate(s::AbstractStochasticProcess)
 
 include("naive.jl")
+
+export Naive, AbstractStochasticProcess, generate_saa, add_inflow_uncertainty!
 
 end

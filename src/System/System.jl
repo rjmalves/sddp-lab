@@ -5,6 +5,7 @@ using CSV
 using DataFrames
 using JuMP
 using Graphs
+using SDDP
 
 using ..Utils
 
@@ -71,6 +72,6 @@ include("thermal.jl")
 include("configuration-validators.jl")
 include("configuration.jl")
 
-export Configuration
+export Configuration, add_system_elements!, downstream
 
 end

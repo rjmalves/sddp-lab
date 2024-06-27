@@ -2,29 +2,27 @@
 
 struct UnitaryNaive
     id::Integer
-    distributions::Dict{Integer, UnivariateDistribution}
+    distributions::Dict{Integer,UnivariateDistribution}
 end
 
-function UnitaryNaive(d::Dict{String, Any})
+function UnitaryNaive(d::Dict{String,Any})
 
     # __validate_dict_unitary_naive
 
-    distributions = Dict{Integer, UnivariateDistribution}()
+    distributions = Dict{Integer,UnivariateDistribution}()
 
     for (i, i_dist) in enumerate(d["distributions"])
-
-        name = i_dist["name"]
+        name = i_dist["kind"]
         seas = Int(i_dist["season"]) # this Int() call should be moved to __validate above
         params = real(i_dist["parameters"]) # this real() call should be moved to __validate above
 
         i_dist = __instantiate_distribution(name, params)
-        i_dist = Dict{Integer, UnivariateDistribution}(seas => i_dist)
+        i_dist = Dict{Integer,UnivariateDistribution}(seas => i_dist)
 
         merge!(distributions, i_dist)
-
     end
 
-    UnitaryNaive(d["id"], distributions)
+    return UnitaryNaive(d["id"], distributions)
 end
 
 # CLASS Naive ------------------------------------------------------------------------------
@@ -33,15 +31,14 @@ struct Naive <: AbstractStochasticProcess
 
     # each entry corresponds to an element in the system, with key equal to that
     # elements 'id'
-    models::Dict{Integer, UnitaryNaive}
+    models::Dict{Integer,UnitaryNaive}
 
     # similar to 'models', but the Int key now corresponds to the season
-    copulas::Dict{Integer, Copula}
-
+    copulas::Dict{Integer,Copula}
 end
 
-function Naive(d::Dict{String, Any})
-    
+function Naive(d::Dict{String,Any})
+
     # __validate_dict_naive
     #   __validate_dict_models
     #   __validate_dict_matrices
@@ -49,35 +46,35 @@ function Naive(d::Dict{String, Any})
     models = __build_marginal_models(d)
     matrices = __build_copulas(d)
 
-    Naive(models, matrices)
-
+    return Naive(models, matrices)
 end
 
-function __build_marginal_models(d::Dict{String, Any})
+function Naive(filename::String, e::CompositeException)
+    d = read_jsonc(filename, e)
+    return d !== nothing ? Naive(d) : nothing
+end
 
+function __build_marginal_models(d::Dict{String,Any})
     unitaries = map(ud -> UnitaryNaive(ud), d["marginal_models"])
     ids = map(x -> x.id, unitaries)
 
-    unitaries = Dict{Integer, UnitaryNaive}(zip(ids, unitaries))
+    unitaries = Dict{Integer,UnitaryNaive}(zip(ids, unitaries))
 
     return unitaries
 end
 
-function __build_copulas(d::Dict{String, Any})
-
-    copulas = Dict{Integer, Copula}()
+function __build_copulas(d::Dict{String,Any})
+    copulas = Dict{Integer,Copula}()
 
     for (i, i_copula) in enumerate(d["copulas"])
-
         name = i_copula["name"]
         seas = Int(i_copula["season"]) # this Int() call should be moved to __validate
-        params = stack(i_copula["parameters"]) |> real # this block should be moved to a __validate
+        params = real(stack(i_copula["parameters"])) # this block should be moved to a __validate
 
         i_copula = __instantiate_copula(name, params)
-        i_copula = Dict{Integer, Copula}(seas => i_copula)
+        i_copula = Dict{Integer,Copula}(seas => i_copula)
 
         merge!(copulas, i_copula)
-
     end
 
     return copulas
@@ -86,24 +83,25 @@ end
 # GENERAL METHODS --------------------------------------------------------------------------
 
 function __get_ids(s::Naive)
-    map(x -> x.id, values(s.models))
+    return map(x -> x.id, values(s.models))
 end
 
 function length(s::Naive)
-    length(__get_ids(s))
+    return length(__get_ids(s))
 end
 
 function size(s::Naive)
     first_id = __get_ids(s)[1]
     first_us = s.models[first_id]
 
-    (length(__get_ids(s)), length(first_us.distributions))
+    return (length(__get_ids(s)), length(first_us.distributions))
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
 
-function generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer)
-
+function __generate_saa(
+    rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer
+)
     size_s = size(s)
 
     out = [zeros(Float64, (size_s[1], B)) for n in range(1, N)]
@@ -117,16 +115,15 @@ function generate_saa(rng::AbstractRNG, s::Naive, initial_season::Integer, N::In
         D = __build_mvdist(s, season)
         out[n] .+= rand(rng, D, B)
     end
-    
+
     return out
 end
 
-function generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
-    __generate_saa(Random.default_rng(), s, initial_season, N, B)
-end
+# function generate_saa(s::Naive, initial_season::Integer, N::Integer, B::Integer)
+#     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
+# end
 
 function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)
-
     n_hydro = length(s)
 
     @variable(m, ω_inflow[1:n_hydro])
@@ -138,7 +135,6 @@ end
 # HELPERS ----------------------------------------------------------------------------------
 
 function __build_mvdist(s::Naive, season::Int)
-    
     ids = __get_ids(s)
 
     marginals = (s.models[id].distributions[season] for id in ids)
@@ -154,7 +150,7 @@ end
 
 Return instance of a distribution from Distributions.jl of type `name` and parameters `params`
 """
-function __instantiate_distribution(name::String, params::Vector{T} where T <: Real) 
+function __instantiate_distribution(name::String, params::Vector{T} where {T<:Real})
     d = getfield(Distributions, Symbol(name))(params...)
     return d
 end
@@ -164,7 +160,9 @@ end
 
 Return instance of a copula from Copulas.jl of type `name` and parameters `params`
 """
-function __instantiate_copula(name::String, params::Union{Vector{T}, Matrix{Float64}} where T <: Real) 
+function __instantiate_copula(
+    name::String, params::Union{Vector{T},Matrix{Float64}} where {T<:Real}
+)
     d = getfield(Copulas, Symbol(name))(params...)
     return d
 end

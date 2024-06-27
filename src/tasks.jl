@@ -22,18 +22,19 @@ struct Policy <: Task
 end
 struct PolicyArtifact <: TaskArtifact
     policy::SDDP.PolicyGraph
+    inputs::Inputs
 end
 
 function run(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
-    # Calls build_model and train_model 
+    model = build_model(t.inputs)
+    train_model(model, t.inputs.files.strategy)
+    return PolicyArtifact(model, t.inputs)
 end
 
-function write(a::PolicyArtifact, configuration::Configuration, output::Outputs)
-    # Write cuts to file
+function write(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
-    outdir = output.path
-    write_model_cuts(cuts, outdir)
-    plot_model_cuts(cuts, configuration, outdir)
+    write_model_cuts(cuts)
+    plot_model_cuts(cuts, a.inputs.files.configuration)
     return true
 end
 
@@ -42,36 +43,38 @@ struct Simulation <: Task
 end
 struct SimulationArtifact <: TaskArtifact
     simulations::Vector{Vector{Dict{Symbol,Any}}}
+    inputs::Inputs
 end
 
 function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
-    # Calls simulate_model
+    sims = simulate_model(a[1].policy, t.inputs.files.strategy)
+    return SimulationArtifact(sims, t.inputs)
 end
 
-function write(a::SimulationArtifact, configuration::Configuration, output::Outputs)
+function write(a::SimulationArtifact)
     # Write simulation results to file
-    sims = simulate_model(a.policy)
-    outdir = Outputs.path
-    write_simulation_results(sims, configuration, outdir)
-    plot_simulation_results(sims, configuration, outdir)
+    write_simulation_results(a.simulations, a.inputs.files.configuration)
+    plot_simulation_results(a.simulations, a.inputs.files.configuration)
     return true
 end
 
 function read_validate_tasks!(
-    t::Vector{String}, inputs::Inputs, e::CompositeException
+    tasks::Vector{String}, inputs::Inputs, e::CompositeException
 )::Vector{Task}
     task_objs = Vector{Task}()
     try
-        task_type = getfield(@__MODULE__, Symbol(t))
-        task_obj = task_type(inputs)
-        push!(task_objs, task_obj)
+        for t in tasks
+            task_type = getfield(@__MODULE__, Symbol(t))
+            task_obj = task_type(inputs)
+            push!(task_objs, task_obj)
+        end
     catch
         push!(e, AssertionError("Task kind ($kind) not recognized"))
     end
     return task_objs
 end
 
-function run_tasks(tasks::Vector{Task}, e::CompositeException)::Vector{TaskArtifact}
+function run_tasks!(tasks::Vector{Task}, e::CompositeException)::Vector{TaskArtifact}
     artifacts = Vector{TaskArtifact}()
     for task in tasks
         a = run(task, artifacts)

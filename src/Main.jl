@@ -56,10 +56,10 @@ end
 
 function main()
     e = CompositeException()
-    d = read_validate_entrypoint("data-refactor/main.jsonc", e)
+    d = read_validate_entrypoint!("main.jsonc", e)
     inputs = read_validate_inputs!(d["inputs"], e)
     outputs = read_validate_outputs!(d["outputs"], e)
     tasks = read_validate_tasks!(d["tasks"], inputs, e)
-    artifacts = run_tasks(tasks, e)
-    return write_outputs(outputs, artifacts)
+    artifacts = run_tasks!(tasks, e)
+    return write_outputs(outputs, artifacts, e)
 end

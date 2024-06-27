@@ -2,6 +2,7 @@ using .Algorithm
 using .Resources
 using .System
 using .Utils
+using .StochasticProcess
 
 # INPUTS --------------------------------------------------------------------------------------
 
@@ -9,6 +10,7 @@ struct InputFiles
     strategy::Strategy
     environment::Environment
     configuration::Configuration
+    inflow_scenarios::AbstractStochasticProcess
 end
 
 struct Inputs
@@ -45,11 +47,19 @@ function __read_validate_input_files!(
     strategy = Strategy(d["algorithm"], e)
     environment = Environment(d["resources"], e)
     configuration = Configuration(d["system"], e)
+    inflow_scenarios = Naive(d["scenarios"], e)
 
     valid_files =
-        strategy !== nothing && environment !== nothing && configuration !== nothing
+        strategy !== nothing &&
+        environment !== nothing &&
+        configuration !== nothing &&
+        inflow_scenarios !== nothing
 
-    return valid_files ? InputFiles(strategy, environment, configuration) : nothing
+    return if valid_files
+        InputFiles(strategy, environment, configuration, inflow_scenarios)
+    else
+        nothing
+    end
 end
 
 function read_validate_inputs!(

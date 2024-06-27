@@ -133,11 +133,9 @@ Exporta os dados de saídas da simulação final do modelo.
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration, OUTDIR::String
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
 )
-    @info "Escrevendo resultados da simulação em $(OUTDIR)"
-
-    __check_outdir(OUTDIR)
+    @info "Escrevendo resultados da simulação"
 
     # variaveis de hidro
     df_hidro = DataFrame()
@@ -156,7 +154,7 @@ function write_simulation_results(
             )
         end
     end
-    CSV.write(joinpath(OUTDIR, "operacao_hidro.csv"), df_hidro)
+    CSV.write("operacao_hidro.csv", df_hidro)
 
     # variaveis de termica
     df_termo = DataFrame()
@@ -166,7 +164,7 @@ function write_simulation_results(
             df_termo, variavel, string(variavel), [n_thermals], "UTE", simulations
         )
     end
-    CSV.write(joinpath(OUTDIR, "operacao_termo.csv"), df_termo)
+    CSV.write("operacao_termo.csv", df_termo)
 
     # variaveis sistemicas
     df_sistema = DataFrame()
@@ -185,7 +183,7 @@ function write_simulation_results(
             )
         end
     end
-    return CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
+    return CSV.write("operacao_sistema.csv", df_sistema)
 end
 
 """
@@ -262,10 +260,9 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
-function write_model_cuts(cuts::DataFrame, OUTDIR::String)
-    PROCESSED_CUTS_PATH = joinpath(OUTDIR, "cortes.csv")
+function write_model_cuts(cuts::DataFrame)
+    PROCESSED_CUTS_PATH = "cortes.csv"
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
-    __check_outdir(OUTDIR)
     return CSV.write(PROCESSED_CUTS_PATH, cuts)
 end
 
@@ -281,9 +278,9 @@ Gera visualizações para as variáveis da operação calculadas durante a simul
   - `OUTDIR::String`: diretório de saída para os plots
 """
 function plot_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration, OUTDIR::String
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
 )
-    OPERATION_PLOTS_PATH = joinpath(OUTDIR, "operacao.html")
+    OPERATION_PLOTS_PATH = "operacao.html"
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
 
@@ -344,7 +341,6 @@ function plot_simulation_results(
     SDDP.add_spaghetti(plt; title = "CMO") do data
         return data[:cmo]
     end
-    __check_outdir(OUTDIR)
     return SDDP.plot(plt, OPERATION_PLOTS_PATH; open = false)
 end
 
@@ -439,12 +435,11 @@ Gera visualizações para os cortes produzidos pelo modelo.
   - `cfg::Configuration`: configuração de entrada para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para os plots
 """
-function plot_model_cuts(cuts::DataFrame, cfg::Configuration, OUTDIR::String)
-    CUTDIR = joinpath(OUTDIR, "plotcortes")
+function plot_model_cuts(cuts::DataFrame, cfg::Configuration)
+    CUTDIR = joinpath(pwd(), "plotcortes")
     __check_outdir(CUTDIR)
     @info "Plotando cortes em $(CUTDIR)"
-    n_hydros = cfg.parque_uhe.n_uhes
-    n_hydros = length(cfg.hydros.entities)
+    n_hydros = length(cfg.hydros)
     if n_hydros == 1
         plot_model_cuts_1var(cuts, cfg, CUTDIR)
     elseif n_hydros == 2

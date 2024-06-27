@@ -81,6 +81,6 @@ include("convergence.jl")
 include("strategy-validators.jl")
 include("strategy.jl")
 
-export Strategy
+export Strategy, generate_scenario_graph
 
 end

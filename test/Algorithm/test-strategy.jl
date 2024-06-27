@@ -6,8 +6,8 @@ using DataFrames
 using JSON
 
 DICT::Dict{String,Any} = Dict(
-    "policy_graph" =>
-        Dict("kind" => "RegularPolicyGraph", "params" => Dict("discount_rate" => 1.00)),
+    "scenario_graph" =>
+        Dict("kind" => "RegularScenarioGraph", "params" => Dict("discount_rate" => 1.00)),
     "horizon" => Dict(
         "kind" => "ExplicitHorizon",
         "params" => Dict(
@@ -47,7 +47,6 @@ DF = DataFrame(;
         d, e = __renew(DICT)
 
         cd(example_data_dir)
-        s = Algorithm.Strategy("algorithm.jsonc", e)
-        @test typeof(s) === Algorithm.Strategy
+        @test typeof(Algorithm.Strategy("algorithm.jsonc", e)) === Algorithm.Strategy
     end
 end

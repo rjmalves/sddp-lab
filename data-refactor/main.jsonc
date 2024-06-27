@@ -16,7 +16,7 @@
             // Defines the scenarios that are used to the
             // optimization, including the scenario generation
             // model and its parameters
-            "scenarios": "scenarios.jsonc",
+            "scenarios": "inflow_scenarios.jsonc",
             // Defines the system that is being optimized,
             // with all the hydro plants, thermal plants, 
             // load buses and exchange lines.

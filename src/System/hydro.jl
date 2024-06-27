@@ -138,6 +138,8 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
         end
     )
 
+    @variable(m, ena[1:num_hydros])
+
     @constraint(
         m, [n = 1:num_hydros], gh[n] + slack_ghmin[n] >= ses.entities[n].min_generation
     )
