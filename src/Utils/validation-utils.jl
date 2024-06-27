@@ -40,9 +40,15 @@ end
 
 # FILE VALIDATORS --------------------------------------------------------------------------
 
-function __validate_file!(filename::String, e::CompositeException)::Bool
-    valid = isfile(filename)
-    valid || push!(e, ErrorException("$filename not found!"))
+function __validate_file!(path::String, e::CompositeException)::Bool
+    valid = isfile(path)
+    valid || push!(e, ErrorException("$path not found!"))
+    return valid
+end
+
+function __validate_directory!(path::String, e::CompositeException)::Bool
+    valid = isdir(path)
+    valid || push!(e, ErrorException("$path not found!"))
     return valid
 end
 

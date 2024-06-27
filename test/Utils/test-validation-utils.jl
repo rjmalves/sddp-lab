@@ -76,6 +76,18 @@ DICT = Dict("a" => 1, "b" => "string", "c" => [[1, 2], [3, 4]])
         @test e.exceptions[1].msg == "$filename not found!"
     end
 
+    @testset "validate_directory" begin
+        cd(example_dir)
+
+        e = CompositeException()
+        dirname = "data"
+        @test Utils.__validate_directory!(dirname, e) == true
+
+        dirname = "non-existent-file"
+        @test Utils.__validate_directory!(dirname, e) == false
+        @test e.exceptions[1].msg == "$dirname not found!"
+    end
+
     @testset "dataframe_to_dict" begin
         df = DataFrame(; a = [1, 2], b = ["a", "b"])
         d = Utils.__dataframe_to_dict(df)
