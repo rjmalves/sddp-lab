@@ -51,7 +51,7 @@ end
 function write(a::SimulationArtifact, configuration::Configuration, output::Outputs)
     # Write simulation results to file
     sims = simulate_model(a.policy)
-    outdir = Outputs.path
+    outdir = output.path
     write_simulation_results(sims, configuration, outdir)
     plot_simulation_results(sims, configuration, outdir)
     return true
