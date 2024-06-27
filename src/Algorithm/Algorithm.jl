@@ -74,4 +74,6 @@ include("convergence.jl")
 include("strategy-validators.jl")
 include("strategy.jl")
 
+export Strategy
+
 end

@@ -10,4 +10,6 @@ include("solver.jl")
 include("environment-validators.jl")
 include("environment.jl")
 
+export Environment
+
 end

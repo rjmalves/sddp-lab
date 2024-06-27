@@ -71,4 +71,6 @@ include("thermal.jl")
 include("configuration-validators.jl")
 include("configuration.jl")
 
+export Configuration
+
 end
