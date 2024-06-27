@@ -15,6 +15,10 @@ function ExplicitHorizon(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? ExplicitHorizon(d["stages"]) : nothing
 end
 
+function length(h::ExplicitHorizon)::Integer
+    return length(h.stages)
+end
+
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_horizon!(d::Dict{String,Any}, e::CompositeException)::Bool

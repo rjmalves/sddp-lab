@@ -1,10 +1,10 @@
 {
-    // Policy graph constructor for defining
+    // Scenario graph constructor for defining
     // if the graph is regular, cyclic, etc.
-    "policy_graph": {
-        "kind": "RegularPolicyGraph",
+    "scenario_graph": {
+        "kind": "RegularScenarioGraph",
         "params": {
-            // Parameters for the policy graph
+            // Parameters for the scenario graph
             "discount_rate": 1.00
         }
     },

@@ -115,8 +115,37 @@ end
 
 # SDDP METHODS -----------------------------------------------------------------------------
 
-# TODO
-function add_system_elements!(m::JuMP.Model, ses::Hydros) end
+function add_system_elements!(m::JuMP.Model, ses::Hydros)
+    num_hydros = length(ses)
+
+    @variable(
+        m,
+        ses.entities[n].min_storage <=
+            earm[n = 1:num_hydros] <=
+            ses.entities[n].max_storage,
+        SDDP.State,
+        initial_value = ses.entities[n].initial_storage
+    )
+
+    @variables(
+        m,
+        begin
+            ses.entities[n].min_generation <=
+            gh[n = 1:num_hydros] <=
+            ses.entities[n].max_generation
+            slack_ghmin[n = 1:num_hydros] >= 0
+            vert[n = 1:num_hydros] >= 0
+        end
+    )
+
+    @constraint(
+        m, [n = 1:num_hydros], gh[n] + slack_ghmin[n] >= ses.entities[n].min_generation
+    )
+
+    @constraint(
+        m, fim_horizonte[n = 1:num_hydros], earm[n].out >= ses.entities[n].min_storage
+    )
+end
 
 # HELPER METHODS ---------------------------------------------------------------------------
 

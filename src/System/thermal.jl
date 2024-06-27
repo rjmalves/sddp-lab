@@ -83,5 +83,12 @@ end
 
 # SDDP METHODS -----------------------------------------------------------------------------
 
-# TODO
-function add_system_elements!(m::JuMP.Model, ses::Thermals) end
+function add_system_elements!(m::JuMP.Model, ses::Thermals)
+    num_thermals = length(ses)
+    @variable(
+        m,
+        ses.entities[n].min_generation <=
+            gt[n = 1:num_thermals] <=
+            ses.entities[n].max_generation
+    )
+end

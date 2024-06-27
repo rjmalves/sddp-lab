@@ -40,8 +40,10 @@ end
 
 # SDDP METHODS -----------------------------------------------------------------------------
 
-# TODO
-function add_system_elements!(m::JuMP.Model, ses::Buses) end
+# TODO - add deficit by bus
+function add_system_elements!(m::JuMP.Model, ses::Buses)
+    @variable(m, deficit >= 0)
+end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 

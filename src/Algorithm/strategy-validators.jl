@@ -1,9 +1,9 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_strategy_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    keys = ["policy_graph", "horizon", "risk_measure", "convergence"]
+    keys = ["scenario_graph", "horizon", "risk_measure", "convergence"]
     keys_types = [
-        T where {T<:PolicyGraph},
+        T where {T<:ScenarioGraph},
         T where {T<:Horizon},
         T where {T<:RiskMeasure},
         Convergence,

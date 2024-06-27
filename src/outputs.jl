@@ -25,11 +25,7 @@ function write_outputs(o::Outputs, artifacts::Vector{TaskArtifact})
     cd(o.path)
 
     for a in artifacts
-        if a isa PolicyArtifact && o.policy
-            write(a)
-        elseif a isa SimulationArtifact && o.simulation
-            write(a)
-        end
+        write(a)
     end
 
     return cd(curdir)

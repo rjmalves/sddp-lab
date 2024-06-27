@@ -40,3 +40,12 @@ function Configuration(filename::String, e::CompositeException)
 
     return valid ? Configuration(d, e) : nothing
 end
+
+# SDDP METHODS -----------------------------------------------------------------------------
+
+function add_system_elements!(m::JuMP.Model, c::Configuration)
+    add_system_elements!(m, c.buses)
+    add_system_elements!(m, c.lines)
+    add_system_elements!(m, c.hydros)
+    return add_system_elements!(m, c.thermals)
+end

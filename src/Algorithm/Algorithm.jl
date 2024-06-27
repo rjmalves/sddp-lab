@@ -12,7 +12,7 @@ using ..Utils
 
 import Base: length
 
-abstract type PolicyGraph end
+abstract type ScenarioGraph end
 abstract type Horizon end
 abstract type RiskMeasure end
 abstract type StoppingCriteria end
@@ -30,12 +30,19 @@ struct Convergence
 end
 
 """
-generate_policy_graph(g::PolicyGraph)
+generate_scenario_graph(g::ScenarioGraph)
 
-Generates an `SDDP.PolicyGraph` object from a `PolicyGraph` object, applying
+Generates an `SDDP.Graph` object from a `ScenarioGraph` object, applying
 study-specific configurations.
 """
-function generate_policy_graph(g::PolicyGraph)::SDDP.PolicyGraph end
+function generate_scenario_graph(g::ScenarioGraph, num_stages::Integer)::SDDP.Graph end
+
+"""
+length(h::Horizon)
+
+Evaluates the length of the study horizon, in number of stages.
+"""
+function length(h::Horizon)::Integer end
 
 """
 generate_risk_measure(m::RiskMeasure)
@@ -53,8 +60,8 @@ study-specific configurations.
 """
 function generate_stopping_rules(c::Convergence)::SDDP.AbstractStoppingRule end
 
-include("policygraph-validators.jl")
-include("policygraph.jl")
+include("scenariograph-validators.jl")
+include("scenariograph.jl")
 
 include("stage-validators.jl")
 include("stage.jl")
