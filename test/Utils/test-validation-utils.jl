@@ -126,23 +126,19 @@ DICT = Dict("a" => 1, "b" => "string", "c" => [[1, 2], [3, 4]])
     end
 
     @testset "validate_required_default_values" begin
-        default_values = Dict{String,Any}("a" => 1, "b" => 2)
-        columns_requiring_default_values = ["b"]
-        columns_data_types = [Integer]
-        df = DataFrame(; a = [1, 2], b = [2, nothing])
-
+        entities = [
+            Dict{String,Any}("a" => 1, "b" => 2), Dict{String,Any}("a" => 1, "b" => missing)
+        ]
         e = CompositeException()
-        valid = Utils.__validate_required_default_values!(
-            default_values, columns_requiring_default_values, columns_data_types, df, e
-        )
+
+        default_values = Dict{String,Any}("a" => 1, "b" => 2)
+        valid = Utils.__validate_required_default_values!(entities, default_values, e)
         @test valid == true
 
         default_values = Dict{String,Any}("a" => 1)
-        valid = Utils.__validate_required_default_values!(
-            default_values, columns_requiring_default_values, columns_data_types, df, e
-        )
+        valid = Utils.__validate_required_default_values!(entities, default_values, e)
         @test valid == false
         @test length(e) == 1
-        @test e.exceptions[1].msg == "Key 'b' not found in dictionary"
+        @test e.exceptions[1].msg == "Key 'b' requires a default value"
     end
 end

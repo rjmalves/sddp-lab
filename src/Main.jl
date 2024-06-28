@@ -14,9 +14,11 @@ function main()
     # Inputs reading
     d = read_validate_entrypoint!("main.jsonc", e)
     d !== nothing || exit_with_errors(e)
+
     inputs = read_validate_inputs!(d["inputs"], e)
     outputs = read_validate_outputs!(d["outputs"], e)
     length(e) == 0 || exit_with_errors(e)
+
     tasks = read_validate_tasks!(d["tasks"], inputs, e)
     tasks !== nothing || exit_with_errors(e)
     # Running tasks

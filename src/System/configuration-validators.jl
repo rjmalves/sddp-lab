@@ -14,46 +14,36 @@ function __validate_system_entity_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_entity_keys = __validate_keys!(d, ["entities"], e)
-    valid_file_keys = valid_entity_keys && __validate_keys!(d["entities"], ["file"], e)
-    valid_file_types =
-        valid_file_keys && __validate_key_types!(d["entities"], ["file"], [String], e)
+    valid_entity_types =
+        valid_entity_keys &&
+        __validate_key_types!(d, ["entities"], [Vector{Dict{String,Any}}], e)
 
-    return valid_file_types
+    return valid_entity_types
 end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_cast_system_entity_content!(
-    filename::String, default_values::Dict{String,Any}, e::CompositeException
-)::Union{Vector{Dict{String,Any}},Nothing}
+    filename::String, e::CompositeException
+)::Vector{Dict{String,Any}}
     df = read_csv(filename, e)
     valid_df = df !== nothing
     empty_df = valid_df && (nrow(df) == 0)
     # Fast check for empty dataframe
     if empty_df
         return []
+    elseif valid_df
+        return __dataframe_to_dict(df)
     end
-
-    # Checks which columns demand default values
-    columns, data_types = __get_dataframe_columns_for_default_value_fill(df)
-
-    # Replaces missing values with default values
-    valid = __validate_required_default_values!(default_values, columns, data_types, df, e)
-    !valid || __fill_default_values!(df, default_values)
-    return valid ? __dataframe_to_dict(df) : nothing
 end
 
 function __validate_system_entity_file_key!(d::Dict{String,Any}, e::CompositeException)
-    valid_entities_key = __validate_keys!(d, ["entities"], e)
-    valid_entities_type =
-        valid_entities_key && __validate_key_types!(d, ["entities"], [Dict{String,Any}], e)
-    has_file_key = valid_entities_type && haskey(d["entities"], "file")
-    valid_file_key =
-        has_file_key && __validate_key_types!(d["entities"], ["file"], [String], e)
+    has_file_key = haskey(d, "file")
+    valid_file_key = has_file_key && __validate_key_types!(d, ["file"], [String], e)
     return valid_file_key
 end
 
-function __validate_system_entities_key!(d::Dict{String,Any}, e::CompositeException)
+function __validate_system_entity_entities_key!(d::Dict{String,Any}, e::CompositeException)
     valid_entities_key = __validate_keys!(d, ["entities"], e)
     valid_entities_type =
         valid_entities_key &&
@@ -61,28 +51,34 @@ function __validate_system_entities_key!(d::Dict{String,Any}, e::CompositeExcept
     return valid_entities_type
 end
 
-function __validate_system_entity_params_key!(d::Dict{String,Any}, e::CompositeException)
-    valid_params_key = __validate_keys!(d, ["params"], e)
-    valid_params_type =
-        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    return valid_params_type
-end
-
 function __validate_cast_system_entity_with_file!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_params_key = __validate_system_entity_params_key!(d, e)
-    valid_entities = false
-
-    if valid_params_key
-        entities_dict = __validate_cast_system_entity_content!(
-            d["entities"]["file"], d["params"], e
-        )
-        valid_entities = entities_dict !== nothing
-        d["entities"] = entities_dict
-    end
+    entities_dict = __validate_cast_system_entity_content!(d["file"], e)
+    valid_entities = entities_dict !== nothing
+    d["entities"] = entities_dict
 
     return valid_entities
+end
+
+function __fill_default_values!(
+    entities::Vector{Dict{String,Any}}, default_values::Dict{String,Any}
+)
+    for e in entities
+        for (k, v) in e
+            if v === missing
+                e[k] = default_values[k]
+            end
+        end
+    end
+end
+
+function __fill_system_entity_default_values!(d::Dict{String,Any}, e::CompositeException)
+    entities = d["entities"]
+    default_values = haskey(d, "params") ? d["params"] : Dict{String,Any}()
+    valid = __validate_required_default_values!(d["entities"], default_values, e)
+    !valid || __fill_default_values!(entities, default_values)
+    return nothing
 end
 
 function __validate_cast_system_entities_content!(
@@ -97,13 +93,18 @@ function __validate_cast_system_entities_content!(
 
     entity_data = d[key]
     valid_file_key = __validate_system_entity_file_key!(entity_data, e)
-    valid_entities_key = valid_file_key || __validate_system_entities_key!(entity_data, e)
+    valid_entities_key =
+        valid_file_key || __validate_system_entity_entities_key!(entity_data, e)
 
     valid = false
     if valid_file_key
         valid = __validate_cast_system_entity_with_file!(entity_data, e)
     elseif valid_entities_key
         valid = true
+    end
+
+    if valid
+        __fill_system_entity_default_values!(entity_data, e)
     end
 
     return valid

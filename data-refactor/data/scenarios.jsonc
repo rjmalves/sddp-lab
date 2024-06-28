@@ -1,11 +1,9 @@
 {
     "inflow": {
         // naive | AR | PAR | HMM | ...
-        "kind": "naive",
+        "kind": "Naive",
         "params": {
-            "file": "inflow_scenarios.csv"
-            // TODO - maybe support json files depending on the "kind"
-            // or always json files
+            "file": "inflow_scenarios.jsonc"
         }
     },
     "load": {

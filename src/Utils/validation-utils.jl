@@ -114,26 +114,22 @@ function __validate_dataframe_content_and_cast!(
 end
 
 function __validate_required_default_values!(
+    entities::Vector{Dict{String,Any}},
     default_values::Dict{String,Any},
-    columns_requiring_default_values::Vector{String},
-    columns_data_types::Vector{DataType},
-    df::DataFrame,
     e::CompositeException,
 )::Bool
-    valid_column_keys = __validate_keys!(
-        default_values, columns_requiring_default_values, e
-    )
-    valid_column_types = if valid_column_keys
-        __validate_key_types!(
-            default_values, columns_requiring_default_values, columns_data_types, e
-        )
-    else
-        false
+    valid = true
+    default_value_keys = collect(keys(default_values))
+    for entity in entities
+        for (k, v) in entity
+            if (v === missing) && (findfirst(==(k), default_value_keys) === nothing)
+                valid = false
+                push!(e, AssertionError("Key '$k' requires a default value"))
+            end
+        end
     end
-    columns_in_dataframe = __validate_columns_in_dataframe!(
-        df, collect(keys(default_values)), e
-    )
-    return valid_column_keys && valid_column_types && columns_in_dataframe
+
+    return valid
 end
 
 # HELPERS ----------------------------------------------------------------------------------
