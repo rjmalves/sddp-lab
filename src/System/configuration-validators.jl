@@ -47,10 +47,18 @@ function __validate_system_entity_file_key!(d::Dict{String,Any}, e::CompositeExc
     valid_entities_key = __validate_keys!(d, ["entities"], e)
     valid_entities_type =
         valid_entities_key && __validate_key_types!(d, ["entities"], [Dict{String,Any}], e)
-    has_file_key = valid_entities_type && __validate_keys!(d["entities"], ["file"], e)
+    has_file_key = valid_entities_type && haskey(d["entities"], "file")
     valid_file_key =
         has_file_key && __validate_key_types!(d["entities"], ["file"], [String], e)
     return valid_file_key
+end
+
+function __validate_system_entities_key!(d::Dict{String,Any}, e::CompositeException)
+    valid_entities_key = __validate_keys!(d, ["entities"], e)
+    valid_entities_type =
+        valid_entities_key &&
+        __validate_key_types!(d, ["entities"], [Vector{Dict{String,Any}}], e)
+    return valid_entities_type
 end
 
 function __validate_system_entity_params_key!(d::Dict{String,Any}, e::CompositeException)
@@ -58,6 +66,23 @@ function __validate_system_entity_params_key!(d::Dict{String,Any}, e::CompositeE
     valid_params_type =
         valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
     return valid_params_type
+end
+
+function __validate_cast_system_entity_with_file!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_params_key = __validate_system_entity_params_key!(d, e)
+    valid_entities = false
+
+    if valid_params_key
+        entities_dict = __validate_cast_system_entity_content!(
+            d["entities"]["file"], d["params"], e
+        )
+        valid_entities = entities_dict !== nothing
+        d["entities"] = entities_dict
+    end
+
+    return valid_entities
 end
 
 function __validate_cast_system_entities_content!(
@@ -72,18 +97,16 @@ function __validate_cast_system_entities_content!(
 
     entity_data = d[key]
     valid_file_key = __validate_system_entity_file_key!(entity_data, e)
-    valid_params_key = __validate_system_entity_params_key!(entity_data, e)
-    valid_entities = false
+    valid_entities_key = valid_file_key || __validate_system_entities_key!(entity_data, e)
 
-    if valid_file_key && valid_params_key
-        entities_dict = __validate_cast_system_entity_content!(
-            entity_data["entities"]["file"], entity_data["params"], e
-        )
-        valid_entities = entities_dict !== nothing
-        d[key] = entities_dict
+    valid = false
+    if valid_file_key
+        valid = __validate_cast_system_entity_with_file!(entity_data, e)
+    elseif valid_entities_key
+        valid = true
     end
 
-    return valid_file_key && valid_entities
+    return valid
 end
 
 function __validate_cast_buses_content!(d::Dict{String,Any}, e::CompositeException)::Bool

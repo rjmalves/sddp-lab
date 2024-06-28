@@ -19,10 +19,41 @@ function __validate_horizon_file_key!(d::Dict{String,Any}, e::CompositeException
     valid_params_key = __validate_keys!(d, ["params"], e)
     valid_params_type =
         valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    has_file_key = valid_params_type && __validate_keys!(d["params"], ["file"], e)
+    has_file_key = valid_params_type && haskey(d["params"], "file")
     valid_file_key =
         has_file_key && __validate_key_types!(d["params"], ["file"], [String], e)
     return valid_file_key
+end
+
+function __validate_horizon_params_key_with_stages!(
+    d::Dict{String,Any}, e::CompositeException
+)
+    valid_params_key = __validate_keys!(d, ["params"], e)
+    valid_params_type =
+        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
+    valid_stages_in_params_key =
+        valid_params_type && __validate_keys!(d["params"], ["stages"], e)
+    valid_stages_in_params_type =
+        valid_stages_in_params_key &&
+        __validate_key_types!(d["params"], ["stages"], [Vector{Dict{String,Any}}], e)
+    return valid_stages_in_params_type
+end
+
+function __validate_cast_horizon_with_file!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    df = read_csv(d["params"]["file"], e)
+    valid_df = df !== nothing
+    valid_stages = valid_df
+
+    if valid_df
+        stages_dict = __validate_dataframe_content_and_cast!(
+            df, ["index", "start_date", "end_date"], [Integer, Date, Date], e
+        )
+        valid_stages = stages_dict !== nothing
+        d["params"]["stages"] = stages_dict
+    end
+    return valid_stages
 end
 
 function __validate_cast_horizon_stage_content!(
@@ -37,21 +68,17 @@ function __validate_cast_horizon_stage_content!(
 
     horizon_data = d["horizon"]
     valid_file_key = __validate_horizon_file_key!(horizon_data, e)
-    df = valid_file_key ? read_csv(horizon_data["params"]["file"], e) : nothing
+    valid_stages_in_params_key =
+        valid_file_key || __validate_horizon_params_key_with_stages!(horizon_data, e)
 
-    valid_df = df !== nothing
-
-    valid_stages = valid_df
-
-    if valid_df
-        stages_dict = __validate_dataframe_content_and_cast!(
-            df, ["index", "start_date", "end_date"], [Integer, Date, Date], e
-        )
-        valid_stages = stages_dict !== nothing
-        horizon_data["params"]["stages"] = stages_dict
+    valid = false
+    if valid_file_key
+        valid = __validate_cast_horizon_with_file!(horizon_data, e)
+    else
+        valid = valid_stages_in_params_key
     end
 
-    return valid_file_key && valid_stages
+    return valid
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------

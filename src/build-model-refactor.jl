@@ -42,7 +42,6 @@ function __generate_subproblem_builder(
         __add_load_balance!(m, cfg)
 
         Ω_node = vec(SAA[node])
-        @info size(Ω_node)
         SDDP.parameterize(m, Ω_node) do ω
             return JuMP.fix.(m[:ω_inflow], ω)
         end

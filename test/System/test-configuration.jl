@@ -14,7 +14,7 @@ LINE_DICT = Dict(
     "exchange_penalty" => 0.0,
 )
 
-HYDRO_DICT1 = Dict(
+HYDRO_DICT = Dict(
     "id" => 1,
     "name" => "UHE1",
     "downstream_id" => 0,
@@ -38,10 +38,10 @@ THERMAL_DICT = Dict(
 )
 
 CFG_DICT = Dict(
-    "buses" => BUSES_DICT,
-    "lines" => [LINE_DICT],
-    "hydros" => [HYDRO_DICT1],
-    "thermals" => [THERMAL_DICT],
+    "buses" => Dict{String,Any}("entities" => BUSES_DICT),
+    "lines" => Dict{String,Any}("entities" => [LINE_DICT]),
+    "hydros" => Dict{String,Any}("entities" => [HYDRO_DICT]),
+    "thermals" => Dict{String,Any}("entities" => [THERMAL_DICT]),
 )
 
 @testset "system-configuration" begin

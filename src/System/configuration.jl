@@ -11,10 +11,10 @@ end
 function Configuration(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    d["buses"] = Buses(d["buses"], e)
-    d["lines"] = Lines(d["lines"], d["buses"], e)
-    d["hydros"] = Hydros(d["hydros"], d["buses"], e)
-    d["thermals"] = Thermals(d["thermals"], d["buses"], e)
+    d["buses"] = Buses(d["buses"]["entities"], e)
+    d["lines"] = Lines(d["lines"]["entities"], d["buses"], e)
+    d["hydros"] = Hydros(d["hydros"]["entities"], d["buses"], e)
+    d["thermals"] = Thermals(d["thermals"]["entities"], d["buses"], e)
 
     # Keys and types validation
     valid = __validate_configuration_keys_types!(d, e)
