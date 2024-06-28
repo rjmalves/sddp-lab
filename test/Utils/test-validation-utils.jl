@@ -61,7 +61,8 @@ DICT = Dict("a" => 1, "b" => "string", "c" => [[1, 2], [3, 4]])
         valid = Utils.__validate_key_types!(d, ["a", "b", "c"], [Int, String, Int], e)
         @test valid == false
         @test length(e) == 1
-        @test e.exceptions[1].msg == "Key 'c' can't be converted to Int64"
+        @test e.exceptions[1].msg ==
+            "Key 'c' ([[1, 2], [3, 4]]) can't be converted to Int64"
     end
 
     @testset "validate_file" begin

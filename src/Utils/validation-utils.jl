@@ -141,7 +141,7 @@ function __parse_as_type!(d::Dict, k::String, t::DataType)
             return nothing
         catch
             v = d[k]
-            err = ErrorException("Key '$k' can't be converted to $t")
+            err = ErrorException("Key '$k' ($v) can't be converted to $t")
             return err
         end
     end
@@ -153,6 +153,10 @@ end
 
 function __try_conversion!(d::Dict, k::String, t::Type{String})
     return d[k] = string(d[k])
+end
+
+function __try_conversion!(d::Dict, k::String, t::Union{Type{DateTime},Type{Date}})
+    return d[k] = parse(t, d[k])
 end
 
 function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
