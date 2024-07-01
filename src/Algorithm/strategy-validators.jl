@@ -1,13 +1,26 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
+STRATEGY_KEYS = ["scenario_graph", "horizon", "risk_measure", "convergence"]
+STRATEGY_KEY_TYPES = [
+    T where {T<:ScenarioGraph}, T where {T<:Horizon}, T where {T<:RiskMeasure}, Convergence
+]
+STRATEGY_KEY_TYPES_BEFORE_BUILD = [
+    Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
+]
+
 function __validate_strategy_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    keys = ["scenario_graph", "horizon", "risk_measure", "convergence"]
-    keys_types = [
-        T where {T<:ScenarioGraph},
-        T where {T<:Horizon},
-        T where {T<:RiskMeasure},
-        Convergence,
-    ]
+    keys = STRATEGY_KEYS
+    keys_types = STRATEGY_KEY_TYPES
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_strategy_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    keys = STRATEGY_KEYS
+    keys_types = STRATEGY_KEY_TYPES_BEFORE_BUILD
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
     return valid_types
@@ -15,70 +28,36 @@ end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
-function __validate_horizon_file_key!(d::Dict{String,Any}, e::CompositeException)
-    valid_params_key = __validate_keys!(d, ["params"], e)
-    valid_params_type =
-        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    has_file_key = valid_params_type && haskey(d["params"], "file")
-    valid_file_key =
-        has_file_key && __validate_key_types!(d["params"], ["file"], [String], e)
-    return valid_file_key
+function __validate_strategy_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
 end
 
-function __validate_horizon_params_key_with_stages!(
-    d::Dict{String,Any}, e::CompositeException
-)
-    valid_params_key = __validate_keys!(d, ["params"], e)
-    valid_params_type =
-        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    valid_stages_in_params_key =
-        valid_params_type && __validate_keys!(d["params"], ["stages"], e)
-    valid_stages_in_params_type =
-        valid_stages_in_params_key &&
-        __validate_key_types!(d["params"], ["stages"], [Vector{Dict{String,Any}}], e)
-    return valid_stages_in_params_type
-end
+# CONSISTENCY VALIDATORS -----------------------------------------------------------------------
 
-function __validate_cast_horizon_with_file!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    df = read_csv(d["params"]["file"], e)
-    valid_df = df !== nothing
-    valid_stages = valid_df
-
-    if valid_df
-        stages_dict = __validate_dataframe_content_and_cast!(
-            df, ["index", "start_date", "end_date"], [Integer, Date, Date], e
-        )
-        valid_stages = stages_dict !== nothing
-        d["params"]["stages"] = stages_dict
-    end
-    return valid_stages
-end
-
-function __validate_cast_horizon_stage_content!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    valid_horizon_key = __validate_keys!(d, ["horizon"], e)
-    valid_horizon_type =
-        valid_horizon_key && __validate_key_types!(d, ["horizon"], [Dict{String,Any}], e)
-    if !valid_horizon_type
-        return false
-    end
-
-    horizon_data = d["horizon"]
-    valid_file_key = __validate_horizon_file_key!(horizon_data, e)
-    valid_stages_in_params_key =
-        valid_file_key || __validate_horizon_params_key_with_stages!(horizon_data, e)
-
-    valid = false
-    if valid_file_key
-        valid = __validate_cast_horizon_with_file!(horizon_data, e)
-    else
-        valid = valid_stages_in_params_key
-    end
-
-    return valid
+function __validate_strategy_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------
+
+function __build_strategy_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_scenario_graph = __build_scenario_graph!(d, e)
+    valid_horizon = __build_horizon!(d, e)
+    valid_risk_measure = __build_risk_measure!(d, e)
+    valid_convergence = __build_convergence!(d, e)
+    return valid_scenario_graph && valid_horizon && valid_risk_measure && valid_convergence
+end
+
+function __cast_strategy_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_key_types = __validate_strategy_keys_types_before_build!(d, e)
+    valid_scenario_graph =
+        valid_key_types && __cast_scenario_graph_internals_from_files!(d, e)
+    valid_horizon = valid_key_types && __cast_horizon_internals_from_files!(d, e)
+    valid_risk_measure = valid_key_types && __cast_risk_measure_internals_from_files!(d, e)
+    valid_convergence = valid_key_types && __cast_convergence_internals_from_files!(d, e)
+    return valid_scenario_graph && valid_horizon && valid_risk_measure && valid_convergence
+end

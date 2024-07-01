@@ -32,12 +32,6 @@ DICT::Dict{String,Any} = Dict(
     ),
 )
 
-DF = DataFrame(;
-    index = [1, 2],
-    start_date = [DateTime(2020, 1, 1), DateTime(2020, 2, 1)],
-    end_date = [DateTime(2020, 2, 1), DateTime(2020, 3, 1)],
-)
-
 @testset "algorithm-strategy" begin
     @testset "strategy-valid" begin
         d, e = __renew(DICT)

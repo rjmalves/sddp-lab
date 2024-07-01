@@ -5,12 +5,22 @@ struct RegularScenarioGraph <: ScenarioGraph
 end
 
 function RegularScenarioGraph(d::Dict{String,Any}, e::CompositeException)
-    valid_keys_types = __validate_regular_scenario_graph_keys_types!(d, e)
-    valid_content =
-        valid_keys_types ? __validate_regular_scenario_graph_content!(d, e) : false
-    valid = valid_keys_types && valid_content
 
-    return valid ? RegularScenarioGraph(d["discount_rate"]) : nothing
+    # Build internal objects
+    valid_internals = __build_regular_scenario_graph_internals_from_dicts!(d, e)
+
+    # Keys and types validation
+    valid_keys_types =
+        valid_internals && __validate_regular_scenario_graph_keys_types!(d, e)
+
+    # Content validation
+    valid_content = valid_keys_types && __validate_regular_scenario_graph_content!(d, e)
+
+    # Consistency validation
+    valid_consistency =
+        valid_content && __validate_regular_scenario_graph_consistency!(d, e)
+
+    return valid_consistency ? RegularScenarioGraph(d["discount_rate"]) : nothing
 end
 
 # SDDP METHODS -----------------------------------------------------------------------
@@ -30,35 +40,16 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_scenario_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_scenario_graph_key = __validate_keys!(d, ["scenario_graph"], e)
-    valid_scenario_graph_type =
-        valid_scenario_graph_key &&
-        __validate_key_types!(d, ["scenario_graph"], [Dict{String,Any}], e)
-    if !valid_scenario_graph_type
+    valid_key_types = __validate_scenario_graph_main_key_type!(d, e)
+    if !valid_key_types
         return false
     end
 
-    scenario_graph_d = d["scenario_graph"]
-    keys = ["kind", "params"]
-    keys_types = [String, Dict{String,Any}]
-    valid_keys = __validate_keys!(scenario_graph_d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(scenario_graph_d, keys, keys_types, e)
-    if !valid_types
-        return false
-    end
+    return __kind_factory!(@__MODULE__, d, "scenario_graph", e)
+end
 
-    kind = scenario_graph_d["kind"]
-    params = scenario_graph_d["params"]
-
-    scenario_graph_obj = nothing
-
-    try
-        kind_type = getfield(@__MODULE__, Symbol(kind))
-        scenario_graph_obj = kind_type(params, e)
-    catch
-        push!(e, AssertionError("Scenario graph kind ($kind) not recognized"))
-    end
-    d["scenario_graph"] = scenario_graph_obj
-
-    return scenario_graph_obj !== nothing
+function __cast_scenario_graph_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
 end

@@ -36,3 +36,15 @@ function __validate_stage_content!(d::Dict{String,Any}, e::CompositeException)::
 end
 
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
+
+function __validate_stage_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+# HELPERS -------------------------------------------------------------------------------------
+
+function __build_stage_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end

@@ -1,6 +1,12 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
-function __validate_explict_horizon_keys_types!(
+function __validate_horizon_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_keys = __validate_keys!(d, ["horizon"], e)
+    valid_types = valid_keys && __validate_key_types!(d, ["horizon"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_explicit_horizon_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_keys = __validate_keys!(d, ["stages"], e)
@@ -10,7 +16,7 @@ end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
-function __validate_explict_horizon_stages!(
+function __validate_explicit_horizon_stages!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     stages = d["stages"]
@@ -21,10 +27,10 @@ function __validate_explict_horizon_stages!(
     return not_empty
 end
 
-function __validate_explict_horizon_content!(
+function __validate_explicit_horizon_content!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_stages = __validate_explict_horizon_stages!(d, e)
+    valid_stages = __validate_explicit_horizon_stages!(d, e)
     return valid_stages
 end
 
@@ -79,10 +85,19 @@ function __validate_sequential_horizon_stage_dates!(
     return valid
 end
 
-function __validate_explict_horizon_consistency!(
+function __validate_explicit_horizon_consistency!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_indexes = __validate_sequential_horizon_stage_indexes!(d, e)
     valid_dates = __validate_sequential_horizon_stage_dates!(d, e)
     return valid_indexes && valid_dates
+end
+
+# HELPERS -------------------------------------------------------------------------------------
+
+function __build_explicit_horizon_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_stages = __build_stages!(d, e)
+    return valid_stages
 end

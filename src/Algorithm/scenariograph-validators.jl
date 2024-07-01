@@ -1,5 +1,14 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
+function __validate_scenario_graph_main_key_type!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["scenario_graph"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(d, ["scenario_graph"], [Dict{String,Any}], e)
+    return valid_types
+end
+
 function __validate_regular_scenario_graph_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -35,3 +44,17 @@ function __validate_regular_scenario_graph_content!(
 end
 
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
+
+function __validate_regular_scenario_graph_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+# HELPERS -----------------------------------------------------------------------------------
+
+function __build_regular_scenario_graph_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end

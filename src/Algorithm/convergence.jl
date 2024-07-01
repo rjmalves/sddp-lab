@@ -3,8 +3,7 @@
 function Convergence(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    valid_stopping_criteria = __build_stopping_criteria!(d, e)
-    valid_internals = valid_stopping_criteria
+    valid_internals = __build_convergence_internals_from_dicts!(d, e)
 
     # Keys and types validation
     valid_keys_types = valid_internals && __validate_convergence_keys_types!(d, e)
@@ -12,7 +11,10 @@ function Convergence(d::Dict{String,Any}, e::CompositeException)
     # Content validation
     valid_content = valid_keys_types && __validate_convergence_content!(d, e)
 
-    return if valid_content
+    # Consistency validation
+    valid_consistency = valid_content && __validate_convergence_consistency!(d, e)
+
+    return if valid_consistency
         Convergence(d["min_iterations"], d["max_iterations"], d["stopping_criteria"])
     else
         nothing
@@ -20,17 +22,24 @@ function Convergence(d::Dict{String,Any}, e::CompositeException)
 end
 
 function __build_convergence!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_convergence_key = __validate_keys!(d, ["convergence"], e)
-    valid_convergence_type =
-        valid_convergence_key &&
-        __validate_key_types!(d, ["convergence"], [Dict{String,Any}], e)
-    if !valid_convergence_type
+    valid_key_types = __validate_convergence_main_key_type!(d, e)
+    if !valid_key_types
         return false
     end
 
     convergence_d = d["convergence"]
-    convergence_obj = Convergence(convergence_d, e)
-    d["convergence"] = convergence_obj
 
-    return convergence_obj !== nothing
+    valid_key_types = __validate_convergence_keys_types_before_build!(convergence_d, e)
+    if !valid_key_types
+        return false
+    end
+
+    d["convergence"] = Convergence(convergence_d, e)
+    return d["convergence"] !== nothing
+end
+
+function __cast_convergence_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
 end

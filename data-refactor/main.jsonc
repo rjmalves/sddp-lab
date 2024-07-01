@@ -6,6 +6,10 @@
         // Each file defines settings for a specific
         // component of the lab
         "files": {
+            // Settings regarding the tasks that are being
+            // performed in the current run
+            // (policy optimization, simulation, etc.)
+            "tasks": "tasks.jsonc",
             // Settings regarding the solution algorithm
             // that is used to solve the optimization problem
             // (decomposition strategy, discretization, etc.)

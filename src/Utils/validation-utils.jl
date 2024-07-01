@@ -38,6 +38,24 @@ function __validate_key_types!(
     return valid
 end
 
+function __validate_kind_params_keys!(d::Dict, e::CompositeException)::Bool
+    keys = ["kind", "params"]
+    keys_types = [String, Dict{String,Any}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_file_key!(d::Dict{String,Any}, e::CompositeException)
+    valid_params_key = __validate_keys!(d, ["params"], e)
+    valid_params_type =
+        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
+    has_file_key = valid_params_type && haskey(d["params"], "file")
+    valid_file_key =
+        has_file_key && __validate_key_types!(d["params"], ["file"], [String], e)
+    return valid_file_key
+end
+
 # FILE VALIDATORS --------------------------------------------------------------------------
 
 function __validate_file!(path::String, e::CompositeException)::Bool

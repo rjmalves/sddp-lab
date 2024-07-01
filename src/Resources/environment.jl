@@ -10,23 +10,19 @@ end
 
 function Environment(d::Dict{String,Any}, e::CompositeException)
 
-    # Keys and types validation pre build
-    valid_keys_types_pre_build = __validate_environment_keys_types_pre_build!(d, e)
-    if !valid_keys_types_pre_build
-        return nothing
-    end
-
     # Build internal objects
-    valid_solver = __build_solver!(d, e)
-    valid_internals = valid_solver
+    valid_internals = __build_environment_internals_from_dicts!(d, e)
 
-    # Keys and types validation pos build
-    valid_keys_types = valid_internals && __validate_environment_keys_types_pos_build!(d, e)
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_environment_keys_types!(d, e)
 
     # Content validation
-    valid = valid_keys_types && valid_internals
+    valid_content = valid_keys_types && __validate_environment_content!(d, e)
 
-    return if valid
+    # Consistency validation
+    valid_consistency = valid_content && __validate_environment_consistency!(d, e)
+
+    return if valid_consistency
         Environment(d["solver"])
     else
         nothing
@@ -37,6 +33,8 @@ function Environment(filename::String, e::CompositeException)
     d = read_jsonc(filename, e)
     valid_jsonc = d !== nothing
 
-    valid = valid_jsonc
+    # Cast data from files into the dictionary
+    valid = valid_jsonc && __cast_environment_internals_from_files!(d, e)
+
     return valid ? Environment(d, e) : nothing
 end

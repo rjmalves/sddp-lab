@@ -1,24 +1,21 @@
 # CLASS Line -----------------------------------------------------------------------
 
-struct Line <: SystemEntity
-    id::Integer
-    name::String
-    source_bus_id::Integer
-    target_bus_id::Integer
-    capacity::Real
-    exchange_penalty::Real
-    # References to other system elements
-    source_bus::Ref{Bus}
-    target_bus::Ref{Bus}
-end
-
 function Line(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    valid_keys_types = __validate_line_keys_types!(d, e)
+
+    # Build internal objects
+    valid_internals = __build_line_internals_from_dicts!(d, e)
+
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_line_keys_types!(d, e)
+
+    # Content validation
     bus_refs = valid_keys_types ? __validate_line_content!(d, buses, e) : nothing
     valid_content = bus_refs !== nothing
-    valid = valid_keys_types && valid_content
 
-    return if valid
+    # Consistency validation
+    valid_consistency = valid_content && __validate_line_consistency!(d, e)
+
+    return if valid_consistency
         Line(
             d["id"],
             d["name"],
@@ -35,26 +32,21 @@ function Line(d::Dict{String,Any}, buses::Buses, e::CompositeException)
 end
 
 # CLASS Lines -----------------------------------------------------------------------
-struct Lines <: SystemEntitySet
-    entities::Vector{Line}
-end
 
-function Lines(d::Vector{Dict{String,Any}}, buses::Buses, e::CompositeException)
-    # Constructs each Line
-    entities = Line[]
-    for i in 1:length(d)
-        entity = Line(d[i], buses, e)
-        if entity !== nothing
-            push!(entities, entity)
-        end
-    end
+function Lines(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    # Build internal objects
+    valid_internals = __build_lines_internals_from_dicts!(d, buses, e)
+
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_lines_keys_types!(d, e)
+
+    # Content validation
+    valid_content = valid_keys_types && __validate_lines_content!(d, e)
 
     # Consistency validation
-    valid = __validate_lines_consistency!(
-        [line.id for line in entities], [line.name for line in entities], e
-    )
+    valid_consistency = valid_content && __validate_lines_consistency!(d, e)
 
-    return valid ? Lines(entities) : Lines([])
+    return valid_consistency ? Lines(d["entities"]) : nothing
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
@@ -85,4 +77,46 @@ end
 
 function length(ses::Lines)::Integer
     return length(get_ids(ses))
+end
+
+# HELPERS --------------------------------------------------------------------------
+
+function __build_line_entities!(
+    d::Dict{String,Any}, buses::Buses, e::CompositeException
+)::Bool
+    lines = d["entities"]
+    entities = Line[]
+    valid = true
+    for i in eachindex(lines)
+        entity = Line(lines[i], buses, e)
+        if entity !== nothing
+            push!(entities, entity)
+        end
+        valid = valid && entity !== nothing
+    end
+    d["entities"] = entities
+    return valid
+end
+
+function __build_lines!(d::Dict{String,Any}, buses::Buses, e::CompositeException)::Bool
+    valid_key_types = __validate_lines_main_key_type!(d, e)
+    if !valid_key_types
+        return false
+    end
+
+    lines_d = d["lines"]
+
+    valid_key_types = __validate_lines_keys_types_before_build!(lines_d, e)
+    if !valid_key_types
+        return false
+    end
+
+    d["lines"] = Lines(lines_d, buses, e)
+    return d["lines"] !== nothing
+end
+
+function __cast_lines_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return __cast_system_entities_content!(d, "lines", e)
 end

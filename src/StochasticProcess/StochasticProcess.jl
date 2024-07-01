@@ -69,6 +69,19 @@ __validate(s::AbstractStochasticProcess)
 
 include("naive.jl")
 
-export Naive, AbstractStochasticProcess, generate_saa, add_inflow_uncertainty!
+function __cast_stochastic_process_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    stochastic_process_d = d["stochastic_process"]
+    valid_file_key = __validate_file_key!(stochastic_process_d, e)
+    valid = valid_file_key && __validate_cast_from_jsonc_file!(stochastic_process_d, e)
+    return valid
+end
+
+export Naive,
+    AbstractStochasticProcess,
+    generate_saa,
+    add_inflow_uncertainty!,
+    __cast_stochastic_process_internals_from_files!
 
 end

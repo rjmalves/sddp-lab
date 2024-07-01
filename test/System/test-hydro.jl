@@ -14,10 +14,13 @@ DICT = Dict(
     "spillage_penalty" => 0.01,
 )
 
-BUSES_DICT = [
-    Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
-    Dict("id" => 2, "name" => "NE", "deficit_cost" => 1000.0),
-]
+BUSES_DICT = Dict{String,Any}(
+    "entities" => [
+        Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
+        Dict("id" => 2, "name" => "NE", "deficit_cost" => 1000.0),
+    ],
+)
+
 BUSES = System.Buses(BUSES_DICT, CompositeException())
 
 @testset "system-hydro" begin

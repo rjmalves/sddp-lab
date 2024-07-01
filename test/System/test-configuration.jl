@@ -47,7 +47,8 @@ CFG_DICT = Dict(
 @testset "system-configuration" begin
     @testset "configuration-valid" begin
         d, e = __renew(convert(Dict{String,Any}, CFG_DICT))
-        @test typeof(System.Configuration(d, e)) === System.Configuration
+        cfg = System.Configuration(d, e)
+        @test typeof(cfg) === System.Configuration
     end
     # TODO - testar não construção de Configuration
     @testset "configuration-invalid-id" begin

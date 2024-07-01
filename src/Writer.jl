@@ -129,18 +129,17 @@ Exporta os dados de saídas da simulação final do modelo.
 # Arguments
 
   - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
+  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData, OUTDIR::String
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
 )
-    @info "Escrevendo resultados da simulação em $(OUTDIR)"
-
-    __check_outdir(OUTDIR)
+    @info "Escrevendo resultados da simulação"
 
     # variaveis de hidro
     df_hidro = DataFrame()
-    names = map(u -> u.name, cfg.parque_uhe.uhes)
+    names = map(u -> u.name, cfg.hydros.entities)
     for variavel in [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
             __increase_dataframe!(
@@ -155,21 +154,17 @@ function write_simulation_results(
             )
         end
     end
-    CSV.write(joinpath(OUTDIR, "operacao_hidro.csv"), df_hidro)
+    CSV.write("operacao_hidro.csv", df_hidro)
 
     # variaveis de termica
     df_termo = DataFrame()
+    n_thermals = length(cfg.thermals.entities)
     for variavel in [:gt]
         __increase_dataframe!(
-            df_termo,
-            variavel,
-            string(variavel),
-            [cfg.parque_ute.n_utes],
-            "UTE",
-            simulations,
+            df_termo, variavel, string(variavel), [n_thermals], "UTE", simulations
         )
     end
-    CSV.write(joinpath(OUTDIR, "operacao_termo.csv"), df_termo)
+    CSV.write("operacao_termo.csv", df_termo)
 
     # variaveis sistemicas
     df_sistema = DataFrame()
@@ -188,7 +183,7 @@ function write_simulation_results(
             )
         end
     end
-    return CSV.write(joinpath(OUTDIR, "operacao_sistema.csv"), df_sistema)
+    return CSV.write("operacao_sistema.csv", df_sistema)
 end
 
 """
@@ -265,10 +260,9 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
-function write_model_cuts(cuts::DataFrame, OUTDIR::String)
-    PROCESSED_CUTS_PATH = joinpath(OUTDIR, "cortes.csv")
+function write_model_cuts(cuts::DataFrame)
+    PROCESSED_CUTS_PATH = "cortes.csv"
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
-    __check_outdir(OUTDIR)
     return CSV.write(PROCESSED_CUTS_PATH, cuts)
 end
 
@@ -280,71 +274,90 @@ Gera visualizações para as variáveis da operação calculadas durante a simul
 # Arguments
 
   - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados da operação na simulação do `SDDP.jl`
-  - `cfg::ConfigData`: configuração de entrada para extração dos elementos do estudo
+  - `cfg::Configuration`: configuração de entrada para extração dos elementos do estudo
   - `OUTDIR::String`: diretório de saída para os plots
 """
 function plot_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::ConfigData, OUTDIR::String
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
 )
-    OPERATION_PLOTS_PATH = joinpath(OUTDIR, "operacao.html")
+    OPERATION_PLOTS_PATH = "operacao.html"
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
 
     # parte hidro
-    indexes = collect(Int64, 1:(cfg.parque_uhe.n_uhes))
+    n_hydros = length(cfg.hydros)
+    indexes = collect(Int64, 1:(n_hydros))
 
     for i in indexes
-        nome = "EAR_" * string(cfg.parque_uhe.uhes[i].name)
+        name = "EAR_" * string(cfg.hydros.entities[i].name)
         SDDP.add_spaghetti(
-            plt; title = nome, ymin = 0.0, ymax = cfg.parque_uhe.uhes[i].earmax
+            plt; title = name, ymin = 0.0, ymax = cfg.hydros.entities[i].max_storage
         ) do data
             return data[:earm][i].out
         end
     end
 
     for i in indexes
-        nome = "GH_" * string(cfg.parque_uhe.uhes[i].name)
+        name = "GH_" * string(cfg.hydros.entities[i].name)
         SDDP.add_spaghetti(
-            plt; title = nome, ymin = 0.0, ymax = cfg.parque_uhe.uhes[i].ghmax
+            plt; title = name, ymin = 0.0, ymax = cfg.hydros.entities[i].max_generation
         ) do data
             return data[:gh][i]
         end
     end
 
     for i in indexes
-        nome = "VERT_" * string(cfg.parque_uhe.uhes[i].name)
-        SDDP.add_spaghetti(plt; title = nome, ymin = 0.0) do data
+        name = "VERT_" * string(cfg.hydros.entities[i].name)
+        SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:vert][i]
         end
     end
 
     for i in indexes
-        nome = "ENA_" * string(cfg.parque_uhe.uhes[i].name)
-        SDDP.add_spaghetti(plt; title = nome, ymin = 0.0) do data
+        name = "ENA_" * string(cfg.hydros.entities[i].name)
+        SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:ena][i]
         end
     end
 
     for i in indexes
-        nome = "VAGUA_" * string(cfg.parque_uhe.uhes[i].name)
-        SDDP.add_spaghetti(plt; title = nome, ymin = 0.0) do data
+        name = "VAGUA_" * string(cfg.hydros.entities[i].name)
+        SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:vagua][i]
         end
     end
 
-    # termo e sistema
-    gtmin = sum(x.gtmin for x in cfg.parque_ute.utes)
-    gtmax = sum(x.gtmax for x in cfg.parque_ute.utes)
-    SDDP.add_spaghetti(plt; title = "GT", ymin = gtmin, ymax = gtmax) do data
-        return sum(data[:gt])
+    # termo
+    n_thermals = length(cfg.thermals)
+    indexes = collect(Int64, 1:(n_thermals))
+
+    for i in indexes
+        name = "GT_" * string(cfg.thermals.entities[i].name)
+        ymin = cfg.thermals.entities[i].min_generation
+        ymax = cfg.thermals.entities[i].max_generation
+        SDDP.add_spaghetti(plt; title = name, ymin = ymin, ymax = ymax) do data
+            return data[:gt][i]
+        end
     end
-    SDDP.add_spaghetti(plt; title = "DEFICIT") do data
-        return data[:deficit]
+
+    # barras
+    n_buses = length(cfg.buses)
+    indexes = collect(Int64, 1:(n_buses))
+
+    for i in indexes
+        name = "DEFICIT_" * string(cfg.buses.entities[i].name)
+        SDDP.add_spaghetti(plt; title = name) do data
+            return data[:deficit][i]
+        end
     end
-    SDDP.add_spaghetti(plt; title = "CMO") do data
-        return data[:cmo]
+
+    for i in indexes
+        name = "CMO_" * string(cfg.buses.entities[i].name)
+        SDDP.add_spaghetti(plt; title = name) do data
+            return data[:cmo][i]
+        end
     end
-    __check_outdir(OUTDIR)
+
     return SDDP.plot(plt, OPERATION_PLOTS_PATH; open = false)
 end
 
@@ -402,12 +415,13 @@ Gera visualizações para os cortes produzidos pelo modelo no caso de uma
 # Arguments
 
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-  - `cfg::ConfigData`: configuração de entrada para validação do número de elementos
+  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para os plots
 """
-function plot_model_cuts_1var(cuts::DataFrame, cfg::ConfigData, CUTDIR::String)
+function plot_model_cuts_1var(cuts::DataFrame, cfg::Configuration, CUTDIR::String)
     stages = unique(cuts.estagio)
-    x = collect(Float64, 0:Int(cfg.parque_uhe.uhes[1].earmax))
+    earmax = cfg.hydros.entities[1].max_storage
+    x = collect(Float64, 0:Int(earmax))
     for s in stages
         highest, plotcut, watervalue = __compute_fcf1var_value_new(x, s, cuts)
         plot(
@@ -435,19 +449,19 @@ Gera visualizações para os cortes produzidos pelo modelo.
 # Arguments
 
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-  - `cfg::ConfigData`: configuração de entrada para validação do número de elementos
+  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para os plots
 """
-function plot_model_cuts(cuts::DataFrame, cfg::ConfigData, OUTDIR::String)
-    CUTDIR = joinpath(OUTDIR, "plotcortes")
+function plot_model_cuts(cuts::DataFrame, cfg::Configuration)
+    CUTDIR = joinpath(pwd(), "plotcortes")
     __check_outdir(CUTDIR)
     @info "Plotando cortes em $(CUTDIR)"
-    n_uhes = cfg.parque_uhe.n_uhes
-    if n_uhes == 1
+    n_hydros = length(cfg.hydros)
+    if n_hydros == 1
         plot_model_cuts_1var(cuts, cfg, CUTDIR)
-    elseif n_uhes == 2
+    elseif n_hydros == 2
         @error "ainda nao implementado"
-    elseif n_uhes > 2
+    elseif n_hydros > 2
         @error "nao e possivel realizar plots para mais de duas UHEs no sistema"
     end
 end

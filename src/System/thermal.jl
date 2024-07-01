@@ -1,23 +1,21 @@
 # CLASS Thermal -----------------------------------------------------------------------
 
-struct Thermal <: SystemEntity
-    id::Integer
-    name::String
-    bus_id::Integer
-    min_generation::Real
-    max_generation::Real
-    cost::Real
-    # Reference to other system elements
-    bus::Ref{Bus}
-end
-
 function Thermal(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    valid_keys_types = __validate_thermal_keys_types!(d, e)
+
+    # Build internal objects
+    valid_internals = __build_thermal_internals_from_dicts!(d, e)
+
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_thermal_keys_types!(d, e)
+
+    # Content validation
     bus_ref = valid_keys_types ? __validate_thermal_content!(d, buses, e) : nothing
     valid_content = bus_ref !== nothing
-    valid = valid_keys_types && valid_content
 
-    return if valid
+    # Consistency validation
+    valid_consistency = valid_content && __validate_thermal_consistency!(d, e)
+
+    return if valid_consistency
         Thermal(
             d["id"],
             d["name"],
@@ -34,26 +32,20 @@ end
 
 # CLASS Thermals -----------------------------------------------------------------------
 
-struct Thermals <: SystemEntitySet
-    entities::Vector{Thermal}
-end
+function Thermals(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    # Build internal objects
+    valid_internals = __build_thermals_internals_from_dicts!(d, buses, e)
 
-function Thermals(d::Vector{Dict{String,Any}}, buses::Buses, e::CompositeException)
-    # Constructs each Thermal
-    entities = Thermal[]
-    for i in 1:length(d)
-        entity = Thermal(d[i], buses, e)
-        if entity !== nothing
-            push!(entities, entity)
-        end
-    end
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_thermals_keys_types!(d, e)
+
+    # Content validation
+    valid_content = valid_keys_types && __validate_thermals_content!(d, e)
 
     # Consistency validation
-    valid = __validate_thermals_consistency!(
-        [thermal.id for thermal in entities], [thermal.name for thermal in entities], e
-    )
+    valid_consistency = valid_content && __validate_thermals_consistency!(d, e)
 
-    return valid ? Thermals(entities) : Thermals([])
+    return valid_consistency ? Thermals(d["entities"]) : nothing
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------
@@ -91,4 +83,46 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals)
             gt[n = 1:num_thermals] <=
             ses.entities[n].max_generation
     )
+end
+
+# HELPERS --------------------------------------------------------------------------
+
+function __build_thermal_entities!(
+    d::Dict{String,Any}, buses::Buses, e::CompositeException
+)::Bool
+    thermals = d["entities"]
+    entities = Thermal[]
+    valid = true
+    for i in eachindex(thermals)
+        entity = Thermal(thermals[i], buses, e)
+        if entity !== nothing
+            push!(entities, entity)
+        end
+        valid = valid && entity !== nothing
+    end
+    d["entities"] = entities
+    return valid
+end
+
+function __build_thermals!(d::Dict{String,Any}, buses::Buses, e::CompositeException)::Bool
+    valid_key_types = __validate_thermals_main_key_type!(d, e)
+    if !valid_key_types
+        return false
+    end
+
+    thermals_d = d["thermals"]
+
+    valid_key_types = __validate_thermals_keys_types_before_build!(thermals_d, e)
+    if !valid_key_types
+        return false
+    end
+
+    d["thermals"] = Thermals(thermals_d, buses, e)
+    return d["thermals"] !== nothing
+end
+
+function __cast_thermals_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return __cast_system_entities_content!(d, "thermals", e)
 end

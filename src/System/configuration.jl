@@ -11,15 +11,18 @@ end
 function Configuration(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    d["buses"] = Buses(d["buses"]["entities"], e)
-    d["lines"] = Lines(d["lines"]["entities"], d["buses"], e)
-    d["hydros"] = Hydros(d["hydros"]["entities"], d["buses"], e)
-    d["thermals"] = Thermals(d["thermals"]["entities"], d["buses"], e)
+    valid_internals = __build_configuration_internals_from_dicts!(d, e)
 
     # Keys and types validation
-    valid = __validate_configuration_keys_types!(d, e)
+    valid_keys_types = valid_internals && __validate_configuration_keys_types!(d, e)
 
-    return if valid
+    # Content validation
+    valid_content = valid_keys_types && __validate_configuration_content!(d, e)
+
+    # Consistency validation
+    valid_consistency = valid_content && __validate_configuration_consistency!(d, e)
+
+    return if valid_consistency
         Configuration(d["buses"], d["lines"], d["hydros"], d["thermals"])
     else
         nothing
@@ -30,13 +33,8 @@ function Configuration(filename::String, e::CompositeException)
     d = read_jsonc(filename, e)
     valid_jsonc = d !== nothing
 
-    # Content validation and casting for internals that depend on files
-    valid_buses = valid_jsonc && __validate_cast_buses_content!(d, e)
-    valid_lines = valid_jsonc && __validate_cast_lines_content!(d, e)
-    valid_hydros = valid_jsonc && __validate_cast_hydros_content!(d, e)
-    valid_thermals = valid_jsonc && __validate_cast_thermals_content!(d, e)
-
-    valid = valid_buses && valid_lines && valid_hydros && valid_thermals
+    # Cast data from files into the dictionary
+    valid = valid_jsonc && __cast_configuration_internals_from_files!(d, e)
 
     return valid ? Configuration(d, e) : nothing
 end
@@ -47,5 +45,6 @@ function add_system_elements!(m::JuMP.Model, c::Configuration)
     add_system_elements!(m, c.buses)
     add_system_elements!(m, c.lines)
     add_system_elements!(m, c.hydros)
-    return add_system_elements!(m, c.thermals)
+    add_system_elements!(m, c.thermals)
+    return true
 end

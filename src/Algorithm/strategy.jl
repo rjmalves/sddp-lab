@@ -10,20 +10,18 @@ end
 function Strategy(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    valid_scenario_graph = __build_scenario_graph!(d, e)
-    valid_horizon = __build_horizon!(d, e)
-    valid_risk_measure = __build_risk_measure!(d, e)
-    valid_convergence = __build_convergence!(d, e)
-
-    valid_internals =
-        valid_scenario_graph && valid_horizon && valid_risk_measure && valid_convergence
+    valid_internals = __build_strategy_internals_from_dicts!(d, e)
 
     # Keys and types validation
-    valid_keys_types = valid_internals ? __validate_strategy_keys_types!(d, e) : false
+    valid_keys_types = valid_internals && __validate_strategy_keys_types!(d, e)
 
     # Content validation
-    valid = valid_keys_types && valid_internals
-    return if valid
+    valid_content = valid_keys_types && __validate_strategy_content!(d, e)
+
+    # Consistency validation
+    valid_consistency = valid_content && __validate_strategy_consistency!(d, e)
+
+    return if valid_consistency
         Strategy(d["scenario_graph"], d["horizon"], d["risk_measure"], d["convergence"])
     else
         nothing
@@ -34,9 +32,8 @@ function Strategy(filename::String, e::CompositeException)
     d = read_jsonc(filename, e)
     valid_jsonc = d !== nothing
 
-    # Content validation and casting for internals that depend on files
-    valid_horizon = valid_jsonc && __validate_cast_horizon_stage_content!(d, e)
-    valid = valid_horizon
+    # Cast data from files into the dictionary
+    valid = valid_jsonc && __cast_strategy_internals_from_files!(d, e)
 
     return valid ? Strategy(d, e) : nothing
 end

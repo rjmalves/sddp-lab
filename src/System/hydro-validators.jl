@@ -1,5 +1,13 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
+function __validate_hydros_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
+    keys = ["hydros"]
+    keys_types = [Dict{String,Any}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
 function __validate_hydro_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = [
         "id",
@@ -20,6 +28,25 @@ function __validate_hydro_keys_types!(d::Dict{String,Any}, e::CompositeException
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
 
+    return valid_types
+end
+
+function __validate_hydros_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    keys = ["entities", "topology"]
+    keys_types = [Vector{Hydro}, T where {T<:DiGraph{Int64}}]
+
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_hydros_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    keys = ["entities"]
+    keys_types = [Vector{Dict{String,Any}}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
     return valid_types
 end
 
@@ -179,7 +206,15 @@ function __validate_hydro_content!(
     return valid ? Ref(buses.entities[bus_index]) : nothing
 end
 
+function __validate_hydros_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
+
+function __validate_hydro_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
 
 function __validate_hydros_unique_ids!(
     hydro_ids::Vector{<:Integer}, e::CompositeException
@@ -204,14 +239,28 @@ function __validate_hydro_topology(topology_graph::DiGraph, e::CompositeExceptio
     return valid
 end
 
-function __validate_hydros_consistency!(
-    hydro_ids::Vector{<:Integer},
-    hydro_names::Vector{String},
-    topology_graph::DiGraph,
-    e::CompositeException,
-)::Bool
+function __validate_hydros_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    hydro_ids = [hydro.id for hydro in d["entities"]]
+    hydro_names = [hydro.name for hydro in d["entities"]]
+    topology_graph = d["topology"]
     valid_ids = __validate_hydros_unique_ids!(hydro_ids, e)
     valid_names = __validate_hydros_unique_names!(hydro_names, e)
     valid_topology = __validate_hydro_topology(topology_graph, e)
     return valid_ids && valid_names && valid_topology
+end
+
+# HELPERS -------------------------------------------------------------------------------------
+
+function __build_hydro_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_hydros_internals_from_dicts!(
+    d::Dict{String,Any}, buses::Buses, e::CompositeException
+)::Bool
+    valid_hydros = __build_hydro_entities!(d, buses, e)
+    valid_topology = __build_hydro_topology!(d)
+    return valid_hydros && valid_topology
 end

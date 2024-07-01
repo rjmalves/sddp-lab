@@ -5,12 +5,18 @@ struct ExplicitHorizon <: Horizon
 end
 
 function ExplicitHorizon(d::Dict{String,Any}, e::CompositeException)
-    valid_stages = __build_stages!(d, e)
-    valid_internals = valid_stages
 
-    valid_keys_types = valid_internals && __validate_explict_horizon_keys_types!(d, e)
-    valid_content = valid_keys_types && __validate_explict_horizon_content!(d, e)
-    valid_consistency = valid_content && __validate_explict_horizon_consistency!(d, e)
+    # Build internal objects
+    valid_internals = __build_explicit_horizon_internals_from_dicts!(d, e)
+
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_explicit_horizon_keys_types!(d, e)
+
+    # Content validation
+    valid_content = valid_keys_types && __validate_explicit_horizon_content!(d, e)
+
+    # Consistency validation
+    valid_consistency = valid_content && __validate_explicit_horizon_consistency!(d, e)
 
     return valid_consistency ? ExplicitHorizon(d["stages"]) : nothing
 end
@@ -22,32 +28,24 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_horizon!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_horizon_key = __validate_keys!(d, ["horizon"], e)
-    valid_horizon_type =
-        valid_horizon_key && __validate_key_types!(d, ["horizon"], [Dict{String,Any}], e)
-    if !valid_horizon_type
+    valid_key_types = __validate_horizon_main_key_type!(d, e)
+    if !valid_key_types
         return false
     end
 
+    return __kind_factory!(@__MODULE__, d, "horizon", e)
+end
+
+function __cast_horizon_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
     horizon_d = d["horizon"]
-    keys = ["kind", "params"]
-    keys_types = [String, Dict{String,Any}]
-    valid_keys = __validate_keys!(horizon_d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(horizon_d, keys, keys_types, e)
-    if !valid_types
-        return false
+    should_cast_from_file = __validate_file_key!(horizon_d, e)
+
+    valid = !should_cast_from_file
+    if should_cast_from_file
+        valid = __validate_cast_from_csv_file!(horizon_d, "stages", e)
     end
 
-    kind = horizon_d["kind"]
-    params = horizon_d["params"]
-
-    horizon_obj = nothing
-    try
-        kind_type = getfield(@__MODULE__, Symbol(kind))
-        horizon_obj = kind_type(params, e)
-    catch
-        push!(e, AssertionError("Horizon kind ($kind) not recognized"))
-    end
-    d["horizon"] = horizon_obj
-    return horizon_obj !== nothing
+    return valid
 end

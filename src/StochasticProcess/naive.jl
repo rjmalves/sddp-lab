@@ -37,7 +37,7 @@ struct Naive <: AbstractStochasticProcess
     copulas::Dict{Integer,Copula}
 end
 
-function Naive(d::Dict{String,Any})
+function Naive(d::Dict{String,Any}, e::CompositeException)
 
     # __validate_dict_naive
     #   __validate_dict_models
@@ -47,11 +47,6 @@ function Naive(d::Dict{String,Any})
     matrices = __build_copulas(d)
 
     return Naive(models, matrices)
-end
-
-function Naive(filename::String, e::CompositeException)
-    d = read_jsonc(filename, e)
-    return d !== nothing ? Naive(d) : nothing
 end
 
 function __build_marginal_models(d::Dict{String,Any})

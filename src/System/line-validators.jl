@@ -1,8 +1,34 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
+function __validate_lines_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
+    keys = ["lines"]
+    keys_types = [Dict{String,Any}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
 function __validate_line_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = ["id", "name", "source_bus_id", "target_bus_id", "capacity", "exchange_penalty"]
     keys_types = [Integer, String, Integer, Integer, Real, Real]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_lines_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    keys = ["entities"]
+    keys_types = [Vector{Line}]
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_lines_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    keys = ["entities"]
+    keys_types = [Vector{Dict{String,Any}}]
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
     return valid_types
@@ -78,7 +104,15 @@ function __validate_line_content!(
     end
 end
 
+function __validate_lines_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
+
+function __validate_line_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
 
 function __validate_lines_unique_ids!(
     line_ids::Vector{<:Integer}, e::CompositeException
@@ -96,10 +130,25 @@ function __validate_lines_unique_names!(
     return valid
 end
 
-function __validate_lines_consistency!(
-    line_ids::Vector{<:Integer}, line_names::Vector{String}, e::CompositeException
-)::Bool
+function __validate_lines_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    line_ids = [line.id for line in d["entities"]]
+    line_names = [line.name for line in d["entities"]]
     valid_ids = __validate_lines_unique_ids!(line_ids, e)
     valid_names = __validate_lines_unique_names!(line_names, e)
     return valid_ids && valid_names
+end
+
+# HELPERS -------------------------------------------------------------------------------------
+
+function __build_line_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_lines_internals_from_dicts!(
+    d::Dict{String,Any}, buses::Buses, e::CompositeException
+)::Bool
+    valid_lines = __build_line_entities!(d, buses, e)
+    return valid_lines
 end
