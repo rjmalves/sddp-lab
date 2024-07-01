@@ -12,63 +12,63 @@
                     // numbers of seasons
                     "season": 1,
                     // distribution name, should be one implemented by Distributions.jl
-                    "name": "Normal",
+                    "kind": "Normal",
                     // parameter vector in the order defined by Distributions.jl
                     "parameters": [70.0, 7.0]
                 },
                 {
                     "season": 2,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [80.0, 8.0]
                 },
                 {
                     "season": 3,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [95.0, 9.5]
                 },
                 {
                     "season": 4,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [60.0, 6.0]
                 },
                 {
                     "season": 5,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [50.0, 5.0]
                 },
                 {
                     "season": 6,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [45.0, 4.5]
                 },
                 {
                     "season": 7,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [35.0, 3.5]
                 },
                 {
                     "season": 8,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [25.0, 2.5]
                 },
                 {
                     "season": 9,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [20.0, 2.0]
                 },
                 {
                     "season": 10,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [20.0, 2.0]
                 },
                 {
                     "season": 11,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [35.0, 3.5]
                 },
                 {
                     "season": 12,
-                    "name": "Normal",
+                    "kind": "Normal",
                     "parameters": [45.0, 4.5]
                 }
             ]
