@@ -29,6 +29,7 @@
         "kind": "Simulation",
         "params": {
             "num_simulated_series": 500,
+            "policy_path": "out/policy",
             "results": {
                 "path": "out/simulation",
                 "save": true
