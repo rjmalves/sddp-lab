@@ -31,7 +31,7 @@ struct Naive <: AbstractStochasticProcess
 
     # each entry corresponds to an element in the system, with key equal to that
     # elements 'id'
-    models::Dict{Integer,UnitaryNaive}
+    models::Vector{UnitaryNaive}
 
     # similar to 'models', but the Int key now corresponds to the season
     copulas::Dict{Integer,Copula}
@@ -51,9 +51,6 @@ end
 
 function __build_marginal_models(d::Dict{String,Any})
     unitaries = map(ud -> UnitaryNaive(ud), d["marginal_models"])
-    ids = map(x -> x.id, unitaries)
-
-    unitaries = Dict{Integer,UnitaryNaive}(zip(ids, unitaries))
 
     return unitaries
 end
