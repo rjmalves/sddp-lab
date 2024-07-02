@@ -56,20 +56,20 @@ function __build_marginal_models(d::Dict{String,Any})
 end
 
 function __build_copulas(d::Dict{String,Any})
-    copulas = Dict{Integer,Copula}()
-
-    for (i, i_copula) in enumerate(d["copulas"])
-        name = i_copula["name"]
-        seas = Int(i_copula["season"]) # this Int() call should be moved to __validate
-        params = real(stack(i_copula["parameters"])) # this block should be moved to a __validate
-
-        i_copula = __instantiate_copula(name, params)
-        i_copula = Dict{Integer,Copula}(seas => i_copula)
-
-        merge!(copulas, i_copula)
-    end
+    copulas = [__build_copula(id) for id in d["copulas"]]
+    copulas = Dict(enumerate(copulas))
 
     return copulas
+end
+
+function __build_copula(d::Dict{String,Any})
+    name = d["name"]
+    seas = Int(d["season"]) # this Int() call should be moved to __validate
+    params = real(stack(d["parameters"])) # this block should be moved to a __validate
+
+    copula_u = __instantiate_copula(name, params)
+
+    return copula_u
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------
