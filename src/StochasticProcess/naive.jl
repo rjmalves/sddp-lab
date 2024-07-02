@@ -96,7 +96,7 @@ function __generate_saa(
 )
     size_s = size(s)
 
-    out = [zeros(Float64, (size_s[1], B)) for n in range(1, N)]
+    out = [[zeros(size_s[1]) for b in range(1, B)] for n in range(1, N)]
 
     for n in range(1, N)
         m = (n + initial_season - 1)
@@ -105,7 +105,11 @@ function __generate_saa(
         # optimization in the future
         season = m - size_s[2] * Int(div(m, size_s[2] + 1e-5))
         D = __build_mvdist(s, season)
-        out[n] .+= rand(rng, D, B)
+
+        for b in range(1, B)
+            sim = rand(rng, D, 1)
+            out[n][b] .+= sim
+        end
     end
 
     return out
