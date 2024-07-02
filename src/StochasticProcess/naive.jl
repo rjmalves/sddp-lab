@@ -5,7 +5,7 @@ struct UnitaryNaive
     distributions::Dict{Integer,UnivariateDistribution}
 end
 
-function UnitaryNaive(d::Dict{String,Any})
+function UnitaryNaive(d::Dict{String,Any})::UnitaryNaive
 
     # __validate_dict_unitary_naive
 
@@ -38,7 +38,7 @@ struct Naive <: AbstractStochasticProcess
     copulas::Dict{Integer,Copula}
 end
 
-function Naive(d::Dict{String,Any}, e::CompositeException)
+function Naive(d::Dict{String,Any}, e::CompositeException)::Naive
 
     # __validate_dict_naive
     #   __validate_dict_models
@@ -50,20 +50,20 @@ function Naive(d::Dict{String,Any}, e::CompositeException)
     return Naive(models, matrices)
 end
 
-function __build_marginal_models(d::Dict{String,Any})
+function __build_marginal_models(d::Dict{String,Any})::Vector{UnitaryNaive}
     unitaries = map(ud -> UnitaryNaive(ud), d["marginal_models"])
 
     return unitaries
 end
 
-function __build_copulas(d::Dict{String,Any})
+function __build_copulas(d::Dict{String,Any})::Dict{Integer,Copula}
     copulas = [__build_copula(id) for id in d["copulas"]]
     copulas = Dict(enumerate(copulas))
 
     return copulas
 end
 
-function __build_copula(d::Dict{String,Any})
+function __build_copula(d::Dict{String,Any})::Copula
     name = d["name"]
     seas = Int(d["season"]) # this Int() call should be moved to __validate
     params = real(stack(d["parameters"])) # this block should be moved to a __validate
@@ -76,15 +76,15 @@ end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 
-function __get_ids(s::Naive)
+function __get_ids(s::Naive)::Vector{Integer}
     return map(x -> x.id, values(s.models))
 end
 
-function length(s::Naive)
+function length(s::Naive)::Integer
     return length(__get_ids(s))
 end
 
-function size(s::Naive)
+function size(s::Naive)::Tuple{Integer, Vararg{Integer}}
     first_id = __get_ids(s)[1]
     first_us = s.models[first_id]
 
@@ -95,7 +95,7 @@ end
 
 function __generate_saa(
     rng::AbstractRNG, s::Naive, initial_season::Integer, N::Integer, B::Integer
-)
+)::Vector{Vector{Vector{Float64}}}
     size_s = size(s)
 
     out = [[zeros(size_s[1]) for b in range(1, B)] for n in range(1, N)]
@@ -121,7 +121,7 @@ end
 #     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 # end
 
-function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)
+function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)::JuMP.Model
     n_hydro = length(s)
 
     @variable(m, ω_inflow[1:n_hydro])
@@ -132,7 +132,7 @@ end
 
 # HELPERS ----------------------------------------------------------------------------------
 
-function __build_mvdist(s::Naive, season::Int)
+function __build_mvdist(s::Naive, season::Int)::Copulas.SklarDist
     num_models = size(s)[1]
 
     marginals = (s.models[i].distributions[season] for i in range(1, num_models))
@@ -148,7 +148,7 @@ end
 
 Return instance of a distribution from Distributions.jl of type `name` and parameters `params`
 """
-function __instantiate_distribution(name::String, params::Tuple)
+function __instantiate_distribution(name::String, params::Tuple)::Distributions.UnivariateDistribution
     d = getfield(Distributions, Symbol(name))(params...)
     return d
 end
@@ -158,7 +158,7 @@ end
 
 Return instance of a copula from Copulas.jl of type `name` and parameters `params`
 """
-function __instantiate_copula(name::String, params::Tuple)
+function __instantiate_copula(name::String, params::Tuple)::Copulas.Copula
     d = getfield(Copulas, Symbol(name))(params...)
     return d
 end
