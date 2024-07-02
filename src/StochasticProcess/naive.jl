@@ -9,21 +9,21 @@ function UnitaryNaive(d::Dict{String,Any})::UnitaryNaive
 
     # __validate_dict_unitary_naive
 
-    distributions = Dict{Integer,UnivariateDistribution}()
-
-    for (i, i_dist) in enumerate(d["distributions"])
-        name = i_dist["kind"]
-        seas = Int(i_dist["season"]) # this Int() call should be moved to __validate above
-        params = real(i_dist["parameters"]) # this real() call should be moved to __validate above
-        params = Tuple(params) # should also be in a validate
-
-        i_dist = __instantiate_distribution(name, params)
-        i_dist = Dict{Integer,UnivariateDistribution}(seas => i_dist)
-
-        merge!(distributions, i_dist)
-    end
+    distributions = [__build_unitarynaive_seasonal_model(id) for id in d["distributions"]]
+    distributions = Dict(enumerate(distributions))
 
     return UnitaryNaive(d["id"], distributions)
+end
+
+function __build_unitarynaive_seasonal_model(d::Dict{String,Any})::Distributions.UnivariateDistribution
+    name = d["kind"]
+    seas = Int(d["season"]) # this Int() call should be moved to __validate above
+    params = real(d["parameters"]) # this real() call should be moved to __validate above
+    params = Tuple(params) # should also be in a validate
+
+    marg_mod = __instantiate_distribution(name, params)
+
+    return marg_mod
 end
 
 # CLASS Naive ------------------------------------------------------------------------------
@@ -44,13 +44,13 @@ function Naive(d::Dict{String,Any}, e::CompositeException)::Naive
     #   __validate_dict_models
     #   __validate_dict_matrices
 
-    models = __build_marginal_models(d)
+    models = __build_unitarynaives(d)
     matrices = __build_copulas(d)
 
     return Naive(models, matrices)
 end
 
-function __build_marginal_models(d::Dict{String,Any})::Vector{UnitaryNaive}
+function __build_unitarynaives(d::Dict{String,Any})::Vector{UnitaryNaive}
     unitaries = map(ud -> UnitaryNaive(ud), d["marginal_models"])
 
     return unitaries
@@ -69,9 +69,9 @@ function __build_copula(d::Dict{String,Any})::Copula
     params = real(stack(d["parameters"])) # this block should be moved to a __validate
     params = tuple(params) # this should be in __validate
 
-    copula_u = __instantiate_copula(name, params)
+    copula = __instantiate_copula(name, params)
 
-    return copula_u
+    return copula
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------
