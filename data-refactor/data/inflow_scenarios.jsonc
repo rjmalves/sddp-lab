@@ -11,7 +11,7 @@
                     // TODO better documentation for the collateral effect of arbitrary 
                     // numbers of seasons
                     "season": 1,
-                    // distribution name, should be one implemented by Distributions.jl
+                    // distribution kind, should be one implemented by Distributions.jl
                     "kind": "Normal",
                     // parameter vector in the order defined by Distributions.jl
                     "parameters": [70.0, 7.0]
@@ -80,8 +80,8 @@
     "copulas": [
         {
             "season": 1,
-            // copula name, should be one implemented by Copulas.jl
-            "name": "GaussianCopula",
+            // copula kind, should be one implemented by Copulas.jl
+            "kind": "GaussianCopula",
             // copula parameters, check the individual documentations for how each copula is
             // parametrized
             // In the case of matrix parameters, supply an array of arrays which will be 
@@ -93,77 +93,77 @@
         },
         {
             "season": 2,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 3,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 4,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 5,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 6,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 7,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 8,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 9,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 10,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 11,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]
         },
         {
             "season": 12,
-            "name": "GaussianCopula",
+            "kind": "GaussianCopula",
             "parameters": [
                 [1.0]
             ]

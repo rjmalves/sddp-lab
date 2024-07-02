@@ -16,12 +16,12 @@ function UnitaryNaive(d::Dict{String,Any})::UnitaryNaive
 end
 
 function __build_unitarynaive_seasonal_model(d::Dict{String,Any})::Distributions.UnivariateDistribution
-    name = d["kind"]
+    kind = d["kind"]
     seas = Int(d["season"]) # this Int() call should be moved to __validate above
     params = real(d["parameters"]) # this real() call should be moved to __validate above
     params = Tuple(params) # should also be in a validate
 
-    marg_mod = __instantiate_distribution(name, params)
+    marg_mod = __instantiate_distribution(kind, params)
 
     return marg_mod
 end
@@ -44,10 +44,10 @@ function Naive(d::Dict{String,Any}, e::CompositeException)::Naive
     #   __validate_dict_models
     #   __validate_dict_matrices
 
-    models = __build_unitarynaives(d)
-    matrices = __build_copulas(d)
+    unitaries = __build_unitarynaives(d)
+    copulas = __build_copulas(d)
 
-    return Naive(models, matrices)
+    return Naive(unitaries, copulas)
 end
 
 function __build_unitarynaives(d::Dict{String,Any})::Vector{UnitaryNaive}
@@ -64,12 +64,12 @@ function __build_copulas(d::Dict{String,Any})::Dict{Integer,Copula}
 end
 
 function __build_copula(d::Dict{String,Any})::Copula
-    name = d["name"]
+    kind = d["kind"]
     seas = Int(d["season"]) # this Int() call should be moved to __validate
     params = real(stack(d["parameters"])) # this block should be moved to a __validate
     params = tuple(params) # this should be in __validate
 
-    copula = __instantiate_copula(name, params)
+    copula = __instantiate_copula(kind, params)
 
     return copula
 end
