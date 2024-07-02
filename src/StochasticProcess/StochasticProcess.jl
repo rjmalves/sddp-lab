@@ -3,6 +3,7 @@ module StochasticProcess
 using Random, Distributions, Copulas
 using LinearAlgebra
 using JuMP
+using ..Utils
 
 import Copulas: Copula
 import Base: length, size
@@ -38,12 +39,18 @@ function size(s::AbstractStochasticProcess) end
 
 Generate a Sample Average Approximation of the noise (uncertainty) terms in model `s`
 """
-function generate_saa(rng::AbstractRNG, s::AbstractStochasticProcess, initial_season::Integer,
-    N::Integer, B::Integer)
-end
+__generate_saa(
+    rng::AbstractRNG,
+    s::AbstractStochasticProcess,
+    initial_season::Integer,
+    N::Integer,
+    B::Integer,
+)
 
-function generate_saa(s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
-    generate_saa(Random.default_rng(), s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+function generate_saa(
+    s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
+)
+    return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
 """
@@ -61,5 +68,20 @@ Return `true` if `s` is a valid instance of stochastic process; raise errors oth
 function __validate(s::AbstractStochasticProcess) end
 
 include("naive.jl")
+
+function __cast_stochastic_process_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    stochastic_process_d = d["stochastic_process"]
+    valid_file_key = __validate_file_key!(stochastic_process_d, e)
+    valid = valid_file_key && __validate_cast_from_jsonc_file!(stochastic_process_d, e)
+    return valid
+end
+
+export Naive,
+    AbstractStochasticProcess,
+    generate_saa,
+    add_inflow_uncertainty!,
+    __cast_stochastic_process_internals_from_files!
 
 end

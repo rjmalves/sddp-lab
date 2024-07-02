@@ -7,8 +7,16 @@ using Plots
 using Logging
 
 include("Utils/Utils.jl")
-include("Config.jl")
-include("Reader.jl")
+include("StochasticProcess/StochasticProcess.jl")
+include("Algorithm/Algorithm.jl")
+include("Resources/Resources.jl")
+include("System/System.jl")
+include("Scenarios/Scenarios.jl")
+include("inputs-validators.jl")
+include("inputs.jl")
+include("tasks.jl")
+include("outputs-validators.jl")
+include("outputs.jl")
 include("Writer.jl")
 include("build-model.jl")
 include("Study.jl")

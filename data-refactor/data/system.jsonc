@@ -3,11 +3,9 @@
         // accepts an external list of entities,
         // which is defined in a CSV file and
         // might override the default values
-        // of the "params" field
-        "entities": {
-            "file": "buses.csv"
-        },
-        "params": {
+        // of the "default_values" field
+        "file": "buses.csv",
+        "default_values": {
             "deficit_cost": 1000.0
         }
     },
@@ -15,11 +13,9 @@
         // accepts an external list of entities,
         // which is defined in a CSV file and
         // might override the default values
-        // of the "params" field
-        "entities": {
-            "file": "lines.csv"
-        },
-        "params": {
+        // of the "default_values" field
+        "file": "lines.csv",
+        "default_values": {
             "exchange_penalty": 0.01
         }
     },
@@ -27,12 +23,10 @@
         // accepts an external list of entities,
         // which is defined in a CSV file and
         // might override the default values
-        // of the "params" field
-        "entities": {
-            "file": "hydros.csv"
-        },
-        "params": {
-            "downstream_id": null,
+        // of the "default_values" field
+        "file": "hydros.csv",
+        "default_values": {
+            "downstream_id": 0,
             "productivity": 1.0,
             "spillage_penalty": 0.01
         }
@@ -41,10 +35,8 @@
         // accepts an external list of entities,
         // which is defined in a CSV file and
         // might override the default values
-        // of the "params" field
-        "entities": {
-            "file": "thermals.csv"
-        },
-        "params": {}
+        // of the "default_values" field
+        "file": "thermals.csv",
+        "default_values": {}
     }
 }

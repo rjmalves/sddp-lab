@@ -1,3 +1,6 @@
+using JSON
+using CSV
+
 # FILE READERS -------------------------------------------------------------------
 
 function read_jsonc(
@@ -33,6 +36,56 @@ function read_csv(filename::String, e::CompositeException)::Union{DataFrame,Noth
 end
 
 # HELPERS -------------------------------------------------------------------
+
+function __kind_factory!(
+    m::Module, d::Dict{String,Any}, key::String, e::CompositeException
+)::Bool
+    factory_d = d[key]
+    valid_key_types = __validate_kind_params_keys!(factory_d, e)
+    if !valid_key_types
+        return false
+    end
+
+    kind = factory_d["kind"]
+    params = factory_d["params"]
+
+    kind_type = nothing
+    try
+        kind_type = getfield(m, Symbol(kind))
+    catch
+        push!(e, AssertionError("Kind ($kind) not recognized"))
+    end
+
+    kind_obj = nothing
+    if kind_type !== nothing
+        kind_obj = kind_type(params, e)
+    end
+
+    d[key] = kind_obj
+    return kind_obj !== nothing
+end
+
+function __validate_cast_from_jsonc_file!(d::Dict{String,Any}, e::CompositeException)::Bool
+    internal_d = read_jsonc(d["params"]["file"], e)
+    valid_file_data = internal_d !== nothing
+    if valid_file_data
+        merge!(d["params"], internal_d)
+    end
+    return valid_file_data
+end
+
+function __validate_cast_from_csv_file!(
+    d::Dict{String,Any}, key::String, e::CompositeException
+)::Bool
+    df = read_csv(d["params"]["file"], e)
+    valid_df = df !== nothing
+    internal_d = valid_df ? __dataframe_to_dict(df) : nothing
+    valid_file_data = internal_d !== nothing
+    if valid_file_data
+        d["params"][key] = internal_d
+    end
+    return valid_file_data
+end
 
 function __get_dataframe_columns_for_default_value_fill(
     df::DataFrame

@@ -5,164 +5,92 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
 
 # Arguments
 
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
- * `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
-     `Lab.Reader.read_ena()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
+    `Lab.Reader.read_ena()`
 """
-function build_model(cfg::ConfigData,
-    ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})::SDDP.PolicyGraph
-
+function build_model(inputs::Inputs)::SDDP.PolicyGraph
     @info "Compilando modelo"
 
-    graph, stages = __build_graph(cfg)
+    graph = __build_graph(inputs.files.strategy)
 
-    #coef_lpp = (cfg.uhe.ghmax - cfg.uhe.ghmin) / (cfg.uhe.earmax)
+    sp_builder = __generate_subproblem_builder(
+        inputs.files.configuration, inputs.files.strategy, inputs.files.uncertainties
+    )
 
-    sampled_enas = __sample_enas(stages, cfg.initial_month, cfg.scenarios_by_stage,
-        cfg.parque_uhe.n_uhes, cfg.cycle_lenght, ena_dist)
-    
-    sp_builder = __generate_subproblem_builder(cfg, sampled_enas)
-
+    # TODO - support multiple solvers
     model = SDDP.PolicyGraph(
-        sp_builder,
-        graph,
-        sense=:Min,
-        lower_bound=0.0,
-        optimizer=GLPK.Optimizer)
+        sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = GLPK.Optimizer
+    )
 
     return model
-
 end
 
-function __generate_subproblem_builder(cfg::ConfigData,
-    SAA::Vector{Vector{Vector{Float64}}})::Function
+function __generate_subproblem_builder(
+    cfg::Configuration, strategy::Strategy, uncertainties::Uncertainties
+)::Function
+    num_buses = length(cfg.buses)
+    num_hydros = length(cfg.hydros)
+    num_thermals = length(cfg.thermals)
+    num_stages = length(strategy.horizon)
 
-    n_uhes = cfg.parque_uhe.n_uhes
-    n_utes = cfg.parque_ute.n_utes
+    SAA = generate_saa(uncertainties, num_stages)
 
-    function fun_sp_build(sp::JuMP.Model, node::Int)
-        
-        __add_hydro!(sp, cfg)
-        __add_thermal!(sp, cfg)
-        __add_systemic!(sp, cfg)
-        __add_inflow!(sp, cfg)
-        __add_hydro_balance!(sp, cfg)
-        __add_load_balance!(sp, cfg)
+    function fun_sp_build(m::JuMP.Model, node::Integer)
+        add_system_elements!(m, cfg)
+        add_uncertainties!(m, uncertainties)
+        __add_hydro_balance!(m, cfg.hydros)
 
-        Ω_node = SAA[node]
-        SDDP.parameterize(sp, Ω_node) do ω
-            return JuMP.fix.(sp[:ω_inflow], ω)
+        # TODO - this will change once we have a proper load representation
+        # as an stochastic process
+        __add_load_balance!(m, cfg, uncertainties, node)
+
+        Ω_node = vec(SAA[node])
+        SDDP.parameterize(m, Ω_node) do ω
+            return JuMP.fix.(m[:ω_inflow], ω)
         end
 
-        @stageobjective(sp,
-            sum(
-                cfg.parque_ute.utes[n].generation_cost * sp[:gt][n] for n in 1:n_utes)
-                + cfg.system.deficit_cost * sp[:deficit]
-                + sum(cfg.system.deficit_cost * 1.0001 * sp[:slack_ghmin][n] for n in 1:n_uhes)
-                + sum(cfg.parque_uhe.uhes[n].spill_penal * sp[:vert][n] for n in 1:n_uhes
-            )
+        @stageobjective(
+            m,
+            sum(cfg.thermals.entities[n].cost * m[:gt][n] for n in 1:num_thermals) +
+                sum(
+                    cfg.buses.entities[n].deficit_cost * m[:deficit][n] for n in 1:num_buses
+                ) +
+                sum(
+                    cfg.hydros.entities[n].bus[].deficit_cost * 1.0001 * m[:slack_ghmin][n]
+                    for n in 1:num_hydros
+                ) +
+                sum(
+                    cfg.hydros.entities[n].spillage_penalty * m[:vert][n] for
+                    n in 1:num_hydros
+                )
         )
     end
 
     return fun_sp_build
 end
 
-function __add_hydro!(sp::JuMP.Model, cfg::ConfigData)
+# TODO - this will change
+function __add_load_balance!(
+    m::JuMP.Model, cfg::Configuration, u::Uncertainties, node::Integer
+)
+    bus_ids = get_ids(cfg.buses)
+    num_buses = length(bus_ids)
+    num_hydros = length(cfg.hydros)
+    num_thermals = length(cfg.thermals)
 
-    n_uhes = cfg.parque_uhe.n_uhes
-
-    @variable(sp, 0 <= earm[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].earmax,
-        SDDP.State,
-        initial_value = cfg.parque_uhe.uhes[n].initial_ear)
-
-    @variables(sp, begin
-        0 <= gh[n=1:n_uhes] <= cfg.parque_uhe.uhes[n].ghmax
-        slack_ghmin[n=1:n_uhes] >= 0
-        vert[n=1:n_uhes] >= 0
-    end)
-
-    @constraint(sp, [n = 1:n_uhes], gh[n] + slack_ghmin[n] >= cfg.parque_uhe.uhes[n].ghmin)
-
-    @constraint(sp,
-        fim_horizonte[n=1:n_uhes],
-        earm[n].out >= cfg.parque_uhe.uhes[n].earmin)
-
-end
-
-function __add_thermal!(sp::JuMP.Model, cfg::ConfigData)
-    n_utes = cfg.parque_ute.n_utes
-    @variable(sp, cfg.parque_ute.utes[n].gtmin <= gt[n=1:n_utes] <= cfg.parque_ute.utes[n].gtmax)
-
-end
-
-function __add_systemic!(sp::JuMP.Model, cfg::ConfigData)
-    @variable(sp, deficit >= 0)
-end
-
-function __add_inflow!(sp::JuMP.Model, cfg::ConfigData)
-    n_uhes = cfg.parque_uhe.n_uhes
-
-    @variable(sp, ena[1:n_uhes])
-    @variable(sp, ω_inflow[1:n_uhes])
-
-    @constraint(sp, inflow_model, ena .== ω_inflow)
-end
-
-function __add_hydro_balance!(sp::JuMP.Model, cfg::ConfigData)
-
-    n_uhes = cfg.parque_uhe.n_uhes
-
-    @constraint(sp,
-        balanco_hidrico[n=1:n_uhes],
-        sp[:earm][n].out == sp[:earm][n].in - sp[:gh][n] - sp[:vert][n] + sp[:ena][n] +
-                        sum(sp[:gh][j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name) +
-                        sum(sp[:vert][j] for j in 1:n_uhes if cfg.parque_uhe.uhes[j].downstream == cfg.parque_uhe.uhes[n].name)
+    @constraint(
+        m,
+        balanco_energetico[n = 1:num_buses],
+        sum(
+            m[:gh][j] for j in 1:num_hydros if cfg.hydros.entities[j].bus_id == bus_ids[n]
+        ) +
+        sum(
+            m[:gt][j] for
+            j in 1:num_thermals if cfg.thermals.entities[j].bus_id == bus_ids[n]
+        ) +
+        m[:deficit][bus_ids[n]] == get_load(bus_ids[n], node, u)
     )
-end
-
-function __add_load_balance!(sp::JuMP.Model, cfg::ConfigData)
-    @constraint(sp,
-        balanco_energetico,
-        sum(sp[:gh]) + sum(sp[:gt]) + sp[:deficit] == cfg.system.demand)       
-end
-
-"""
-    __sample_enas(stages, initial_month, number_of_samples, n_uhes, period, distributions)
-
-Amostra SAA de ENAs a partir de um dicionario de distribuicoes periodicas
-
-# Arguments
-
- * `stages::Int`: numero de estágios para construção do SAA
- * `initial_month::Int`: mes inicial
- * `number_of_samples::Int`: numero de aberturas a cada estagio
- * `n_uhes::Int`: numero de UHEs
- * `period::Int`: tamanho do ciclo
- * `distributions::Dict{Int,Vector{Float64}}`: dicionario contendo meida e sd por UHE por mes, como
-     retornado por `Lab.Reader.read_ena()`
-"""
-function __sample_enas(stages::Int, initial_month::Int, number_of_samples::Int,
-    n_uhes::Int,period::Int,
-    distributions::Dict{Int,Dict{Int,Vector{Float64}}})::Vector{Vector{Vector{Float64}}}
-
-    Random.seed!(0)
-
-    # para cada estagio, um vetor tamanho number_of_samples cujos elementos sao realizacoes
-    # n_uhe-dimensional
-    out = [[zeros(n_uhes) for u in 1:number_of_samples] for s in 1:stages]
-    for u in 1:n_uhes
-        for s in 1:stages
-            params = distributions[u][(s+initial_month-1)%period+1]
-            dist = Normal(params[1], params[2])
-            dist = truncated(dist, 0.0, Inf)
-            for n in 1:number_of_samples
-                out[s][n][u] += rand(dist, 1)[1]
-            end
-        end
-    end
-
-    return out
-
 end
 
 """
@@ -172,28 +100,11 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
 
 # Arguments
 
- * `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
+  - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __build_graph(cfg::ConfigData)
-    graph = SDDP.Graph(0)
-    edge_prob = cfg.discout_by_stage ? cfg.discout_factor : 1.0
+function __build_graph(strategy::Strategy)
+    scenario_graph = strategy.graph
+    num_stages = length(strategy.horizon)
 
-    if cfg.cyclic
-        if cfg.discout_by_cycle
-            edge_prob = cfg.discout_factor ^ (1/cfg.cycle_lenght)
-        end
-        for s in 1:cfg.cycle_lenght
-            SDDP.add_node(graph, s)
-            SDDP.add_edge(graph, s-1 => s, edge_prob)
-        end
-        SDDP.add_edge(graph, cfg.cycle_lenght => 1, edge_prob)
-        return graph, cfg.cycle_lenght
-    else
-        nstages = Int(cfg.cycle_lenght * cfg.cycles)
-        for s in 1:nstages
-            SDDP.add_node(graph, s)
-            SDDP.add_edge(graph, s-1 => s, edge_prob)
-        end
-        return graph, nstages
-    end
+    return generate_scenario_graph(scenario_graph, num_stages)
 end

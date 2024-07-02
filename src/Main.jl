@@ -1,55 +1,28 @@
-"""
-    compute_simulate_policy(execution)
 
-Realiza um estudo completo: aproxima politica, realiza simulacao e escreve todos os resultados
-
-# Arguments
-
-  - `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
-"""
-function compute_simulate_policy(execution::Dict{String,Any})
-    cfg = read_config(execution["INDIR"])
-    ena = read_ena(execution["INDIR"], cfg)
-
-    model = build_model(cfg, ena)
-    train_model(model, cfg)
-
-    if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"]
-        sims = simulate_model(model, cfg)
+function exit_with_errors(e::CompositeException)
+    @info "Errors found:"
+    for m in e
+        @error m.msg
     end
-    if execution["ESCREVEOPERACAO"]
-        write_simulation_results(sims, cfg, execution["OUTDIR"])
-    end
-    if execution["PLOTAOPERACAO"]
-        plot_simulation_results(sims, cfg, execution["OUTDIR"])
-    end
+    return exit(1)
+end
 
-    if execution["ESCREVECORTES"] || execution["PLOTACORTES"]
-        cuts = get_model_cuts(model)
-    end
-    if execution["ESCREVECORTES"]
-        write_model_cuts(cuts, execution["OUTDIR"])
-    end
-    if execution["PLOTACORTES"]
-        plot_model_cuts(cuts, cfg, execution["OUTDIR"])
-    end
+# TODO - break function in reading - running - exporting
 
-    if execution["ESCREVEOPERACAO"] ||
-        execution["PLOTAOPERACAO"] ||
-        execution["ESCREVECORTES"] ||
-        execution["PLOTACORTES"]
-        @info "Escrevendo eco dos arquivos de entrada em " * execution["OUTDIR"]
-        cp(
-            joinpath(execution["INDIR"], "config.json"),
-            joinpath(execution["OUTDIR"], "config.json");
-            force = true,
-        )
-        cp(
-            joinpath(execution["INDIR"], "ena.csv"),
-            joinpath(execution["OUTDIR"], "ena.csv");
-            force = true,
-        )
-    end
+function main()
+    e = CompositeException()
+    # Inputs reading
+    d = read_validate_entrypoint!("main.jsonc", e)
+    d !== nothing || exit_with_errors(e)
 
-    @info "Execucao completa"
+    inputs = read_validate_inputs!(d["inputs"], e)
+    outputs = read_validate_outputs!(d["outputs"], e)
+    length(e) == 0 || exit_with_errors(e)
+
+    tasks = read_validate_tasks!(d["tasks"], inputs, e)
+    tasks !== nothing || exit_with_errors(e)
+    # Running tasks
+    artifacts = run_tasks!(tasks, e)
+    # Output exporting
+    return write_outputs(outputs, artifacts, e)
 end
