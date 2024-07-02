@@ -15,6 +15,7 @@ function UnitaryNaive(d::Dict{String,Any})
         name = i_dist["kind"]
         seas = Int(i_dist["season"]) # this Int() call should be moved to __validate above
         params = real(i_dist["parameters"]) # this real() call should be moved to __validate above
+        params = Tuple(params) # should also be in a validate
 
         i_dist = __instantiate_distribution(name, params)
         i_dist = Dict{Integer,UnivariateDistribution}(seas => i_dist)
@@ -66,6 +67,7 @@ function __build_copula(d::Dict{String,Any})
     name = d["name"]
     seas = Int(d["season"]) # this Int() call should be moved to __validate
     params = real(stack(d["parameters"])) # this block should be moved to a __validate
+    params = tuple(params) # this should be in __validate
 
     copula_u = __instantiate_copula(name, params)
 
@@ -146,7 +148,7 @@ end
 
 Return instance of a distribution from Distributions.jl of type `name` and parameters `params`
 """
-function __instantiate_distribution(name::String, params::Vector{T} where {T<:Real})
+function __instantiate_distribution(name::String, params::Tuple)
     d = getfield(Distributions, Symbol(name))(params...)
     return d
 end
@@ -156,9 +158,7 @@ end
 
 Return instance of a copula from Copulas.jl of type `name` and parameters `params`
 """
-function __instantiate_copula(
-    name::String, params::Union{Vector{T},Matrix{Float64}} where {T<:Real}
-)
+function __instantiate_copula(name::String, params::Tuple)
     d = getfield(Copulas, Symbol(name))(params...)
     return d
 end
