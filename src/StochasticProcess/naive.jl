@@ -127,9 +127,9 @@ end
 # HELPERS ----------------------------------------------------------------------------------
 
 function __build_mvdist(s::Naive, season::Int)
-    ids = __get_ids(s)
+    num_models = size(s)[1]
 
-    marginals = (s.models[id].distributions[season] for id in ids)
+    marginals = (s.models[i].distributions[season] for i in range(1, num_models))
     copula = s.copulas[season]
 
     D = SklarDist(copula, marginals)
