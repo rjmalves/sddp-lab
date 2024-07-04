@@ -5,7 +5,7 @@ using Dates
 using DataFrames
 using JSON
 
-DICT::Dict{String,Any} = Dict(
+DICT = Dict{String,Any}(
     "scenario_graph" =>
         Dict("kind" => "RegularScenarioGraph", "params" => Dict("discount_rate" => 1.00)),
     "horizon" => Dict(
@@ -22,14 +22,6 @@ DICT::Dict{String,Any} = Dict(
         ),
     ),
     "risk_measure" => Dict("kind" => "Expectation", "params" => Dict()),
-    "convergence" => Dict(
-        "min_iterations" => 10,
-        "max_iterations" => 100,
-        "stopping_criteria" => Dict(
-            "kind" => "LowerBoundStability",
-            "params" => Dict("threshold" => 0.05, "num_iterations" => 5),
-        ),
-    ),
 )
 
 @testset "algorithm-strategy" begin

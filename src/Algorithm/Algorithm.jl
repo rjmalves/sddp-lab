@@ -5,7 +5,7 @@ using CSV
 using DataFrames
 using JuMP
 using Graphs
-using SDDP
+using SDDP: SDDP
 using Dates
 
 using ..Utils
@@ -15,18 +15,11 @@ import Base: length
 abstract type ScenarioGraph end
 abstract type Horizon end
 abstract type RiskMeasure end
-abstract type StoppingCriteria end
 
 struct Stage
     index::Integer
     start_date::DateTime
     end_date::DateTime
-end
-
-struct Convergence
-    min_iterations::Integer
-    max_iterations::Integer
-    stopping_criteria::StoppingCriteria
 end
 
 """
@@ -52,14 +45,6 @@ study-specific configurations.
 """
 function generate_risk_measure(m::RiskMeasure)::SDDP.AbstractRiskMeasure end
 
-"""
-generate_stopping_rules(m::RiskMeasure)
-
-Generates an `SDDP.AbstractStoppingRule` object from a `Convergence` object, applying
-study-specific configurations.
-"""
-function generate_stopping_rules(c::Convergence)::SDDP.AbstractStoppingRule end
-
 include("scenariograph-validators.jl")
 include("scenariograph.jl")
 
@@ -71,12 +56,6 @@ include("horizon.jl")
 
 include("riskmeasure-validators.jl")
 include("riskmeasure.jl")
-
-include("stoppingcriteria-validators.jl")
-include("stoppingcriteria.jl")
-
-include("convergence-validators.jl")
-include("convergence.jl")
 
 include("strategy-validators.jl")
 include("strategy.jl")

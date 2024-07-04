@@ -1,85 +1,144 @@
-using SDDP
+using SDDP: SDDP
 
-abstract type Task end
-abstract type TaskArtifact end
+using .Tasks
+using .Outputs
 
-"""
-run(t::Task, a::Vector{TaskArtifact})
+# Container for the inputs
 
-Runs a task that was required for a given entrypoint.
-"""
-function run(t::Task, a::Vector{TaskArtifact})::Union{TaskArtifact,Nothing} end
-
-"""
-write(a::TaskArtifact)
-
-Write the task results given an artifact.
-"""
-function write(a::TaskArtifact) end
-
-struct Policy <: Task
-    inputs::Inputs
-end
-struct PolicyArtifact <: TaskArtifact
-    policy::SDDP.PolicyGraph
-    inputs::Inputs
+struct InputsArtifact <: TaskArtifact
+    files::Files
 end
 
-function run(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
-    model = build_model(t.inputs)
-    train_model(model, t.inputs.files.strategy)
-    return PolicyArtifact(model, t.inputs)
+function get_task_output_path(a::InputsArtifact)::String
+    return ""
 end
 
-function write(a::PolicyArtifact)
-    cuts = get_model_cuts(a.policy)
-    write_model_cuts(cuts)
-    plot_model_cuts(cuts, a.inputs.files.configuration)
-    return true
+function should_write_results(a::InputsArtifact)::Bool
+    return false
 end
 
-struct Simulation <: Task
-    inputs::Inputs
-end
-struct SimulationArtifact <: TaskArtifact
-    simulations::Vector{Vector{Dict{Symbol,Any}}}
-    inputs::Inputs
+function save(a::InputsArtifact)
+    return false
 end
 
-function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
-    sims = simulate_model(a[1].policy, t.inputs.files.strategy)
-    return SimulationArtifact(sims, t.inputs)
-end
+# Runner for all given tasks
 
-function write(a::SimulationArtifact)
-    # Write simulation results to file
-    write_simulation_results(a.simulations, a.inputs.files.configuration)
-    plot_simulation_results(a.simulations, a.inputs.files.configuration)
-    return true
-end
+function run_tasks!(
+    entrypoint::Union{Entrypoint,Nothing}, e::CompositeException
+)::Vector{TaskArtifact}
+    # Returns empty vector if no entrypoint is given
+    entrypoint === nothing && return Vector{TaskArtifact}()
 
-function read_validate_tasks!(
-    tasks::Vector{String}, inputs::Inputs, e::CompositeException
-)::Vector{Task}
-    task_objs = Vector{Task}()
-    try
-        for t in tasks
-            task_type = getfield(@__MODULE__, Symbol(t))
-            task_obj = task_type(inputs)
-            push!(task_objs, task_obj)
-        end
-    catch
-        push!(e, AssertionError("Task kind ($kind) not recognized"))
-    end
-    return task_objs
-end
-
-function run_tasks!(tasks::Vector{Task}, e::CompositeException)::Vector{TaskArtifact}
-    artifacts = Vector{TaskArtifact}()
+    files = get_files(entrypoint)
+    tasks = get_tasks(files)
+    artifacts = Vector{TaskArtifact}([InputsArtifact(files)])
     for task in tasks
         a = run(task, artifacts)
         a !== nothing || push!(e, AssertionError("Task $task failed"))
         push!(artifacts, a)
     end
     return artifacts
+end
+
+# Writer for the results
+
+function save_results(artifacts::Vector{TaskArtifact})
+    for a in artifacts
+        basedir = pwd()
+        if should_write_results(a)
+            path = get_task_output_path(a)
+            isdir(path) || mkpath(path)
+            cd(path)
+            save(a)
+            cd(basedir)
+        end
+    end
+end
+
+# Echo --------------------------------------------------------
+
+struct EchoArtifact <: TaskArtifact
+    task::Echo
+    files::Files
+end
+
+function get_task_output_path(a::EchoArtifact)::String
+    return a.task.results.path
+end
+
+function should_write_results(a::EchoArtifact)::Bool
+    return a.task.results.save
+end
+
+function run(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
+    input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[input_index].files
+    return EchoArtifact(t, files)
+end
+
+function save(a::EchoArtifact)
+    # TODO - implement export_json(files)
+    return true
+end
+
+# Policy --------------------------------------------------------
+
+struct PolicyArtifact <: TaskArtifact
+    task::Policy
+    policy::SDDP.PolicyGraph
+    files::Files
+end
+
+function get_task_output_path(a::PolicyArtifact)::String
+    return a.task.results.path
+end
+
+function should_write_results(a::PolicyArtifact)::Bool
+    return a.task.results.save
+end
+
+function run(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
+    input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[input_index].files
+    model = build_model(files)
+    train_model(model, t)
+    return PolicyArtifact(t, model, files)
+end
+
+function save(a::PolicyArtifact)
+    cuts = get_model_cuts(a.policy)
+    write_model_cuts(cuts)
+    plot_model_cuts(cuts, a.files.configuration)
+    return true
+end
+
+# Simulation --------------------------------------------------------
+
+struct SimulationArtifact <: TaskArtifact
+    task::Simulation
+    simulations::Vector{Vector{Dict{Symbol,Any}}}
+    files::Files
+end
+
+function get_task_output_path(a::SimulationArtifact)::String
+    return a.task.results.path
+end
+
+function should_write_results(a::SimulationArtifact)::Bool
+    return a.task.results.save
+end
+
+function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
+    files_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[files_index].files
+    policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
+    policy = a[policy_index].policy
+    sims = simulate_model(policy, files.strategy)
+    return SimulationArtifact(t, sims, files)
+end
+
+function save(a::SimulationArtifact)
+    write_simulation_results(a.simulations, a.files.configuration)
+    plot_simulation_results(a.simulations, a.files.configuration)
+    return true
 end

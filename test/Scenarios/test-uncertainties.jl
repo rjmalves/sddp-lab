@@ -36,7 +36,7 @@ LOAD_DICT = Dict{String,Any}(
     ),
 )
 
-DICT::Dict{String,Any} = Dict(
+DICT = Dict{String,Any}(
     "initial_season" => 1, "branchings" => 1, "inflow" => INFLOW_DICT, "load" => LOAD_DICT
 )
 

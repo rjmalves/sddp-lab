@@ -1,28 +1,17 @@
 
-function exit_with_errors(e::CompositeException)
-    @info "Errors found:"
+using .Inputs
+
+function log_errors(e::CompositeException)
+    has_errors = length(e) > 0
+    has_errors && @info "Errors found:"
     for m in e
         @error m.msg
     end
-    return exit(1)
+    return has_errors
 end
 
-# TODO - break function in reading - running - exporting
-
-function main()
-    e = CompositeException()
-    # Inputs reading
-    d = read_validate_entrypoint!("main.jsonc", e)
-    d !== nothing || exit_with_errors(e)
-
-    inputs = read_validate_inputs!(d["inputs"], e)
-    outputs = read_validate_outputs!(d["outputs"], e)
-    length(e) == 0 || exit_with_errors(e)
-
-    tasks = read_validate_tasks!(d["tasks"], inputs, e)
-    tasks !== nothing || exit_with_errors(e)
-    # Running tasks
-    artifacts = run_tasks!(tasks, e)
-    # Output exporting
-    return write_outputs(outputs, artifacts, e)
+function main(; e = CompositeException())
+    entrypoint = Entrypoint("main.jsonc", e)
+    artifacts = run_tasks!(entrypoint, e)
+    return log_errors(e) || save_results(artifacts)
 end

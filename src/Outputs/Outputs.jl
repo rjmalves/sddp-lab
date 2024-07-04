@@ -1,3 +1,12 @@
+module Outputs
+
+using SDDP: SDDP
+using DataFrames
+using JSON
+using CSV
+using Plots
+using ..System
+
 """
     __check_outdir(OUTDIR)
 
@@ -464,4 +473,13 @@ function plot_model_cuts(cuts::DataFrame, cfg::Configuration)
     elseif n_hydros > 2
         @error "nao e possivel realizar plots para mais de duas UHEs no sistema"
     end
+end
+
+export write_simulation_results,
+    get_model_cuts,
+    write_model_cuts,
+    plot_simulation_results,
+    plot_model_cuts,
+    plot_model_cuts_1var
+
 end

@@ -4,7 +4,6 @@ struct Strategy
     graph::ScenarioGraph
     horizon::Horizon
     risk::RiskMeasure
-    convergence::Convergence
 end
 
 function Strategy(d::Dict{String,Any}, e::CompositeException)
@@ -22,7 +21,7 @@ function Strategy(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_strategy_consistency!(d, e)
 
     return if valid_consistency
-        Strategy(d["scenario_graph"], d["horizon"], d["risk_measure"], d["convergence"])
+        Strategy(d["scenario_graph"], d["horizon"], d["risk_measure"])
     else
         nothing
     end

@@ -5,7 +5,7 @@ using CSV
 using DataFrames
 using JuMP
 using Graphs
-using SDDP
+using SDDP: SDDP
 
 using ..Utils
 
