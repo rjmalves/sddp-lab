@@ -60,6 +60,6 @@ include("riskmeasure.jl")
 include("algorithmdata-validators.jl")
 include("algorithmdata.jl")
 
-export AlgorithmData, generate_scenario_graph
+export AlgorithmData, Horizon, ScenarioGraph, generate_scenario_graph
 
 end

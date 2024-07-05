@@ -48,3 +48,12 @@ function add_system_elements!(m::JuMP.Model, s::SystemData)
     add_system_elements!(m, s.thermals)
     return true
 end
+
+# """
+# get_hydros(s::SystemData)::Hydros
+
+# Return the hydro objects from system.
+# """
+# function get_hydros(s::SystemData)::Hydros
+#     return s.hydros
+# end

@@ -133,7 +133,7 @@ function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,N
     files = a[files_index].files
     policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
     policy = a[policy_index].policy
-    sims = simulate_model(policy, files.algorithm)
+    sims = simulate_model(policy, files)
     return SimulationArtifact(t, sims, files)
 end
 
