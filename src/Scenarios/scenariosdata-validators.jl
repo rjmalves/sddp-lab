@@ -8,9 +8,7 @@ UNCERTAINTIES_KEY_TYPES_BEFORE_BUILD = [
     Integer, Integer, Dict{String,Any}, Dict{String,Any}
 ]
 
-function __validate_uncertainties_keys_types!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_scenarios_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = UNCERTAINTIES_KEYS
     keys_types = UNCERTAINTIES_KEY_TYPES
     valid_keys = __validate_keys!(d, keys, e)
@@ -18,7 +16,7 @@ function __validate_uncertainties_keys_types!(
     return valid_types
 end
 
-function __validate_uncertainties_keys_types_before_build!(
+function __validate_scenarios_keys_types_before_build!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     keys = UNCERTAINTIES_KEYS
@@ -30,7 +28,7 @@ end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
-function __validate_uncertainties_initial_season!(
+function __validate_scenarios_initial_season!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     season = d["initial_season"]
@@ -40,9 +38,7 @@ function __validate_uncertainties_initial_season!(
     return valid
 end
 
-function __validate_uncertainties_branchings!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_scenarios_branchings!(d::Dict{String,Any}, e::CompositeException)::Bool
     branchings = d["branchings"]
     valid = branchings > 0
     valid ||
@@ -50,23 +46,21 @@ function __validate_uncertainties_branchings!(
     return valid
 end
 
-function __validate_uncertainties_content!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_initial_season = __validate_uncertainties_initial_season!(d, e)
-    valid_branchings = valid_initial_season && __validate_uncertainties_branchings!(d, e)
+function __validate_scenarios_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_initial_season = __validate_scenarios_initial_season!(d, e)
+    valid_branchings = valid_initial_season && __validate_scenarios_branchings!(d, e)
     return valid_branchings
 end
 
 # CONSISTENCY VALIDATORS -----------------------------------------------------------------------
 
-function __validate_uncertainties_consistency!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_scenarios_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
     return true
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------
 
-function __build_uncertainties_internals_from_dicts!(
+function __build_scenarios_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_inflow = __build_inflow_scenarios!(d, e)
@@ -74,10 +68,10 @@ function __build_uncertainties_internals_from_dicts!(
     return valid_inflow && valid_load
 end
 
-function __cast_uncertainties_internals_from_files!(
+function __cast_scenarios_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_key_types = __validate_uncertainties_keys_types_before_build!(d, e)
+    valid_key_types = __validate_scenarios_keys_types_before_build!(d, e)
     valid_inflow = valid_key_types && __cast_inflow_scenarios_internals_from_files!(d, e)
     valid_load = valid_key_types && __cast_load_scenarios_internals_from_files!(d, e)
     return valid_inflow && valid_load

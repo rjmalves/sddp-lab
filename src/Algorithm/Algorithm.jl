@@ -57,9 +57,9 @@ include("horizon.jl")
 include("riskmeasure-validators.jl")
 include("riskmeasure.jl")
 
-include("strategy-validators.jl")
-include("strategy.jl")
+include("algorithmdata-validators.jl")
+include("algorithmdata.jl")
 
-export Strategy, generate_scenario_graph
+export AlgorithmData, generate_scenario_graph
 
 end

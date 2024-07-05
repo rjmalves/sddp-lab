@@ -44,25 +44,25 @@ CFG_DICT = Dict(
     "thermals" => Dict{String,Any}("entities" => [THERMAL_DICT]),
 )
 
-@testset "system-configuration" begin
-    @testset "configuration-valid" begin
+@testset "system-systemdata" begin
+    @testset "system-valid" begin
         d, e = __renew(convert(Dict{String,Any}, CFG_DICT))
-        cfg = System.Configuration(d, e)
-        @test typeof(cfg) === System.Configuration
+        system = System.SystemData(d, e)
+        @test typeof(system) === System.SystemData
     end
-    # TODO - testar não construção de Configuration
-    @testset "configuration-invalid-id" begin
+    # TODO - testar não construção de SystemData
+    @testset "system-invalid-id" begin
         d, e = __renew(convert(Dict{String,Any}, CFG_DICT))
         # d = __modif_key(d, "buses", [HYDRO_DICT1])
         # d = __remove_key(d, "thermals")
-        # @test System.Configuration(d, e) === nothing
+        # @test System.SystemData(d, e) === nothing
     end
 
-    @testset "configuration-valid-from-file" begin
+    @testset "system-valid-from-file" begin
         d, e = __renew(DICT)
 
         cd(example_data_dir)
-        s = System.Configuration("system.jsonc", e)
-        @test typeof(s) === System.Configuration
+        s = System.SystemData("system.jsonc", e)
+        @test typeof(s) === System.SystemData
     end
 end

@@ -8,20 +8,20 @@ using ..Scenarios
 using ..Tasks
 
 struct Files
-    strategy::Strategy
-    environment::Environment
-    configuration::Configuration
-    uncertainties::Uncertainties
-    work::Work
+    algorithm::AlgorithmData
+    resources::ResourcesData
+    system::SystemData
+    scenarios::ScenariosData
+    tasks::TasksData
 end
 
-struct Reading
+struct InputsData
     path::String
     files::Files
 end
 
 struct Entrypoint
-    inputs::Reading
+    inputs::InputsData
 end
 
 """
@@ -39,14 +39,14 @@ get_tasks(f::Files)::Vector{TaskDefinition}
 Return the task definitions from the read files.
 """
 function get_tasks(f::Files)::Vector{TaskDefinition}
-    return f.work.tasks
+    return f.tasks.tasks
 end
 
 include("files-validators.jl")
 include("files.jl")
 
-include("reading-validators.jl")
-include("reading.jl")
+include("inputsdata-validators.jl")
+include("inputsdata.jl")
 
 include("entrypoint-validators.jl")
 include("entrypoint.jl")

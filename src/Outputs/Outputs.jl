@@ -138,17 +138,17 @@ Exporta os dados de saídas da simulação final do modelo.
 # Arguments
 
   - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
-  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
+  - `system::SystemData`: configuração de entrada do sistema para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
 )
     @info "Escrevendo resultados da simulação"
 
     # variaveis de hidro
     df_hidro = DataFrame()
-    names = map(u -> u.name, cfg.hydros.entities)
+    names = map(u -> u.name, system.hydros.entities)
     for variavel in [:gh, :earm, :vert, :ena, :vagua]
         if variavel == :earm
             __increase_dataframe!(
@@ -167,7 +167,7 @@ function write_simulation_results(
 
     # variaveis de termica
     df_termo = DataFrame()
-    n_thermals = length(cfg.thermals.entities)
+    n_thermals = length(system.thermals.entities)
     for variavel in [:gt]
         __increase_dataframe!(
             df_termo, variavel, string(variavel), [n_thermals], "UTE", simulations
@@ -283,85 +283,85 @@ Gera visualizações para as variáveis da operação calculadas durante a simul
 # Arguments
 
   - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados da operação na simulação do `SDDP.jl`
-  - `cfg::Configuration`: configuração de entrada para extração dos elementos do estudo
+  - `system::SystemData`: configuração de entrada do sistema para extração dos elementos do estudo
   - `OUTDIR::String`: diretório de saída para os plots
 """
 function plot_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, cfg::Configuration
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
 )
     OPERATION_PLOTS_PATH = "operacao.html"
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
 
     # parte hidro
-    n_hydros = length(cfg.hydros)
+    n_hydros = length(system.hydros)
     indexes = collect(Int64, 1:(n_hydros))
 
     for i in indexes
-        name = "EAR_" * string(cfg.hydros.entities[i].name)
+        name = "EAR_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(
-            plt; title = name, ymin = 0.0, ymax = cfg.hydros.entities[i].max_storage
+            plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_storage
         ) do data
             return data[:earm][i].out
         end
     end
 
     for i in indexes
-        name = "GH_" * string(cfg.hydros.entities[i].name)
+        name = "GH_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(
-            plt; title = name, ymin = 0.0, ymax = cfg.hydros.entities[i].max_generation
+            plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_generation
         ) do data
             return data[:gh][i]
         end
     end
 
     for i in indexes
-        name = "VERT_" * string(cfg.hydros.entities[i].name)
+        name = "VERT_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:vert][i]
         end
     end
 
     for i in indexes
-        name = "ENA_" * string(cfg.hydros.entities[i].name)
+        name = "ENA_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:ena][i]
         end
     end
 
     for i in indexes
-        name = "VAGUA_" * string(cfg.hydros.entities[i].name)
+        name = "VAGUA_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
             return data[:vagua][i]
         end
     end
 
     # termo
-    n_thermals = length(cfg.thermals)
+    n_thermals = length(system.thermals)
     indexes = collect(Int64, 1:(n_thermals))
 
     for i in indexes
-        name = "GT_" * string(cfg.thermals.entities[i].name)
-        ymin = cfg.thermals.entities[i].min_generation
-        ymax = cfg.thermals.entities[i].max_generation
+        name = "GT_" * string(system.thermals.entities[i].name)
+        ymin = system.thermals.entities[i].min_generation
+        ymax = system.thermals.entities[i].max_generation
         SDDP.add_spaghetti(plt; title = name, ymin = ymin, ymax = ymax) do data
             return data[:gt][i]
         end
     end
 
     # barras
-    n_buses = length(cfg.buses)
+    n_buses = length(system.buses)
     indexes = collect(Int64, 1:(n_buses))
 
     for i in indexes
-        name = "DEFICIT_" * string(cfg.buses.entities[i].name)
+        name = "DEFICIT_" * string(system.buses.entities[i].name)
         SDDP.add_spaghetti(plt; title = name) do data
             return data[:deficit][i]
         end
     end
 
     for i in indexes
-        name = "CMO_" * string(cfg.buses.entities[i].name)
+        name = "CMO_" * string(system.buses.entities[i].name)
         SDDP.add_spaghetti(plt; title = name) do data
             return data[:cmo][i]
         end
@@ -424,12 +424,12 @@ Gera visualizações para os cortes produzidos pelo modelo no caso de uma
 # Arguments
 
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
+  - `system::SystemData`: configuração de entrada do sistema para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para os plots
 """
-function plot_model_cuts_1var(cuts::DataFrame, cfg::Configuration, CUTDIR::String)
+function plot_model_cuts_1var(cuts::DataFrame, system::SystemData, CUTDIR::String)
     stages = unique(cuts.estagio)
-    earmax = cfg.hydros.entities[1].max_storage
+    earmax = system.hydros.entities[1].max_storage
     x = collect(Float64, 0:Int(earmax))
     for s in stages
         highest, plotcut, watervalue = __compute_fcf1var_value_new(x, s, cuts)
@@ -458,16 +458,16 @@ Gera visualizações para os cortes produzidos pelo modelo.
 # Arguments
 
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-  - `cfg::Configuration`: configuração de entrada para validação do número de elementos
+  - `system::SystemData`: configuração de entrada do sistema para validação do número de elementos
   - `OUTDIR::String`: diretório de saída para os plots
 """
-function plot_model_cuts(cuts::DataFrame, cfg::Configuration)
+function plot_model_cuts(cuts::DataFrame, system::SystemData)
     CUTDIR = joinpath(pwd(), "plotcortes")
     __check_outdir(CUTDIR)
     @info "Plotando cortes em $(CUTDIR)"
-    n_hydros = length(cfg.hydros)
+    n_hydros = length(system.hydros)
     if n_hydros == 1
-        plot_model_cuts_1var(cuts, cfg, CUTDIR)
+        plot_model_cuts_1var(cuts, system, CUTDIR)
     elseif n_hydros == 2
         @error "ainda nao implementado"
     elseif n_hydros > 2

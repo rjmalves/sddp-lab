@@ -24,15 +24,16 @@ DICT = Dict{String,Any}(
     "risk_measure" => Dict("kind" => "Expectation", "params" => Dict()),
 )
 
-@testset "algorithm-strategy" begin
-    @testset "strategy-valid" begin
+@testset "algorithm-algorithmdata" begin
+    @testset "algorithm-valid" begin
         d, e = __renew(DICT)
-        @test typeof(Algorithm.Strategy(d, e)) === Algorithm.Strategy
+        @test typeof(Algorithm.AlgorithmData(d, e)) === Algorithm.AlgorithmData
     end
-    @testset "strategy-valid-from-file" begin
+    @testset "algorithm-valid-from-file" begin
         d, e = __renew(DICT)
 
         cd(example_data_dir)
-        @test typeof(Algorithm.Strategy("algorithm.jsonc", e)) === Algorithm.Strategy
+        @test typeof(Algorithm.AlgorithmData("algorithm.jsonc", e)) ===
+            Algorithm.AlgorithmData
     end
 end

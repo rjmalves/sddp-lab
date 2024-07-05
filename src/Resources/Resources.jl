@@ -7,9 +7,9 @@ abstract type Solver end
 include("solver-validators.jl")
 include("solver.jl")
 
-include("environment-validators.jl")
-include("environment.jl")
+include("resourcesdata-validators.jl")
+include("resourcesdata.jl")
 
-export Environment
+export ResourcesData
 
 end

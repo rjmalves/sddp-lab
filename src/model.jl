@@ -18,10 +18,10 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
 function build_model(files::Files)::SDDP.PolicyGraph
     @info "Compilando modelo"
 
-    graph = __build_graph(files.strategy)
+    graph = __build_graph(files.algorithm)
 
     sp_builder = __generate_subproblem_builder(
-        files.configuration, files.strategy, files.uncertainties
+        files.system, files.algorithm, files.scenarios
     )
 
     # TODO - support multiple solvers
@@ -33,23 +33,23 @@ function build_model(files::Files)::SDDP.PolicyGraph
 end
 
 function __generate_subproblem_builder(
-    cfg::Configuration, strategy::Strategy, uncertainties::Uncertainties
+    system::SystemData, algorithm::AlgorithmData, scenarios::ScenariosData
 )::Function
-    num_buses = length(cfg.buses)
-    num_hydros = length(cfg.hydros)
-    num_thermals = length(cfg.thermals)
-    num_stages = length(strategy.horizon)
+    num_buses = length(system.buses)
+    num_hydros = length(system.hydros)
+    num_thermals = length(system.thermals)
+    num_stages = length(algorithm.horizon)
 
-    SAA = generate_saa(uncertainties, num_stages)
+    SAA = generate_saa(scenarios, num_stages)
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
-        add_system_elements!(m, cfg)
-        add_uncertainties!(m, uncertainties)
-        __add_hydro_balance!(m, cfg.hydros)
+        add_system_elements!(m, system)
+        add_uncertainties!(m, scenarios)
+        __add_hydro_balance!(m, system.hydros)
 
         # TODO - this will change once we have a proper load representation
         # as an stochastic process
-        __add_load_balance!(m, cfg, uncertainties, node)
+        __add_load_balance!(m, system, scenarios, node)
 
         Ω_node = vec(SAA[node])
         SDDP.parameterize(m, Ω_node) do ω
@@ -58,16 +58,18 @@ function __generate_subproblem_builder(
 
         @stageobjective(
             m,
-            sum(cfg.thermals.entities[n].cost * m[:gt][n] for n in 1:num_thermals) +
+            sum(system.thermals.entities[n].cost * m[:gt][n] for n in 1:num_thermals) +
                 sum(
-                    cfg.buses.entities[n].deficit_cost * m[:deficit][n] for n in 1:num_buses
+                    system.buses.entities[n].deficit_cost * m[:deficit][n] for
+                    n in 1:num_buses
                 ) +
                 sum(
-                    cfg.hydros.entities[n].bus[].deficit_cost * 1.0001 * m[:slack_ghmin][n]
-                    for n in 1:num_hydros
+                    system.hydros.entities[n].bus[].deficit_cost *
+                    1.0001 *
+                    m[:slack_ghmin][n] for n in 1:num_hydros
                 ) +
                 sum(
-                    cfg.hydros.entities[n].spillage_penalty * m[:vert][n] for
+                    system.hydros.entities[n].spillage_penalty * m[:vert][n] for
                     n in 1:num_hydros
                 )
         )
@@ -78,24 +80,25 @@ end
 
 # TODO - this will change
 function __add_load_balance!(
-    m::JuMP.Model, cfg::Configuration, u::Uncertainties, node::Integer
+    m::JuMP.Model, system::SystemData, scenarios::ScenariosData, node::Integer
 )
-    bus_ids = get_ids(cfg.buses)
+    bus_ids = get_ids(system.buses)
     num_buses = length(bus_ids)
-    num_hydros = length(cfg.hydros)
-    num_thermals = length(cfg.thermals)
+    num_hydros = length(system.hydros)
+    num_thermals = length(system.thermals)
 
     @constraint(
         m,
         balanco_energetico[n = 1:num_buses],
         sum(
-            m[:gh][j] for j in 1:num_hydros if cfg.hydros.entities[j].bus_id == bus_ids[n]
+            m[:gh][j] for
+            j in 1:num_hydros if system.hydros.entities[j].bus_id == bus_ids[n]
         ) +
         sum(
             m[:gt][j] for
-            j in 1:num_thermals if cfg.thermals.entities[j].bus_id == bus_ids[n]
+            j in 1:num_thermals if system.thermals.entities[j].bus_id == bus_ids[n]
         ) +
-        m[:deficit][bus_ids[n]] == get_load(bus_ids[n], node, u)
+        m[:deficit][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
     )
 end
 
@@ -108,9 +111,9 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
 
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __build_graph(strategy::Strategy)
-    scenario_graph = strategy.graph
-    num_stages = length(strategy.horizon)
+function __build_graph(algorithm::AlgorithmData)
+    scenario_graph = algorithm.graph
+    num_stages = length(algorithm.horizon)
 
     return generate_scenario_graph(scenario_graph, num_stages)
 end
@@ -143,13 +146,13 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
 """
 function simulate_model(
-    model::SDDP.PolicyGraph, strategy::Strategy
+    model::SDDP.PolicyGraph, algorithm::AlgorithmData
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
 
     number_simulated_series = 300
 
-    num_stages = length(strategy.horizon)
+    num_stages = length(algorithm.horizon)
     sampler = SDDP.InSampleMonteCarlo(;
         max_depth = num_stages, terminate_on_dummy_leaf = false
     )

@@ -1,7 +1,7 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 ENTRYPOINT_KEYS = ["inputs"]
-ENTRYPOINT_KEY_TYPES = [Reading]
+ENTRYPOINT_KEY_TYPES = [InputsData]
 ENTRYPOINT_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}]
 
 function __validate_entrypoint_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -41,7 +41,7 @@ end
 function __build_entrypoint_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    d["inputs"] = Reading(d["inputs"], e)
+    d["inputs"] = InputsData(d["inputs"], e)
     valid_inputs = d["inputs"] !== nothing
     return valid_inputs
 end

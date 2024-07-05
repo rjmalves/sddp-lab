@@ -6,9 +6,7 @@ CONFIGURATION_KEY_TYPES_BEFORE_BUILD = [
     Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
 ]
 
-function __validate_configuration_keys_types!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_system_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = CONFIGURATION_KEYS
     keys_types = CONFIGURATION_KEY_TYPES
     valid_keys = __validate_keys!(d, keys, e)
@@ -16,7 +14,7 @@ function __validate_configuration_keys_types!(
     return valid_types
 end
 
-function __validate_configuration_keys_types_before_build!(
+function __validate_system_keys_types_before_build!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     keys = CONFIGURATION_KEYS
@@ -39,21 +37,19 @@ end
 
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
-function __validate_configuration_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+function __validate_system_content!(d::Dict{String,Any}, e::CompositeException)::Bool
     return true
 end
 
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
 
-function __validate_configuration_consistency!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_system_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
     return true
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------
 
-function __build_configuration_internals_from_dicts!(
+function __build_system_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_buses = __build_buses!(d, e)
@@ -63,10 +59,10 @@ function __build_configuration_internals_from_dicts!(
     return valid_lines && valid_hydros && valid_thermals
 end
 
-function __cast_configuration_internals_from_files!(
+function __cast_system_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_key_types = __validate_configuration_keys_types_before_build!(d, e)
+    valid_key_types = __validate_system_keys_types_before_build!(d, e)
     valid_buses = valid_key_types && __cast_buses_internals_from_files!(d, e)
     valid_lines = valid_key_types && __cast_lines_internals_from_files!(d, e)
     valid_hydros = valid_key_types && __cast_hydros_internals_from_files!(d, e)

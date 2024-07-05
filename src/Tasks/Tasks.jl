@@ -56,12 +56,12 @@ include("convergence.jl")
 include("results-validators.jl")
 include("results.jl")
 
-include("task-validators.jl")
-include("task.jl")
+include("taskdefinition-validators.jl")
+include("taskdefinition.jl")
 
-include("work-validators.jl")
-include("work.jl")
+include("tasksdata-validators.jl")
+include("tasksdata.jl")
 
-export Work, TaskDefinition, TaskArtifact, Echo, Policy, Simulation
+export TasksData, TaskDefinition, TaskArtifact, Echo, Policy, Simulation
 
 end

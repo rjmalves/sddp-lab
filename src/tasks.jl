@@ -108,7 +108,7 @@ end
 function save(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
     write_model_cuts(cuts)
-    plot_model_cuts(cuts, a.files.configuration)
+    plot_model_cuts(cuts, a.files.system)
     return true
 end
 
@@ -133,12 +133,12 @@ function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,N
     files = a[files_index].files
     policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
     policy = a[policy_index].policy
-    sims = simulate_model(policy, files.strategy)
+    sims = simulate_model(policy, files.algorithm)
     return SimulationArtifact(t, sims, files)
 end
 
 function save(a::SimulationArtifact)
-    write_simulation_results(a.simulations, a.files.configuration)
-    plot_simulation_results(a.simulations, a.files.configuration)
+    write_simulation_results(a.simulations, a.files.system)
+    plot_simulation_results(a.simulations, a.files.system)
     return true
 end

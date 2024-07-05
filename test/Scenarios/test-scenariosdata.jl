@@ -40,16 +40,16 @@ DICT = Dict{String,Any}(
     "initial_season" => 1, "branchings" => 1, "inflow" => INFLOW_DICT, "load" => LOAD_DICT
 )
 
-@testset "scenarios-uncertainties" begin
-    @testset "uncertainties-valid" begin
+@testset "scenarios-scenariosdata" begin
+    @testset "scenariosdata-valid" begin
         d, e = __renew(DICT)
-        u = Scenarios.Uncertainties(d, e)
-        @test typeof(u) === Scenarios.Uncertainties
+        u = Scenarios.ScenariosData(d, e)
+        @test typeof(u) === Scenarios.ScenariosData
     end
-    @testset "uncertainties-valid-from-file" begin
+    @testset "scenariosdata-valid-from-file" begin
         d, e = __renew(DICT)
         cd(example_data_dir)
-        u = Scenarios.Uncertainties("scenarios.jsonc", e)
-        @test typeof(u) === Scenarios.Uncertainties
+        u = Scenarios.ScenariosData("scenarios.jsonc", e)
+        @test typeof(u) === Scenarios.ScenariosData
     end
 end

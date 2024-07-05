@@ -186,9 +186,9 @@ include("hydro.jl")
 include("thermal-validators.jl")
 include("thermal.jl")
 
-include("configuration-validators.jl")
-include("configuration.jl")
+include("systemdata-validators.jl")
+include("systemdata.jl")
 
-export Configuration, add_system_elements!, __add_hydro_balance!, get_ids
+export SystemData, add_system_elements!, __add_hydro_balance!, get_ids
 
 end

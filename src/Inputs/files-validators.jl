@@ -1,7 +1,7 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 FILES_KEYS = ["algorithm", "resources", "scenarios", "system", "tasks"]
-FILES_KEY_TYPES = [Strategy, Environment, Uncertainties, Configuration, Work]
+FILES_KEY_TYPES = [AlgorithmData, ResourcesData, ScenariosData, SystemData, TasksData]
 FILES_KEY_TYPES_BEFORE_BUILD = [String, String, String, String, String]
 
 function __validate_files_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -45,15 +45,15 @@ end
 function __build_files_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    d["algorithm"] = Strategy(d["algorithm"], e)
+    d["algorithm"] = AlgorithmData(d["algorithm"], e)
     valid_algorithm = d["algorithm"] !== nothing
-    d["resources"] = Environment(d["resources"], e)
+    d["resources"] = ResourcesData(d["resources"], e)
     valid_resources = d["resources"] !== nothing
-    d["scenarios"] = Uncertainties(d["scenarios"], e)
+    d["scenarios"] = ScenariosData(d["scenarios"], e)
     valid_scenarios = d["scenarios"] !== nothing
-    d["system"] = Configuration(d["system"], e)
+    d["system"] = SystemData(d["system"], e)
     valid_system = d["system"] !== nothing
-    d["tasks"] = Work(d["tasks"], e)
+    d["tasks"] = TasksData(d["tasks"], e)
     valid_tasks = d["tasks"] !== nothing
     return valid_algorithm &&
            valid_resources &&
