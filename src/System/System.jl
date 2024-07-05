@@ -119,15 +119,6 @@ Add state variables, decision variables and constraints to a JuMP model `m`
 """
 function add_system_elements!(m::JuMP.Model, ses::SystemEntitySet) end
 
-# """
-# get_hydros(s::SystemData)::Hydros
-
-# Return the hydro objects from system.
-# """
-# function get_hydros(s::SystemData)::Hydros
-#     return s.hydros
-# end
-
 function __cast_system_entity_from_file!(d::Dict{String,Any}, e::CompositeException)::Bool
     df = read_csv(d["file"], e)
     valid_df = df !== nothing
