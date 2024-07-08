@@ -1,7 +1,7 @@
 
 # CLASS SystemData -----------------------------------------------------------------------
 
-struct SystemData
+struct SystemData <: InputModule
     buses::Buses
     lines::Lines
     hydros::Hydros

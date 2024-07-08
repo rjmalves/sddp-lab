@@ -1,7 +1,7 @@
 
 # CLASS TasksData -----------------------------------------------------------------------
 
-struct TasksData
+struct TasksData <: InputModule
     tasks::Vector{TaskDefinition}
 end
 

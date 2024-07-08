@@ -1,6 +1,6 @@
 # CLASS AlgorithmData -----------------------------------------------------------------------
 
-struct AlgorithmData
+struct AlgorithmData <: InputModule
     graph::ScenarioGraph
     horizon::Horizon
     risk::RiskMeasure

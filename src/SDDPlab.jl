@@ -6,6 +6,7 @@ using JSON, CSV, DataFrames
 using SDDP, GLPK
 using Logging
 
+include("Core/types.jl")
 include("Utils/Utils.jl")
 include("StochasticProcess/StochasticProcess.jl")
 include("Algorithm/Algorithm.jl")

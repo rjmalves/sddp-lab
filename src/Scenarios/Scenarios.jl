@@ -30,7 +30,7 @@ Return the number of dimensions (elements) in the load scenarios
 """
 function length(s::LoadScenarios) end
 
-struct ScenariosData
+struct ScenariosData <: InputModule
     initial_season::Integer
     branchings::Integer
     inflow::InflowScenarios

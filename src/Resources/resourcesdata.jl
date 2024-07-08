@@ -1,6 +1,6 @@
 # CLASS ResourcesData -----------------------------------------------------------------------
 
-struct ResourcesData
+struct ResourcesData <: InputModule
     solver::Solver
     # strategy::Strategy
     # processes::Processes
