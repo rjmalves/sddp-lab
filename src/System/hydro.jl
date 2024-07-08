@@ -119,7 +119,7 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     )
 end
 
-function __add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
+function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
     num_hydros = length(hydros)
 
     @constraint(

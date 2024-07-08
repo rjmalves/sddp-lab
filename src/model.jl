@@ -17,9 +17,7 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
 """
 function build_model(files::Files)::SDDP.PolicyGraph
     @info "Compilando modelo"
-    algorithm = get_algorithm(files)
     graph = __build_graph(files)
-
     sp_builder = __generate_subproblem_builder(files)
 
     # TODO - support multiple solvers
@@ -31,23 +29,15 @@ function build_model(files::Files)::SDDP.PolicyGraph
 end
 
 function __generate_subproblem_builder(files::Files)::Function
-    hydros_entities = get_hydros_entities(files)
-    buses_entities = get_buses_entities(files)
-    thermals_entities = get_thermals_entities(files)
     system = get_system(files)
     scenarios = get_scenarios(files)
-
-    num_stages = get_number_stages(files)
-    num_buses = length(buses_entities)
-    num_hydros = length(hydros_entities)
-    num_thermals = length(thermals_entities)
+    num_stages = get_number_of_stages(files)
 
     SAA = generate_saa(scenarios, num_stages)
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
         add_uncertainties!(m, scenarios)
-        __add_hydro_balance!(m, get_hydros(files))
 
         # TODO - this will change once we have a proper load representation
         # as an stochastic process
@@ -58,16 +48,7 @@ function __generate_subproblem_builder(files::Files)::Function
             return JuMP.fix.(m[:ω_inflow], ω)
         end
 
-        @stageobjective(
-            m,
-            sum(thermals_entities[n].cost * m[:gt][n] for n in 1:num_thermals) +
-                sum(buses_entities[n].deficit_cost * m[:deficit][n] for n in 1:num_buses) +
-                sum(
-                    hydros_entities[n].bus[].deficit_cost * 1.0001 * m[:slack_ghmin][n] for
-                    n in 1:num_hydros
-                ) +
-                sum(hydros_entities[n].spillage_penalty * m[:vert][n] for n in 1:num_hydros)
-        )
+        return add_system_objective!(m, system)
     end
 
     return fun_sp_build
@@ -106,7 +87,7 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
 """
 function __build_graph(files::Files)
     scenario_graph = get_scenario_graph(files)
-    num_stages = get_number_stages(files)
+    num_stages = get_number_of_stages(files)
 
     return generate_scenario_graph(scenario_graph, num_stages)
 end
@@ -145,7 +126,7 @@ function simulate_model(
 
     number_simulated_series = 300
 
-    num_stages = get_number_stages(files)
+    num_stages = get_number_of_stages(files)
     sampler = SDDP.InSampleMonteCarlo(;
         max_depth = num_stages, terminate_on_dummy_leaf = false
     )
