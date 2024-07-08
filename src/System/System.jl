@@ -190,6 +190,6 @@ include("systemdata-validators.jl")
 include("systemdata.jl")
 
 export SystemData,
-    Hydro, Hydros, Bus, Buses, Thermal, add_system_elements!, __add_hydro_balance!, get_ids
+    Hydro, Hydros, Bus, Buses, Thermal, add_system_elements!, add_system_objective!, get_ids
 
 end

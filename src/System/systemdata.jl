@@ -39,12 +39,96 @@ function SystemData(filename::String, e::CompositeException)
     return valid ? SystemData(d, e) : nothing
 end
 
+# GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_hydros(s::SystemData)::Hydros
+
+Return the hydro object from files.
+"""
+function get_hydros(s::SystemData)::Hydros
+    return s.hydros
+end
+
+"""
+get_hydros_entities(s::SystemData)::Vector{Hydro}
+
+Return the hydro entities from files.
+"""
+function get_hydros_entities(s::SystemData)::Vector{Hydro}
+    return s.hydros.entities
+end
+
+"""
+get_buses(s::SystemData)::Buses
+
+Return the buses object from files.
+"""
+function get_buses(s::SystemData)::Buses
+    return s.buses
+end
+
+"""
+get_buses_entities(s::SystemData)::Vector{Bus}
+
+Return the bus entities from files.
+"""
+function get_buses_entities(s::SystemData)::Vector{Bus}
+    return s.buses.entities
+end
+"""
+get_thermals(s::SystemData)::Thermals
+
+Return the thermals object from files.
+"""
+function get_thermals(s::SystemData)::Thermals
+    return s.thermals
+end
+
+"""
+get_thermals_entities(s::SystemData)::Vector{Thermal}
+
+Return the thermal entities from files.
+"""
+function get_thermals_entities(s::SystemData)::Vector{Thermal}
+    return s.thermals.entities
+end
+"""
+get_lines(s::SystemData)::Lines
+
+Return the lines object from files.
+"""
+function get_lines(s::SystemData)::Lines
+    return s.lines
+end
+
 # SDDP METHODS -----------------------------------------------------------------------------
 
 function add_system_elements!(m::JuMP.Model, s::SystemData)
-    add_system_elements!(m, s.buses)
-    add_system_elements!(m, s.lines)
-    add_system_elements!(m, s.hydros)
-    add_system_elements!(m, s.thermals)
+    add_system_elements!(m, get_buses(s))
+    add_system_elements!(m, get_lines(s))
+    add_system_elements!(m, get_hydros(s))
+    add_system_elements!(m, get_thermals(s))
+    add_hydro_balance!(m, get_hydros(s))
     return true
+end
+
+function add_system_objective!(m::JuMP.Model, s::SystemData)
+    hydros = get_hydros_entities(s)
+    buses = get_buses_entities(s)
+    thermals = get_thermals_entities(s)
+    num_buses = length(buses)
+    num_hydros = length(hydros)
+    num_thermals = length(thermals)
+
+    SDDP.@stageobjective(
+        m,
+        sum(thermals[n].cost * m[:gt][n] for n in 1:num_thermals) +
+            sum(buses[n].deficit_cost * m[:deficit][n] for n in 1:num_buses) +
+            sum(
+                hydros[n].bus[].deficit_cost * 1.0001 * m[:slack_ghmin][n] for
+                n in 1:num_hydros
+            ) +
+            sum(hydros[n].spillage_penalty * m[:vert][n] for n in 1:num_hydros)
+    )
 end

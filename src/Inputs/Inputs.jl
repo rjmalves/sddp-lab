@@ -111,11 +111,11 @@ function get_horizon(f::Files)::Horizon
     return f.algorithm.horizon
 end
 """
-get_number_stages(f::Files)::Integer
+get_number_of_stages(f::Files)::Integer
 
 Return the number of stages from files.
 """
-function get_number_stages(f::Files)::Integer
+function get_number_of_stages(f::Files)::Integer
     return length(get_horizon(f))
 end
 """
@@ -155,7 +155,7 @@ export Entrypoint,
     get_buses_entities,
     get_thermals_entities,
     get_algorithm,
-    get_number_stages,
+    get_number_of_stages,
     get_horizon,
     get_scenario_graph,
     get_scenarios
