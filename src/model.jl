@@ -1,3 +1,4 @@
+using .Core
 using .System
 using .Scenarios
 using .Algorithm
@@ -15,7 +16,7 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
   - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
     `Lab.Reader.read_ena()`
 """
-function build_model(files::Files)::SDDP.PolicyGraph
+function build_model(files::Vector{InputModule})::SDDP.PolicyGraph
     @info "Compilando modelo"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
@@ -28,7 +29,7 @@ function build_model(files::Files)::SDDP.PolicyGraph
     return model
 end
 
-function __generate_subproblem_builder(files::Files)::Function
+function __generate_subproblem_builder(files::Vector{InputModule})::Function
     system = get_system(files)
     scenarios = get_scenarios(files)
     num_stages = get_number_of_stages(files)
@@ -55,7 +56,7 @@ function __generate_subproblem_builder(files::Files)::Function
 end
 
 # TODO - this will change
-function __add_load_balance!(m::JuMP.Model, files::Files, node::Integer)
+function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::Integer)
     hydros_entities = get_hydros_entities(files)
     thermals_entities = get_thermals_entities(files)
     scenarios = get_scenarios(files)
@@ -85,7 +86,7 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
 
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __build_graph(files::Files)
+function __build_graph(files::Vector{InputModule})
     scenario_graph = get_scenario_graph(files)
     num_stages = get_number_of_stages(files)
 
@@ -120,7 +121,7 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
 """
 function simulate_model(
-    model::SDDP.PolicyGraph, files::Files
+    model::SDDP.PolicyGraph, files::Vector{InputModule}
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
 

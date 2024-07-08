@@ -1,5 +1,6 @@
 module Tasks
 
+using ..Core
 using ..Algorithm
 using ..Resources
 using ..System

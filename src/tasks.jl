@@ -1,12 +1,13 @@
 using SDDP: SDDP
 
+using .Core
 using .Tasks
 using .Outputs
 
 # Container for the inputs
 
 struct InputsArtifact <: TaskArtifact
-    files::Files
+    files::Vector{InputModule}
 end
 
 function get_task_output_path(a::InputsArtifact)::String
@@ -30,6 +31,8 @@ function run_tasks!(
     entrypoint === nothing && return Vector{TaskArtifact}()
 
     files = get_files(entrypoint)
+    @info files
+    @info typeof(files)
     tasks = get_tasks(files)
     artifacts = Vector{TaskArtifact}([InputsArtifact(files)])
     for task in tasks
@@ -59,7 +62,7 @@ end
 
 struct EchoArtifact <: TaskArtifact
     task::Echo
-    files::Files
+    files::Vector{InputModule}
 end
 
 function get_task_output_path(a::EchoArtifact)::String
@@ -86,7 +89,7 @@ end
 struct PolicyArtifact <: TaskArtifact
     task::Policy
     policy::SDDP.PolicyGraph
-    files::Files
+    files::Vector{InputModule}
 end
 
 function get_task_output_path(a::PolicyArtifact)::String
@@ -108,7 +111,7 @@ end
 function save(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
     write_model_cuts(cuts)
-    plot_model_cuts(cuts, a.files.system)
+    plot_model_cuts(cuts, get_system(a.files))
     return true
 end
 
@@ -117,7 +120,7 @@ end
 struct SimulationArtifact <: TaskArtifact
     task::Simulation
     simulations::Vector{Vector{Dict{Symbol,Any}}}
-    files::Files
+    files::Vector{InputModule}
 end
 
 function get_task_output_path(a::SimulationArtifact)::String
@@ -138,7 +141,7 @@ function run(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,N
 end
 
 function save(a::SimulationArtifact)
-    write_simulation_results(a.simulations, a.files.system)
-    plot_simulation_results(a.simulations, a.files.system)
+    write_simulation_results(a.simulations, get_system(a.files))
+    plot_simulation_results(a.simulations, get_system(a.files))
     return true
 end

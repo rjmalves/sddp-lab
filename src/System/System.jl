@@ -7,6 +7,7 @@ using JuMP
 using Graphs
 using SDDP: SDDP
 
+using ..Core
 using ..Utils
 
 import Base: length
@@ -190,6 +191,14 @@ include("systemdata-validators.jl")
 include("systemdata.jl")
 
 export SystemData,
-    Hydro, Hydros, Bus, Buses, Thermal, add_system_elements!, add_system_objective!, get_ids
+    Hydro,
+    Hydros,
+    Bus,
+    Buses,
+    Thermal,
+    Thermals,
+    add_system_elements!,
+    add_system_objective!,
+    get_ids
 
 end

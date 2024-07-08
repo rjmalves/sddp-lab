@@ -2,6 +2,7 @@ module Scenarios
 
 using JuMP
 
+using ..Core
 using ..Utils
 using ..StochasticProcess
 

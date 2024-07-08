@@ -8,6 +8,7 @@ using Graphs
 using SDDP: SDDP
 using Dates
 
+using ..Core
 using ..Utils
 
 import Base: length

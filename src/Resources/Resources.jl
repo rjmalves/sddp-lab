@@ -1,5 +1,6 @@
 module Resources
 
+using ..Core
 using ..Utils
 
 abstract type Solver end
