@@ -1,10 +1,5 @@
 # CLASS LowerBoundStability -----------------------------------------------------------------------
 
-struct LowerBoundStability <: StoppingCriteria
-    threshold::Real
-    num_iterations::Integer
-end
-
 function LowerBoundStability(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

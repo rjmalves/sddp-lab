@@ -1,9 +1,3 @@
-using .Core
-using .System
-using .Scenarios
-using .Algorithm
-using .Inputs
-using .Tasks
 
 """
     build_model(cfg, ena_dist)
@@ -16,7 +10,7 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
   - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
     `Lab.Reader.read_ena()`
 """
-function build_model(files::Vector{InputModule})::SDDP.PolicyGraph
+function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
     @info "Compilando modelo"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
@@ -32,7 +26,7 @@ end
 function __generate_subproblem_builder(files::Vector{InputModule})::Function
     system = get_system(files)
     scenarios = get_scenarios(files)
-    num_stages = get_number_of_stages(files)
+    num_stages = get_number_of_stages(get_algorithm(files))
 
     SAA = generate_saa(scenarios, num_stages)
 
@@ -57,10 +51,11 @@ end
 
 # TODO - this will change
 function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::Integer)
-    hydros_entities = get_hydros_entities(files)
-    thermals_entities = get_thermals_entities(files)
+    system = get_system(files)
+    hydros_entities = get_hydros_entities(system)
+    thermals_entities = get_thermals_entities(system)
     scenarios = get_scenarios(files)
-    bus_ids = get_ids(get_buses(files))
+    bus_ids = get_ids(get_buses(system))
 
     num_buses = length(bus_ids)
     num_hydros = length(hydros_entities)
@@ -87,10 +82,7 @@ Gera um `SDDP.Graph` parametrizado de acordo com configuracoes de estudo
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
 function __build_graph(files::Vector{InputModule})
-    scenario_graph = get_scenario_graph(files)
-    num_stages = get_number_of_stages(files)
-
-    return generate_scenario_graph(scenario_graph, num_stages)
+    return generate_scenario_graph(get_algorithm(files))
 end
 
 """
@@ -103,11 +95,11 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function train_model(model::SDDP.PolicyGraph, task::Policy)
+function __train_model(model::SDDP.PolicyGraph, convergence::Convergence)
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
-    max_iterations = task.convergence.max_iterations
+    max_iterations = convergence.max_iterations
     return SDDP.train(model; iteration_limit = max_iterations)
 end
 
@@ -120,17 +112,11 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
 
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
 """
-function simulate_model(
-    model::SDDP.PolicyGraph, files::Vector{InputModule}
+function __simulate_model(
+    model::SDDP.PolicyGraph, files::Vector{InputModule}, number_simulated_series::Integer
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
-
-    number_simulated_series = 300
-
-    num_stages = get_number_of_stages(files)
-    sampler = SDDP.InSampleMonteCarlo(;
-        max_depth = num_stages, terminate_on_dummy_leaf = false
-    )
+    sampler = generate_sampler(get_algorithm(files))
     @info "Realizando simulação"
     return SDDP.simulate(
         model,

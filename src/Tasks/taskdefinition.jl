@@ -1,9 +1,4 @@
-
 # CLASS Echo -----------------------------------------------------------------------
-
-struct Echo <: TaskDefinition
-    results::Results
-end
 
 function Echo(d::Dict{String,Any}, e::CompositeException)
 
@@ -22,12 +17,13 @@ function Echo(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? Echo(d["results"]) : nothing
 end
 
-# CLASS Policy -----------------------------------------------------------------------
-
-struct Policy <: TaskDefinition
-    convergence::Convergence
-    results::Results
+function run_task(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
+    input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[input_index].files
+    return EchoArtifact(t, files)
 end
+
+# CLASS Policy  -----------------------------------------------------------------------
 
 function Policy(d::Dict{String,Any}, e::CompositeException)
 
@@ -46,13 +42,15 @@ function Policy(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? Policy(d["convergence"], d["results"]) : nothing
 end
 
-# CLASS Simulation -----------------------------------------------------------------------
-
-struct Simulation <: TaskDefinition
-    num_simulated_series::Integer
-    policy_path::String
-    results::Results
+function run_task(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
+    input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[input_index].files
+    model = __build_model(files)
+    __train_model(model, t.convergence)
+    return PolicyArtifact(t, model, files)
 end
+
+# CLASS Simulation  -----------------------------------------------------------------------
 
 function Simulation(d::Dict{String,Any}, e::CompositeException)
 
@@ -73,6 +71,15 @@ function Simulation(d::Dict{String,Any}, e::CompositeException)
     else
         nothing
     end
+end
+
+function run_task(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
+    files_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[files_index].files
+    policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
+    policy = a[policy_index].policy
+    sims = __simulate_model(policy, files, t.num_simulated_series)
+    return SimulationArtifact(t, sims, files)
 end
 
 # HELPERS -------------------------------------------------------------------------------------

@@ -1,7 +1,5 @@
 # CLASS Expectation -----------------------------------------------------------------------
 
-struct Expectation <: RiskMeasure end
-
 function Expectation(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

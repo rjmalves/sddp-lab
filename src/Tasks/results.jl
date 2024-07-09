@@ -1,10 +1,5 @@
 # CLASS Results -----------------------------------------------------------------------
 
-struct Results
-    path::String
-    save::Bool
-end
-
 function Results(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

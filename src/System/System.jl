@@ -12,6 +12,8 @@ using ..Utils
 
 import Base: length
 
+# TYPES ------------------------------------------------------------------------
+
 abstract type SystemEntity end
 
 struct Bus <: SystemEntity
@@ -59,20 +61,6 @@ struct Thermal <: SystemEntity
     bus::Ref{Bus}
 end
 
-"""
-get_id(s)
-
-Return the `id` of the system entity
-"""
-function get_id(se::SystemEntity)::Integer end
-
-"""
-get_params(s)
-
-Return parameters that are specific to the system entity, as a dictionary
-"""
-function get_params(se::SystemEntity)::Dict{String,Any} end
-
 abstract type SystemEntitySet end
 
 struct Buses <: SystemEntitySet
@@ -91,6 +79,29 @@ end
 struct Thermals <: SystemEntitySet
     entities::Vector{Thermal}
 end
+
+struct SystemData <: InputModule
+    buses::Buses
+    lines::Lines
+    hydros::Hydros
+    thermals::Thermals
+end
+
+# GENERAL METHODS ------------------------------------------------------------------------
+
+"""
+get_id(s)
+
+Return the `id` of the system entity
+"""
+function get_id(se::SystemEntity)::Integer end
+
+"""
+get_params(s)
+
+Return parameters that are specific to the system entity, as a dictionary
+"""
+function get_params(se::SystemEntity)::Dict{String,Any} end
 
 """
 get_ids(ses)
@@ -119,6 +130,8 @@ add_system_elements!(m, ses)
 Add state variables, decision variables and constraints to a JuMP model `m`
 """
 function add_system_elements!(m::JuMP.Model, ses::SystemEntitySet) end
+
+# UTILS ------------------------------------------------------------------------
 
 function __cast_system_entity_from_file!(d::Dict{String,Any}, e::CompositeException)::Bool
     df = read_csv(d["file"], e)
@@ -175,6 +188,8 @@ function __cast_system_entities_content!(
     return valid
 end
 
+# INTERNALS ------------------------------------------------------------------------
+
 include("bus-validators.jl")
 include("bus.jl")
 
@@ -199,6 +214,10 @@ export SystemData,
     Thermals,
     add_system_elements!,
     add_system_objective!,
+    get_system,
+    get_buses,
+    get_hydros_entities,
+    get_thermals_entities,
     get_ids
 
 end

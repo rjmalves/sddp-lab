@@ -1,10 +1,6 @@
 
 # CLASS TasksData -----------------------------------------------------------------------
 
-struct TasksData <: InputModule
-    tasks::Vector{TaskDefinition}
-end
-
 function TasksData(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
@@ -34,4 +30,15 @@ function TasksData(filename::String, e::CompositeException)
     valid = valid_jsonc && __cast_tasksdata_internals_from_files!(d, e)
 
     return valid ? TasksData(d, e) : nothing
+end
+
+# GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_tasks(s::Vector{InputModule})::Vector{TaskDefinition}
+
+Return the task definition objects from files.
+"""
+function get_tasks(f::Vector{InputModule})::Vector{TaskDefinition}
+    return get_input_module(f, TasksData).tasks
 end

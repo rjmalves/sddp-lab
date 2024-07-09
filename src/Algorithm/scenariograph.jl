@@ -1,9 +1,5 @@
 # CLASS RegularScenarioGraph -----------------------------------------------------------------------
 
-struct RegularScenarioGraph <: ScenarioGraph
-    discount_rate::Real
-end
-
 function RegularScenarioGraph(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

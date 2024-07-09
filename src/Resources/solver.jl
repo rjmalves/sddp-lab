@@ -1,8 +1,5 @@
 # CLASS Solver -----------------------------------------------------------------------
 
-struct CLP <: Solver end
-struct GLPK <: Solver end
-
 function CLP(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

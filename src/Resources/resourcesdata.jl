@@ -38,3 +38,14 @@ function ResourcesData(filename::String, e::CompositeException)
 
     return valid ? ResourcesData(d, e) : nothing
 end
+
+# GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_resources(s::Vector{InputModule})::ResourcesData
+
+Return the ResourcesData object from files.
+"""
+function get_resources(f::Vector{InputModule})::ResourcesData
+    return get_input_module(f, ResourcesData)
+end

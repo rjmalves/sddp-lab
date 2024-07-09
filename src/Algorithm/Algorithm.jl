@@ -13,15 +13,35 @@ using ..Utils
 
 import Base: length
 
+# TYPES ------------------------------------------------------------------------
+
 abstract type ScenarioGraph end
 abstract type Horizon end
 abstract type RiskMeasure end
+
+struct RegularScenarioGraph <: ScenarioGraph
+    discount_rate::Real
+end
 
 struct Stage
     index::Integer
     start_date::DateTime
     end_date::DateTime
 end
+
+struct ExplicitHorizon <: Horizon
+    stages::Vector{Stage}
+end
+
+struct Expectation <: RiskMeasure end
+
+struct AlgorithmData <: InputModule
+    graph::ScenarioGraph
+    horizon::Horizon
+    risk::RiskMeasure
+end
+
+# GENERAL METHODS ------------------------------------------------------------------------
 
 """
 generate_scenario_graph(g::ScenarioGraph)
@@ -46,6 +66,8 @@ study-specific configurations.
 """
 function generate_risk_measure(m::RiskMeasure)::SDDP.AbstractRiskMeasure end
 
+# INTERNALS ------------------------------------------------------------------------
+
 include("scenariograph-validators.jl")
 include("scenariograph.jl")
 
@@ -61,6 +83,12 @@ include("riskmeasure.jl")
 include("algorithmdata-validators.jl")
 include("algorithmdata.jl")
 
-export AlgorithmData, Horizon, ScenarioGraph, generate_scenario_graph
+export AlgorithmData,
+    Horizon,
+    ScenarioGraph,
+    get_algorithm,
+    get_number_of_stages,
+    generate_scenario_graph,
+    generate_sampler
 
 end

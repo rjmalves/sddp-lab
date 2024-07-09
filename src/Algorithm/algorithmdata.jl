@@ -1,11 +1,5 @@
 # CLASS AlgorithmData -----------------------------------------------------------------------
 
-struct AlgorithmData <: InputModule
-    graph::ScenarioGraph
-    horizon::Horizon
-    risk::RiskMeasure
-end
-
 function AlgorithmData(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
@@ -35,4 +29,67 @@ function AlgorithmData(filename::String, e::CompositeException)
     valid = valid_jsonc && __cast_algorithm_internals_from_files!(d, e)
 
     return valid ? AlgorithmData(d, e) : nothing
+end
+
+# GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_algorithm(s::Vector{InputModule})::AlgorithmData
+
+Return the AlgorithmData object from files.
+"""
+function get_algorithm(f::Vector{InputModule})::AlgorithmData
+    return get_input_module(f, AlgorithmData)
+end
+
+"""
+get_horizon(s::AlgorithmData)::Horizon
+
+Return the Horizon object from files.
+"""
+function get_horizon(s::AlgorithmData)::Horizon
+    return s.horizon
+end
+
+"""
+get_scenario_graph(s::AlgorithmData)::ScenarioGraph
+
+Return the ScenarioGraph object from files.
+"""
+function get_scenario_graph(s::AlgorithmData)::ScenarioGraph
+    return s.graph
+end
+
+"""
+get_number_of_stages(s::AlgorithmData)::Integer
+
+Return the hydro entities from files.
+"""
+function get_number_of_stages(s::AlgorithmData)::Integer
+    h = get_horizon(s)
+    return length(h)
+end
+
+# SDDP METHODS -----------------------------------------------------------------------------
+
+"""
+generate_scenario_graph(s::AlgorithmData)::AbstractSamplingScheme
+
+Generates the SDDP.jl sampler for simulating the model.
+"""
+function generate_scenario_graph(s::AlgorithmData)::SDDP.Graph
+    num_stages = get_number_of_stages(s)
+    return generate_scenario_graph(get_scenario_graph(s), num_stages)
+end
+
+"""
+generate_sampler(s::AlgorithmData)::AbstractSamplingScheme
+
+Generates the SDDP.jl sampler for simulating the model.
+"""
+function generate_sampler(s::AlgorithmData)::SDDP.AbstractSamplingScheme
+    num_stages = get_number_of_stages(s)
+    return SDDP.InSampleMonteCarlo(;
+        max_depth = num_stages, terminate_on_dummy_leaf = false
+    )
 end

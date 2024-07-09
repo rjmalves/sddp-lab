@@ -1,13 +1,6 @@
 
 # CLASS SystemData -----------------------------------------------------------------------
 
-struct SystemData <: InputModule
-    buses::Buses
-    lines::Lines
-    hydros::Hydros
-    thermals::Thermals
-end
-
 function SystemData(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
@@ -40,6 +33,15 @@ function SystemData(filename::String, e::CompositeException)
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_system(s::Vector{InputModule})::SystemData
+
+Return the SystemData object from files.
+"""
+function get_system(f::Vector{InputModule})::SystemData
+    return get_input_module(f, SystemData)
+end
 
 """
 get_hydros(s::SystemData)::Hydros

@@ -89,6 +89,6 @@ include("load.jl")
 include("scenariosdata-validators.jl")
 include("scenariosdata.jl")
 
-export ScenariosData, add_uncertainties!, generate_saa, get_load
+export ScenariosData, add_uncertainties!, generate_saa, get_load, get_scenarios
 
 end

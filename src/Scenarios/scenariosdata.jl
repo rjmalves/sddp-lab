@@ -30,3 +30,14 @@ function ScenariosData(filename::String, e::CompositeException)
 
     return valid ? ScenariosData(d, e) : nothing
 end
+
+# GENERAL METHODS --------------------------------------------------------------------------
+
+"""
+get_scenarios(s::Vector{InputModule})::ScenariosData
+
+Return the ScenariosData object from files.
+"""
+function get_scenarios(f::Vector{InputModule})::ScenariosData
+    return get_input_module(f, ScenariosData)
+end

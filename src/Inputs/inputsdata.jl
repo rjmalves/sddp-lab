@@ -2,8 +2,6 @@
 
 function InputsData(d::Dict{String,Any}, e::CompositeException)
 
-    # TODO - the error is in these functions below
-
     # Build internal objects
     valid_internals = __build_inputsdata_internals_from_dicts!(d, e)
 
