@@ -75,7 +75,7 @@ end
 """
 generate_scenario_graph(s::AlgorithmData)::AbstractSamplingScheme
 
-Generates the SDDP.jl sampler for simulating the model.
+Generates the SDDP.jl graph for building the model.
 """
 function generate_scenario_graph(s::AlgorithmData)::SDDP.Graph
     num_stages = get_number_of_stages(s)

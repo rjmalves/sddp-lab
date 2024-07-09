@@ -70,8 +70,6 @@ function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
 
     files_d = d["files"]
 
-    @info files_d
-
     valid_key_types = __validate_files_keys_types_before_build!(files_d, e)
     if !valid_key_types
         return false
