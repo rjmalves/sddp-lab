@@ -88,22 +88,5 @@
         // each risk measure might need different params,
         // such as the confidence level for AV@R, etc.
         "params": {}
-    },
-    "convergence": {
-        // Min/Max number of iterations
-        "min_iterations": 10,
-        "max_iterations": 50,
-        // Early stopping criteria and params
-        "stopping_criteria": {
-            // LowerBoundStability | statistical | gap | ...
-            "kind": "LowerBoundStability",
-            "params": {
-                // Threshold for the early
-                // stopping in % of zinf delta
-                // per iteration
-                "threshold": 0.1,
-                "num_iterations": 6
-            }
-        }
     }
 }
