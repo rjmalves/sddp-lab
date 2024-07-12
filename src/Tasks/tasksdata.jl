@@ -42,3 +42,23 @@ Return the task definition objects from files.
 function get_tasks(f::Vector{InputModule})::Vector{TaskDefinition}
     return get_input_module(f, TasksData).tasks
 end
+
+"""
+get_convergence(t::Policy)::Convergence
+
+Return the task definition objects from files.
+"""
+function get_convergence(t::Policy)::Convergence
+    return f.convergence
+end
+
+"""
+get_stopping_criteria(c::Convergence)::StoppingCriteria
+
+Return the task definition objects from files.
+"""
+function get_stopping_criteria(c::Convergence)::StoppingCriteria
+    return c.stopping_criteria
+end
+
+# SDDP METHODS --------------------------------------------------------------------------

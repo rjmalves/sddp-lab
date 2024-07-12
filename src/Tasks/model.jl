@@ -99,7 +99,10 @@ function __train_model(model::SDDP.PolicyGraph, convergence::Convergence)
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
     max_iterations = convergence.max_iterations
-    return SDDP.train(model; iteration_limit = max_iterations)
+    stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
+    return SDDP.train(
+        model; iteration_limit = max_iterations, stopping_rules = [stopping_rule]
+    )
 end
 
 """

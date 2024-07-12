@@ -26,6 +26,14 @@ end
 
 abstract type StoppingCriteria end
 
+struct IterationLimit <: StoppingCriteria
+    num_iterations::Integer
+end
+
+struct TimeLimit <: StoppingCriteria
+    time_seconds::Integer
+end
+
 struct LowerBoundStability <: StoppingCriteria
     threshold::Real
     num_iterations::Integer
@@ -76,6 +84,14 @@ struct TasksData <: InputModule
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
+
+"""
+generate_stopping_rule(s::StoppingCriteria)
+
+Return the StoppingRule object that is used by the algorithm
+to decide if the training should be stopped.
+"""
+function generate_stopping_rule(s::StoppingCriteria) end
 
 """
 get_task_output_path(a::TaskArtifact)::String
@@ -134,6 +150,7 @@ export TasksData,
     save_task,
     get_task_output_path,
     should_write_results,
-    get_tasks
+    get_tasks,
+    generate_stopping_rule
 
 end
