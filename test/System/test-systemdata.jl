@@ -50,12 +50,12 @@ CFG_DICT = Dict(
         system = System.SystemData(d, e)
         @test typeof(system) === System.SystemData
     end
-    # TODO - testar não construção de SystemData
-    @testset "system-invalid-id" begin
+
+    @testset "system-invalid" begin
         d, e = __renew(convert(Dict{String,Any}, CFG_DICT))
-        # d = __modif_key(d, "buses", [HYDRO_DICT1])
-        # d = __remove_key(d, "thermals")
-        # @test System.SystemData(d, e) === nothing
+        d = __modif_key(d, "buses", [HYDRO_DICT])
+        d = __remove_key(d, "thermals")
+        @test System.SystemData(d, e) === nothing
     end
 
     @testset "system-valid-from-file" begin
