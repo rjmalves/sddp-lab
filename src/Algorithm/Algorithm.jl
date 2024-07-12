@@ -23,6 +23,13 @@ struct RegularScenarioGraph <: ScenarioGraph
     discount_rate::Real
 end
 
+struct CyclicScenarioGraph <: ScenarioGraph
+    discount_rate::Real
+    cycle_length::Integer
+    cycle_stage::Integer
+    max_depth::Integer
+end
+
 struct Stage
     index::Integer
     start_date::DateTime

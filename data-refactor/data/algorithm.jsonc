@@ -8,6 +8,16 @@
             "discount_rate": 1.00
         }
     },
+    // "scenario_graph": {
+    //     "kind": "CyclicScenarioGraph",
+    //     "params": {
+    //         // Parameters for the scenario graph
+    //         "discount_rate": 0.9,
+    //         "cycle_length": 12,
+    //         "cycle_stage": 1,
+    //         "max_depth": 24
+    //     }
+    // },
     "horizon": {
         // explicit | daily | weekly | monthly | yearly
         "kind": "ExplicitHorizon",

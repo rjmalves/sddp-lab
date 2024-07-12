@@ -61,13 +61,22 @@ function get_scenario_graph(s::AlgorithmData)::ScenarioGraph
 end
 
 """
+get_scenario_graph_max_depth(s::AlgorithmData)::ScenarioGraph
+
+Return the max depth allowed by the ScenarioGraph object.
+"""
+function get_scenario_graph_max_depth(g::ScenarioGraph)::Integer end
+
+"""
 get_number_of_stages(s::AlgorithmData)::Integer
 
 Return the hydro entities from files.
 """
 function get_number_of_stages(s::AlgorithmData)::Integer
     h = get_horizon(s)
-    return length(h)
+    horizon_length = length(h)
+    max_graph_depth = get_scenario_graph_max_depth(get_scenario_graph(s))
+    return max(horizon_length, max_graph_depth)
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
