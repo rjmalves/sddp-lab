@@ -34,6 +34,46 @@ function GLPK(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? GLPK() : nothing
 end
 
+function HiGHS(d::Dict{String,Any}, e::CompositeException)
+
+    # Build internal objects
+    valid_internals = __build_highs_internals_from_dicts!(d, e)
+
+    # Keys and types validation
+    valid_keys_types = valid_internals && __validate_highs_keys_types!(d, e)
+
+    # Content validation
+    valid_content = valid_keys_types && __validate_highs_content!(d, e)
+
+    # Consistency validation
+    valid_consistency = valid_content && __validate_highs_consistency!(d, e)
+
+    return valid_consistency ? HiGHS() : nothing
+end
+
+# GENERAL METHODS -----------------------------------------------------------------------
+
+function generate_optimizer(s::CLP)
+    @eval begin
+        import Clp: Optimizer
+        return Optimizer
+    end
+end
+
+function generate_optimizer(s::GLPK)
+    @eval begin
+        import GLPK: Optimizer
+        return Optimizer
+    end
+end
+
+function generate_optimizer(s::HiGHS)
+    @eval begin
+        import HiGHS: Optimizer
+        return Optimizer
+    end
+end
+
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool

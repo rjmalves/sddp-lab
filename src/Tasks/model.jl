@@ -14,10 +14,9 @@ function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
     @info "Compilando modelo"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
-
-    # TODO - support multiple solvers
+    optimizer = generate_optimizer(get_resources(files))
     model = SDDP.PolicyGraph(
-        sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = GLPK.Optimizer
+        sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = optimizer
     )
 
     return model

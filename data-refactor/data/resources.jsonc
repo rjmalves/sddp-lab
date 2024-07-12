@@ -1,7 +1,7 @@
 {
     "solver": {
         // CLP | GLPK | HiGHS | CPLEX | Gurobi | ...
-        "kind": "CLP",
+        "kind": "GLPK",
         "params": {}
     }
     // TODO

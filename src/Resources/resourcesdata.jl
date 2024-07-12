@@ -49,3 +49,23 @@ Return the ResourcesData object from files.
 function get_resources(f::Vector{InputModule})::ResourcesData
     return get_input_module(f, ResourcesData)
 end
+
+"""
+get_solver(s::ResourcesData)::Solver
+
+Return the Solver object from files.
+"""
+function get_solver(s::ResourcesData)::Solver
+    return s.solver
+end
+
+# SDDP METHODS --------------------------------------------------------------------------
+
+"""
+generate_optimizer(s::ResourcesData)
+
+Generates the SDDP.jl graph for building the model.
+"""
+function generate_optimizer(s::ResourcesData)
+    return generate_optimizer(get_solver(s))
+end

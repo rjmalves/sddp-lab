@@ -82,7 +82,7 @@ end
 # SDDP METHODS -----------------------------------------------------------------------------
 
 """
-generate_scenario_graph(s::AlgorithmData)::AbstractSamplingScheme
+generate_scenario_graph(s::AlgorithmData)::SDDP.Graph
 
 Generates the SDDP.jl graph for building the model.
 """
