@@ -5,9 +5,9 @@ using Suppressor
     @testset "main_success" begin
         e = CompositeException()
         cd(example_dir)
-        @suppress begin
-            SDDPlab.main(; e = e)
-        end
+        # @suppress begin
+        SDDPlab.main(; e = e)
+        # end
         @test length(e) == 0
     end
 end

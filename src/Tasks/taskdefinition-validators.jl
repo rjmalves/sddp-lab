@@ -116,8 +116,9 @@ function __build_policy_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_convergence = __build_convergence!(d, e)
+    valid_risk_measure = __build_risk_measure!(d, e)
     valid_results = __build_results!(d, e)
-    return valid_convergence && valid_results
+    return valid_convergence && valid_risk_measure && valid_results
 end
 
 function __build_simulation_internals_from_dicts!(

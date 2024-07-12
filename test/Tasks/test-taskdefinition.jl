@@ -16,6 +16,7 @@ POLICY_DICT = convert(
                 "params" => Dict("threshold" => 0.05, "num_iterations" => 5),
             ),
         ),
+        "risk_measure" => Dict("kind" => "Expectation", "params" => Dict()),
     ),
 )
 SIMULATION_DICT = convert(

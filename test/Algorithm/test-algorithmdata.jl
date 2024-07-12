@@ -21,7 +21,6 @@ DICT = Dict{String,Any}(
             ],
         ),
     ),
-    "risk_measure" => Dict("kind" => "Expectation", "params" => Dict()),
 )
 
 @testset "algorithm-algorithmdata" begin

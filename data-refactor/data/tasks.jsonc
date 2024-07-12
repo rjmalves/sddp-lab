@@ -33,6 +33,23 @@
                         // }
                     }
                 },
+                "risk_measure": {
+                    // Expectation | WorstCase | AVaR | CVaR | ...
+                    "kind": "Expectation",
+                    // each risk measure might need different params,
+                    // such as the confidence level for AVaR, etc.
+                    "params": {}
+                },
+                // "risk_measure": {
+                //     // Expectation | WorstCase | AVaR | CVaR | ...
+                //     "kind": "CVaR",
+                //     // each risk measure might need different params,
+                //     // such as the confidence level for AVaR, etc.
+                //     "params": {
+                //         "alpha": 0.5,
+                //         "lambda": 0.5
+                //     }
+                // },
                 "results": {
                     "path": "out/policy",
                     "save": true

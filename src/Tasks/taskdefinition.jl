@@ -39,14 +39,18 @@ function Policy(d::Dict{String,Any}, e::CompositeException)
     # Consistency validation
     valid_consistency = valid_content && __validate_policy_consistency!(d, e)
 
-    return valid_consistency ? Policy(d["convergence"], d["results"]) : nothing
+    return if valid_consistency
+        Policy(d["convergence"], d["risk_measure"], d["results"])
+    else
+        nothing
+    end
 end
 
 function run_task(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[input_index].files
     model = __build_model(files)
-    __train_model(model, t.convergence)
+    __train_model(model, get_convergence(t), get_risk_measure(t))
     return PolicyArtifact(t, model, files)
 end
 
@@ -96,7 +100,8 @@ end
 function __cast_policy_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    return true
+    valid_risk_measure = __cast_risk_measure_internals_from_files!(d, e)
+    return valid_risk_measure
 end
 
 function __cast_simulation_internals_from_files!(

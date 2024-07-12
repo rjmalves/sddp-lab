@@ -49,7 +49,7 @@ get_convergence(t::Policy)::Convergence
 Return the task definition objects from files.
 """
 function get_convergence(t::Policy)::Convergence
-    return f.convergence
+    return t.convergence
 end
 
 """
@@ -59,6 +59,15 @@ Return the task definition objects from files.
 """
 function get_stopping_criteria(c::Convergence)::StoppingCriteria
     return c.stopping_criteria
+end
+
+"""
+get_risk_measure(t::Policy)::RiskMeasure
+
+Return the task definition objects from files.
+"""
+function get_risk_measure(t::Policy)::RiskMeasure
+    return t.risk_measure
 end
 
 # SDDP METHODS --------------------------------------------------------------------------

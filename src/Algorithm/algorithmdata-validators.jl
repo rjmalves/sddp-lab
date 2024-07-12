@@ -1,12 +1,8 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
-STRATEGY_KEYS = ["scenario_graph", "horizon", "risk_measure"]
-STRATEGY_KEY_TYPES = [
-    T where {T<:ScenarioGraph}, T where {T<:Horizon}, T where {T<:RiskMeasure}
-]
-STRATEGY_KEY_TYPES_BEFORE_BUILD = [
-    Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
-]
+STRATEGY_KEYS = ["scenario_graph", "horizon"]
+STRATEGY_KEY_TYPES = [T where {T<:ScenarioGraph}, T where {T<:Horizon}]
+STRATEGY_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}, Dict{String,Any}, Dict{String,Any}]
 
 function __validate_algorithm_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = STRATEGY_KEYS
@@ -45,8 +41,7 @@ function __build_algorithm_internals_from_dicts!(
 )::Bool
     valid_scenario_graph = __build_scenario_graph!(d, e)
     valid_horizon = __build_horizon!(d, e)
-    valid_risk_measure = __build_risk_measure!(d, e)
-    return valid_scenario_graph && valid_horizon && valid_risk_measure
+    return valid_scenario_graph && valid_horizon
 end
 
 function __cast_algorithm_internals_from_files!(
@@ -56,6 +51,5 @@ function __cast_algorithm_internals_from_files!(
     valid_scenario_graph =
         valid_key_types && __cast_scenario_graph_internals_from_files!(d, e)
     valid_horizon = valid_key_types && __cast_horizon_internals_from_files!(d, e)
-    valid_risk_measure = valid_key_types && __cast_risk_measure_internals_from_files!(d, e)
-    return valid_scenario_graph && valid_horizon && valid_risk_measure
+    return valid_scenario_graph && valid_horizon
 end

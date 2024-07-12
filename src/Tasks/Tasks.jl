@@ -45,8 +45,24 @@ struct Convergence
     stopping_criteria::StoppingCriteria
 end
 
+abstract type RiskMeasure end
+
+struct Expectation <: RiskMeasure end
+
+struct WorstCase <: RiskMeasure end
+
+struct AVaR <: RiskMeasure
+    alpha::Real
+end
+
+struct CVaR <: RiskMeasure
+    alpha::Real
+    lambda::Real
+end
+
 struct Policy <: TaskDefinition
     convergence::Convergence
+    risk_measure::RiskMeasure
     results::Results
 end
 
@@ -91,7 +107,15 @@ generate_stopping_rule(s::StoppingCriteria)
 Return the StoppingRule object that is used by the algorithm
 to decide if the training should be stopped.
 """
-function generate_stopping_rule(s::StoppingCriteria) end
+function generate_stopping_rule(s::StoppingCriteria)::SDDP.AbstractStoppingRule end
+
+"""
+generate_risk_measure(m::RiskMeasure)
+
+Generates an `SDDP.AbstractRiskMeasure` object from a `RiskMeasure` object, applying
+study-specific configurations.
+"""
+function generate_risk_measure(m::RiskMeasure)::SDDP.AbstractRiskMeasure end
 
 """
 get_task_output_path(a::TaskArtifact)::String
@@ -129,6 +153,9 @@ include("stoppingcriteria.jl")
 include("convergence-validators.jl")
 include("convergence.jl")
 
+include("riskmeasure-validators.jl")
+include("riskmeasure.jl")
+
 include("results-validators.jl")
 include("results.jl")
 
@@ -151,6 +178,7 @@ export TasksData,
     get_task_output_path,
     should_write_results,
     get_tasks,
-    generate_stopping_rule
+    generate_stopping_rule,
+    generate_risk_measure
 
 end

@@ -94,14 +94,18 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __train_model(model::SDDP.PolicyGraph, convergence::Convergence)
+function __train_model(model::SDDP.PolicyGraph, convergence::Convergence, risk::RiskMeasure)
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
     max_iterations = convergence.max_iterations
     stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
+    risk_measure = generate_risk_measure(risk)
     return SDDP.train(
-        model; iteration_limit = max_iterations, stopping_rules = [stopping_rule]
+        model;
+        iteration_limit = max_iterations,
+        stopping_rules = [stopping_rule],
+        risk_measure = risk_measure,
     )
 end
 

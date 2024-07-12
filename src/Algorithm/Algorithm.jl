@@ -17,7 +17,6 @@ import Base: length
 
 abstract type ScenarioGraph end
 abstract type Horizon end
-abstract type RiskMeasure end
 
 struct RegularScenarioGraph <: ScenarioGraph
     discount_rate::Real
@@ -40,12 +39,9 @@ struct ExplicitHorizon <: Horizon
     stages::Vector{Stage}
 end
 
-struct Expectation <: RiskMeasure end
-
 struct AlgorithmData <: InputModule
     graph::ScenarioGraph
     horizon::Horizon
-    risk::RiskMeasure
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
@@ -65,14 +61,6 @@ Evaluates the length of the study horizon, in number of stages.
 """
 function length(h::Horizon)::Integer end
 
-"""
-generate_risk_measure(m::RiskMeasure)
-
-Generates an `SDDP.AbstractRiskMeasure` object from a `RiskMeasure` object, applying
-study-specific configurations.
-"""
-function generate_risk_measure(m::RiskMeasure)::SDDP.AbstractRiskMeasure end
-
 # INTERNALS ------------------------------------------------------------------------
 
 include("scenariograph-validators.jl")
@@ -83,9 +71,6 @@ include("stage.jl")
 
 include("horizon-validators.jl")
 include("horizon.jl")
-
-include("riskmeasure-validators.jl")
-include("riskmeasure.jl")
 
 include("algorithmdata-validators.jl")
 include("algorithmdata.jl")

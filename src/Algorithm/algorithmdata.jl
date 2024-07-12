@@ -15,7 +15,7 @@ function AlgorithmData(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_algorithm_consistency!(d, e)
 
     return if valid_consistency
-        AlgorithmData(d["scenario_graph"], d["horizon"], d["risk_measure"])
+        AlgorithmData(d["scenario_graph"], d["horizon"])
     else
         nothing
     end
