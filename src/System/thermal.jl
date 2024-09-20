@@ -77,12 +77,16 @@ end
 
 function add_system_elements!(m::JuMP.Model, ses::Thermals)
     num_thermals = length(ses)
-    @variable(
+    m[THERMAL_GENERATION] = @variable(m, [n = 1:num_thermals])
+
+    @constraint(
         m,
+        [n = 1:num_thermals],
         ses.entities[n].min_generation <=
-            gt[n = 1:num_thermals] <=
+            m[THERMAL_GENERATION][n] <=
             ses.entities[n].max_generation
     )
+    return nothing
 end
 
 # HELPERS --------------------------------------------------------------------------

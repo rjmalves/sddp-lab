@@ -51,8 +51,17 @@ end
 
 # SDDP METHODS -----------------------------------------------------------------------------
 
-# TODO
-function add_system_elements!(m::JuMP.Model, ses::Lines) end
+function add_system_elements!(m::JuMP.Model, ses::Lines)
+    num_lines = length(ses)
+
+    m[EXCHANGE] = @variable(m, [n = 1:num_lines])
+
+    @constraint(
+        m,
+        [n = 1:num_lines],
+        -ses.entities[n].capacity <= m[EXCHANGE][n] <= ses.entities[n].capacity
+    )
+end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 

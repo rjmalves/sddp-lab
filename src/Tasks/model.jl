@@ -39,7 +39,7 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
 
         Ω_node = vec(SAA[node])
         SDDP.parameterize(m, Ω_node) do ω
-            return JuMP.fix.(m[:ω_inflow], ω)
+            return JuMP.fix.(m[ω_INFLOW], ω)
         end
 
         return add_system_objective!(m, system)
@@ -53,22 +53,37 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
     system = get_system(files)
     hydros_entities = get_hydros_entities(system)
     thermals_entities = get_thermals_entities(system)
+    lines_entities = get_lines_entities(system)
     scenarios = get_scenarios(files)
     bus_ids = get_ids(get_buses(system))
 
     num_buses = length(bus_ids)
+    num_lines = length(lines_entities)
     num_hydros = length(hydros_entities)
     num_thermals = length(thermals_entities)
 
-    @constraint(
+    m[LOAD_BALANCE] = @constraint(
         m,
-        balanco_energetico[n = 1:num_buses],
-        sum(m[:gh][j] for j in 1:num_hydros if hydros_entities[j].bus_id == bus_ids[n]) +
+        [n = 1:num_buses],
         sum(
-            m[:gt][j] for j in 1:num_thermals if thermals_entities[j].bus_id == bus_ids[n]
+            m[HYDRO_GENERATION][j] for
+            j in 1:num_hydros if hydros_entities[j].bus_id == bus_ids[n]
         ) +
-        m[:deficit][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
+        sum(
+            m[THERMAL_GENERATION][j] for
+            j in 1:num_thermals if thermals_entities[j].bus_id == bus_ids[n]
+        ) +
+        sum(
+            m[EXCHANGE][j] for
+            j in 1:num_lines if lines_entities[j].target_bus_id == bus_ids[n]
+        ) +
+        sum(
+            -m[EXCHANGE][j] for
+            j in 1:num_lines if lines_entities[j].source_bus_id == bus_ids[n]
+        ) +
+        m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
     )
+    return nothing
 end
 
 """
@@ -127,12 +142,22 @@ function __simulate_model(
     return SDDP.simulate(
         model,
         number_simulated_series,
-        [:gt, :gh, :earm, :deficit, :vert, :ena];
+        [
+            THERMAL_GENERATION,
+            INFLOW,
+            TURBINED_FLOW,
+            SPILLAGE,
+            OUTFLOW,
+            HYDRO_GENERATION,
+            STORED_VOLUME,
+            DEFICIT,
+            EXCHANGE,
+        ];
         sampling_scheme = sampler,
         custom_recorders = Dict{Symbol,Function}(
-            :cmo => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_energetico]),
-            :vagua => (sp::JuMP.Model) -> JuMP.dual.(sp[:balanco_hidrico]),
-            :custo_total => (sp::JuMP.Model) -> JuMP.objective_value(sp),
+            MARGINAL_COST => (sp::JuMP.Model) -> JuMP.dual.(sp[LOAD_BALANCE]),
+            WATER_VALUE => (sp::JuMP.Model) -> JuMP.dual.(sp[HYDRO_BALANCE]),
+            TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
     )
 end

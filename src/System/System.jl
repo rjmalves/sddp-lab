@@ -218,6 +218,7 @@ export SystemData,
     get_buses,
     get_hydros_entities,
     get_thermals_entities,
+    get_lines_entities,
     get_ids
 
 end

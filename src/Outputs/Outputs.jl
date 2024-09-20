@@ -5,6 +5,7 @@ using DataFrames
 using JSON
 using CSV
 using Plots
+using ..Core
 using ..System
 
 """
@@ -73,8 +74,8 @@ function __increase_dataframe!(
     for j in eachindex(indexes)
         index = indexes[j]
         internal_df = DataFrame()
-        internal_df.estagio = 1:length(simulations[1])
-        internal_df[!, "variavel"] = fill(name, length(simulations[1]))
+        internal_df.stage = 1:length(simulations[1])
+        internal_df[!, "variable"] = fill(name, length(simulations[1]))
         internal_df[!, index_name] = fill(index, length(simulations[1]))
         for i in eachindex(simulations)
             internal_df[!, string(i)] = [
@@ -116,8 +117,8 @@ function __increase_dataframe!(
     for j in 1:length(elements)
         element = elements[j]
         internal_df = DataFrame()
-        internal_df.estagio = 1:length(simulations[1])
-        internal_df[!, "variavel"] = fill(name, length(simulations[1]))
+        internal_df.stage = 1:length(simulations[1])
+        internal_df[!, "variable"] = fill(name, length(simulations[1]))
         internal_df[!, index_name] = fill(element, length(simulations[1]))
         for i in eachindex(simulations)
             internal_df[!, string(i)] = [
@@ -146,53 +147,97 @@ function write_simulation_results(
 )
     @info "Escrevendo resultados da simulação"
 
-    # variaveis de hidro
-    df_hidro = DataFrame()
-    names = map(u -> u.name, system.hydros.entities)
-    for variavel in [:gh, :earm, :vert, :ena, :vagua]
-        if variavel == :earm
-            __increase_dataframe!(
-                df_hidro, :earm, "earm_inicial", names, "UHE", simulations, true, false
-            )
-            __increase_dataframe!(
-                df_hidro, :earm, "earm_final", names, "UHE", simulations, false, true
-            )
-        else
-            __increase_dataframe!(
-                df_hidro, variavel, string(variavel), names, "UHE", simulations
-            )
-        end
+    # variaveis de barra
+    df_barra = DataFrame()
+    names = map(u -> u.name, system.buses.entities)
+    for variavel in [DEFICIT, MARGINAL_COST]
+        __increase_dataframe!(
+            df_barra, variavel, string(variavel), names, "bus_name", simulations
+        )
     end
-    CSV.write("operacao_hidro.csv", df_hidro)
+    CSV.write("operation_buses.csv", df_barra)
+
+    # variaveis de linha
+    df_linha = DataFrame()
+    names = map(u -> u.name, system.lines.entities)
+    for variavel in [EXCHANGE]
+        __increase_dataframe!(
+            df_linha, variavel, string(variavel), names, "line_name", simulations
+        )
+    end
+    CSV.write("operation_lines.csv", df_linha)
 
     # variaveis de termica
     df_termo = DataFrame()
-    n_thermals = length(system.thermals.entities)
-    for variavel in [:gt]
+    names = map(u -> u.name, system.thermals.entities)
+    for variavel in [THERMAL_GENERATION]
         __increase_dataframe!(
-            df_termo, variavel, string(variavel), [n_thermals], "UTE", simulations
+            df_termo, variavel, string(variavel), names, "thermal_name", simulations
         )
     end
-    CSV.write("operacao_termo.csv", df_termo)
+    CSV.write("operation_thermals.csv", df_termo)
 
-    # variaveis sistemicas
-    df_sistema = DataFrame()
-    for variavel in [:deficit, :cmo, :stage_objective, :bellman_term, :custo_total] # :cmo vai eventualmente ser uma variavel de barra
-        if variavel == :stage_objective
+    # variaveis de hidro
+    df_hidro = DataFrame()
+    names = map(u -> u.name, system.hydros.entities)
+    for variavel in [
+        STORED_VOLUME,
+        INFLOW,
+        TURBINED_FLOW,
+        OUTFLOW,
+        SPILLAGE,
+        WATER_VALUE,
+        HYDRO_GENERATION,
+    ]
+        if variavel == STORED_VOLUME
             __increase_dataframe!(
-                df_sistema, variavel, "custo_presente", [1], "SISTEMA", simulations
+                df_hidro,
+                STORED_VOLUME,
+                String(STORED_VOLUME) * "_IN",
+                names,
+                "hydro_name",
+                simulations,
+                true,
+                false,
             )
-        elseif variavel == :bellman_term
             __increase_dataframe!(
-                df_sistema, variavel, "custo_futuro", [1], "SISTEMA", simulations
+                df_hidro,
+                STORED_VOLUME,
+                String(STORED_VOLUME) * "_OUT",
+                names,
+                "hydro_name",
+                simulations,
+                false,
+                true,
             )
         else
             __increase_dataframe!(
-                df_sistema, variavel, string(variavel), [1], "SISTEMA", simulations
+                df_hidro, variavel, string(variavel), names, "hydro_name", simulations
             )
         end
     end
-    return CSV.write("operacao_sistema.csv", df_sistema)
+    CSV.write("operation_hydros.csv", df_hidro)
+
+    # variaveis sistemicas
+    df_sistema = DataFrame()
+    for variavel in [STAGE_COST, FUTURE_COST, TOTAL_COST]
+        if variavel == STAGE_COST
+            __increase_dataframe!(
+                df_sistema, variavel, "STAGE_COST", [1], "system", simulations
+            )
+        elseif variavel == FUTURE_COST
+            __increase_dataframe!(
+                df_sistema, variavel, "FUTURE_COST", [1], "system", simulations
+            )
+        else
+            __increase_dataframe!(
+                df_sistema, variavel, string(variavel), [1], "system", simulations
+            )
+        end
+    end
+    CSV.write("operation_system.csv", df_sistema)
+
+    return nothing
 end
 
 """
@@ -289,7 +334,7 @@ Gera visualizações para as variáveis da operação calculadas durante a simul
 function plot_simulation_results(
     simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
 )
-    OPERATION_PLOTS_PATH = "operacao.html"
+    OPERATION_PLOTS_PATH = "operation.html"
     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
     plt = SDDP.SpaghettiPlot(simulations)
 
@@ -298,41 +343,41 @@ function plot_simulation_results(
     indexes = collect(Int64, 1:(n_hydros))
 
     for i in indexes
-        name = "EAR_" * string(system.hydros.entities[i].name)
+        name = String(STORED_VOLUME) * "_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(
             plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_storage
         ) do data
-            return data[:earm][i].out
+            return data[STORED_VOLUME][i].out
         end
     end
 
     for i in indexes
-        name = "GH_" * string(system.hydros.entities[i].name)
+        name = String(HYDRO_GENERATION) * "_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(
             plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_generation
         ) do data
-            return data[:gh][i]
+            return data[HYDRO_GENERATION][i]
         end
     end
 
     for i in indexes
-        name = "VERT_" * string(system.hydros.entities[i].name)
+        name = String(SPILLAGE) * "_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-            return data[:vert][i]
+            return data[SPILLAGE][i]
         end
     end
 
     for i in indexes
-        name = "ENA_" * string(system.hydros.entities[i].name)
+        name = String(INFLOW) * "_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-            return data[:ena][i]
+            return data[INFLOW][i]
         end
     end
 
     for i in indexes
-        name = "VAGUA_" * string(system.hydros.entities[i].name)
+        name = String(WATER_VALUE) * "_" * string(system.hydros.entities[i].name)
         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-            return data[:vagua][i]
+            return data[WATER_VALUE][i]
         end
     end
 
@@ -341,11 +386,11 @@ function plot_simulation_results(
     indexes = collect(Int64, 1:(n_thermals))
 
     for i in indexes
-        name = "GT_" * string(system.thermals.entities[i].name)
+        name = String(THERMAL_GENERATION) * "_" * string(system.thermals.entities[i].name)
         ymin = system.thermals.entities[i].min_generation
         ymax = system.thermals.entities[i].max_generation
         SDDP.add_spaghetti(plt; title = name, ymin = ymin, ymax = ymax) do data
-            return data[:gt][i]
+            return data[THERMAL_GENERATION][i]
         end
     end
 
@@ -354,16 +399,16 @@ function plot_simulation_results(
     indexes = collect(Int64, 1:(n_buses))
 
     for i in indexes
-        name = "DEFICIT_" * string(system.buses.entities[i].name)
+        name = String(DEFICIT) * "_" * string(system.buses.entities[i].name)
         SDDP.add_spaghetti(plt; title = name) do data
-            return data[:deficit][i]
+            return data[DEFICIT][i]
         end
     end
 
     for i in indexes
-        name = "CMO_" * string(system.buses.entities[i].name)
+        name = String(MARGINAL_COST) * "_" * string(system.buses.entities[i].name)
         SDDP.add_spaghetti(plt; title = name) do data
-            return data[:cmo][i]
+            return data[MARGINAL_COST][i]
         end
     end
 

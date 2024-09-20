@@ -41,8 +41,12 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Buses)
     num_buses = length(ses)
 
-    @variable(m, load[1:num_buses])
-    @variable(m, deficit[1:num_buses] >= 0)
+    # Adds variables registering internal names by symbols
+    m[LOAD] = @variable(m, [1:num_buses])
+    m[DEFICIT] = @variable(m, [1:num_buses])
+
+    @constraint(m, m[DEFICIT] >= 0)
+    return nothing
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------

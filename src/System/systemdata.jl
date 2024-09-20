@@ -78,6 +78,7 @@ Return the bus entities from files.
 function get_buses_entities(s::SystemData)::Vector{Bus}
     return s.buses.entities
 end
+
 """
 get_thermals(s::SystemData)::Thermals
 
@@ -95,6 +96,7 @@ Return the thermal entities from files.
 function get_thermals_entities(s::SystemData)::Vector{Thermal}
     return s.thermals.entities
 end
+
 """
 get_lines(s::SystemData)::Lines
 
@@ -104,13 +106,22 @@ function get_lines(s::SystemData)::Lines
     return s.lines
 end
 
+"""
+get_lines_entities(s::SystemData)::Vector{Line}
+
+Return the line entities from files.
+"""
+function get_lines_entities(s::SystemData)::Vector{Line}
+    return s.lines.entities
+end
+
 # SDDP METHODS -----------------------------------------------------------------------------
 
 function add_system_elements!(m::JuMP.Model, s::SystemData)
     add_system_elements!(m, get_buses(s))
     add_system_elements!(m, get_lines(s))
-    add_system_elements!(m, get_hydros(s))
     add_system_elements!(m, get_thermals(s))
+    add_system_elements!(m, get_hydros(s))
     add_hydro_balance!(m, get_hydros(s))
     return true
 end
@@ -118,19 +129,22 @@ end
 function add_system_objective!(m::JuMP.Model, s::SystemData)
     hydros = get_hydros_entities(s)
     buses = get_buses_entities(s)
+    lines = get_lines_entities(s)
     thermals = get_thermals_entities(s)
     num_buses = length(buses)
+    num_lines = length(lines)
     num_hydros = length(hydros)
     num_thermals = length(thermals)
 
     SDDP.@stageobjective(
         m,
-        sum(thermals[n].cost * m[:gt][n] for n in 1:num_thermals) +
-            sum(buses[n].deficit_cost * m[:deficit][n] for n in 1:num_buses) +
+        sum(thermals[n].cost * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
+            sum(buses[n].deficit_cost * m[DEFICIT][n] for n in 1:num_buses) +
+            sum(lines[n].exchange_penalty * abs(m[EXCHANGE][n]) for n in 1:num_lines) +
             sum(
-                hydros[n].bus[].deficit_cost * 1.0001 * m[:slack_ghmin][n] for
+                hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
                 n in 1:num_hydros
             ) +
-            sum(hydros[n].spillage_penalty * m[:vert][n] for n in 1:num_hydros)
+            sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
     )
 end
