@@ -22,6 +22,15 @@ end
 # GENERAL METHODS ------------------------------------------------------------------------
 
 """
+get_path(e::Entrypoint)::String
+
+Return the path where the input files were located.
+"""
+function get_path(e::Entrypoint)::String
+    return e.inputs.path
+end
+
+"""
 get_files(e::Entrypoint)::Vector{InputModule}
 
 Return the file objects from the entrypoint.
@@ -38,5 +47,5 @@ include("inputsdata.jl")
 include("entrypoint-validators.jl")
 include("entrypoint.jl")
 
-export Entrypoint, get_files
+export Entrypoint, get_files, get_path
 end

@@ -75,6 +75,7 @@ end
 abstract type TaskArtifact end
 
 struct InputsArtifact <: TaskArtifact
+    path::String
     files::Vector{InputModule}
 end
 

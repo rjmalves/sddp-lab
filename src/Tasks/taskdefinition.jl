@@ -19,6 +19,13 @@ end
 
 function run_task(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    if (t.results.save)
+        for (root, dirs, files) in walkdir(a[input_index].path)
+            for file in files
+                cp(joinpath(root, file), joinpath(t.results.path, file))
+            end
+        end
+    end
     files = a[input_index].files
     return EchoArtifact(t, files)
 end

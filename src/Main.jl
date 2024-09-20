@@ -7,9 +7,10 @@ function __run_tasks!(
     # Returns empty vector if no entrypoint is given
     entrypoint === nothing && return Vector{TaskArtifact}()
 
+    path = get_path(entrypoint)
     files = get_files(entrypoint)
     tasks = get_tasks(files)
-    artifacts = Vector{TaskArtifact}([InputsArtifact(files)])
+    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files)])
     for task in tasks
         a = run_task(task, artifacts)
         a !== nothing || push!(e, AssertionError("Task $task failed"))
