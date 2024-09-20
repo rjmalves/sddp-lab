@@ -54,13 +54,17 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Lines)
     num_lines = length(ses)
 
-    m[EXCHANGE] = @variable(m, [n = 1:num_lines])
+    m[DIRECT_EXCHANGE] = @variable(m, [n = 1:num_lines])
+    m[REVERSE_EXCHANGE] = @variable(m, [n = 1:num_lines])
+    m[NET_EXCHANGE] = @variable(m, [n = 1:num_lines])
 
     @constraint(
-        m,
-        [n = 1:num_lines],
-        -ses.entities[n].capacity <= m[EXCHANGE][n] <= ses.entities[n].capacity
+        m, [n = 1:num_lines], 0 <= m[DIRECT_EXCHANGE][n] <= ses.entities[n].capacity
     )
+    @constraint(
+        m, [n = 1:num_lines], 0 <= m[REVERSE_EXCHANGE][n] <= ses.entities[n].capacity
+    )
+    @constraint(m, m[NET_EXCHANGE] .== m[DIRECT_EXCHANGE] - m[REVERSE_EXCHANGE])
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------

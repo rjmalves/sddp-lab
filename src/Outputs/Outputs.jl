@@ -160,7 +160,7 @@ function write_simulation_results(
     # variaveis de linha
     df_linha = DataFrame()
     names = map(u -> u.name, system.lines.entities)
-    for variavel in [EXCHANGE]
+    for variavel in [NET_EXCHANGE]
         __increase_dataframe!(
             df_linha, variavel, string(variavel), names, "line_name", simulations
         )

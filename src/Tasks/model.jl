@@ -74,11 +74,11 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
             j in 1:num_thermals if thermals_entities[j].bus_id == bus_ids[n]
         ) +
         sum(
-            m[EXCHANGE][j] for
+            m[DIRECT_EXCHANGE][j] - m[REVERSE_EXCHANGE][j] for
             j in 1:num_lines if lines_entities[j].target_bus_id == bus_ids[n]
         ) +
         sum(
-            -m[EXCHANGE][j] for
+            m[REVERSE_EXCHANGE][j] - m[DIRECT_EXCHANGE][j] for
             j in 1:num_lines if lines_entities[j].source_bus_id == bus_ids[n]
         ) +
         m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
@@ -151,7 +151,7 @@ function __simulate_model(
             HYDRO_GENERATION,
             STORED_VOLUME,
             DEFICIT,
-            EXCHANGE,
+            NET_EXCHANGE,
         ];
         sampling_scheme = sampler,
         custom_recorders = Dict{Symbol,Function}(

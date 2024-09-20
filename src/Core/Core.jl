@@ -28,6 +28,8 @@ export InputModule,
     WATER_VALUE,
     STAGE_COST,
     FUTURE_COST,
-    EXCHANGE
+    DIRECT_EXCHANGE,
+    REVERSE_EXCHANGE,
+    NET_EXCHANGE
 
 end
