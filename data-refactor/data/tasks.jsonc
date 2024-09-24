@@ -5,7 +5,7 @@
             "params": {
                 "results": {
                     "path": "out/echo",
-                    "save": true
+                    "save": false
                 }
             }
         },
