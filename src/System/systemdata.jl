@@ -148,4 +148,16 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
             ) +
             sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
     )
+    # @objective(
+    #     m,
+    #     sum(thermals[n].cost * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
+    #         sum(buses[n].deficit_cost * m[DEFICIT][n] for n in 1:num_buses) +
+    #         sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n] for n in 1:num_lines) +
+    #         sum(lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n] for n in 1:num_lines) +
+    #         sum(
+    #             hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
+    #             n in 1:num_hydros
+    #         ) +
+    #         sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
+    # )
 end

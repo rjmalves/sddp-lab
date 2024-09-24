@@ -121,7 +121,7 @@ end
 function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)
     n_hydro = length(s)
 
-    m[ω_INFLOW] = @variable(m, [1:n_hydro])
+    m[ω_INFLOW] = @variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
 
     @constraint(m, inflow_model, m[INFLOW] .== m[ω_INFLOW])
 

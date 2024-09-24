@@ -91,7 +91,7 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     m[STORED_VOLUME] = @variable(
         m,
         [n = 1:num_hydros],
-        # base_name = String(STORED_VOLUME),
+        base_name = String(STORED_VOLUME),
         SDDP.State,
         initial_value = ses.entities[n].initial_storage
     )
@@ -112,21 +112,23 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
             ses.entities[n].max_storage
     )
 
-    m[INFLOW] = @variable(m, [1:num_hydros])
+    m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
 
-    m[TURBINED_FLOW] = @variable(m, [1:num_hydros])
+    m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
 
-    @constraint(m, m[TURBINED_FLOW] >= 0)
+    @constraint(m, m[TURBINED_FLOW] .>= 0)
 
-    m[SPILLAGE] = @variable(m, [n = 1:num_hydros])
+    m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
 
-    @constraint(m, m[SPILLAGE] >= 0)
+    @constraint(m, m[SPILLAGE] .>= 0)
 
-    m[OUTFLOW] = @variable(m, [1:num_hydros])
+    m[OUTFLOW] = @variable(m, [1:num_hydros], base_name = String(OUTFLOW))
 
     @constraint(m, m[OUTFLOW] .== m[TURBINED_FLOW] + m[SPILLAGE])
 
-    m[HYDRO_GENERATION] = @variable(m, [n = 1:num_hydros])
+    m[HYDRO_GENERATION] = @variable(
+        m, [n = 1:num_hydros], base_name = String(HYDRO_GENERATION)
+    )
 
     @constraint(
         m,
@@ -142,7 +144,9 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
             ses.entities[n].max_generation
     )
 
-    m[HYDRO_MIN_GENERATION_SLACK] = @variable(m, [n = 1:num_hydros])
+    m[HYDRO_MIN_GENERATION_SLACK] = @variable(
+        m, [n = 1:num_hydros], base_name = String(HYDRO_MIN_GENERATION_SLACK)
+    )
 
     @constraint(m, m[HYDRO_MIN_GENERATION_SLACK] .>= 0)
 

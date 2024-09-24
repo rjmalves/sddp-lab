@@ -77,7 +77,9 @@ end
 
 function add_system_elements!(m::JuMP.Model, ses::Thermals)
     num_thermals = length(ses)
-    m[THERMAL_GENERATION] = @variable(m, [n = 1:num_thermals])
+    m[THERMAL_GENERATION] = @variable(
+        m, [n = 1:num_thermals], base_name = String(THERMAL_GENERATION)
+    )
 
     @constraint(
         m,

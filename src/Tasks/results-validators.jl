@@ -20,6 +20,7 @@ end
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_results_path!(d::Dict{String,Any}, e::CompositeException)::Bool
+    # Create dir
     return true
 end
 
