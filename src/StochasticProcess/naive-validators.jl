@@ -1,4 +1,23 @@
+# FORM VALIDATORS --------------------------------------------------------------------------
+
+function __validate_naive_keys_types(d::Dict{String, Any}, e::CompositeException)::Bool
+    return true
+end
+
 # CONTENT VALIDATORS -----------------------------------------------------------------------
+
+function __validate_naive_content(d::Dict{String, Any}, e::CompositeException)::Bool
+
+    # valid marginal model dist
+        # valid dist name
+        # valid dist params
+
+    # valid copula per season
+        # valid copula names
+        # valid copula params
+            # check dimension of matrix parameters
+
+end
 
 function __validate_distribution_name(name::String)
     as_symbol = Symbol(name)

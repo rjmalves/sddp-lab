@@ -14,7 +14,7 @@ NAIVE_INFLOW_DICT = Dict{String,Any}(
     ],
     "copulas" => [
         Dict{String,Any}(
-            "season" => 1, "name" => "GaussianCopula", "parameters" => [[1.0]]
+            "season" => 1, "kind" => "GaussianCopula", "parameters" => [[1.0]]
         ),
     ],
 )
