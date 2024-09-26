@@ -2,6 +2,7 @@ module Scenarios
 
 using JuMP
 
+using ..Core
 using ..Utils
 using ..StochasticProcess
 
@@ -30,7 +31,7 @@ Return the number of dimensions (elements) in the load scenarios
 """
 function length(s::LoadScenarios) end
 
-struct Uncertainties
+struct ScenariosData <: InputModule
     initial_season::Integer
     branchings::Integer
     inflow::InflowScenarios
@@ -51,29 +52,29 @@ function __get_load(bus_id::Integer, stage_index::Integer, load::LoadScenarios):
 
 Gets the load value for a given bus and stage
 """
-function get_load(bus_id::Integer, stage_index::Integer, u::Uncertainties)::Real
-    return __get_load(bus_id, stage_index, u.load)
+function get_load(bus_id::Integer, stage_index::Integer, scenarios::ScenariosData)::Real
+    return __get_load(bus_id, stage_index, scenarios.load)
 end
 
 """
-    generate_saa(u::Uncertainties, num_stages::Integer)
+    generate_saa(scenarios::ScenariosData, num_stages::Integer)
 
 Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
 """
-function generate_saa(u::Uncertainties, num_stages::Integer)
-    inflow = u.inflow.stochastic_process
-    initial_season = u.initial_season
-    branchings = u.branchings
+function generate_saa(scenarios::ScenariosData, num_stages::Integer)
+    inflow = scenarios.inflow.stochastic_process
+    initial_season = scenarios.initial_season
+    branchings = scenarios.branchings
     return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
 end
 
 """
-    add_uncertainties!(m::JuMP.Model, u::Uncertainties)
+    add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
 
 Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
 """
-function add_uncertainties!(m::JuMP.Model, u::Uncertainties)
-    inflow = u.inflow.stochastic_process
+function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
+    inflow = scenarios.inflow.stochastic_process
     # TODO - for when we have a proper load representation
     # add_load_uncertainty!(m, load)
     return add_inflow_uncertainty!(m, inflow)
@@ -85,9 +86,9 @@ include("inflow.jl")
 include("load-validators.jl")
 include("load.jl")
 
-include("uncertainties-validators.jl")
-include("uncertainties.jl")
+include("scenariosdata-validators.jl")
+include("scenariosdata.jl")
 
-export Uncertainties, add_uncertainties!, generate_saa, get_load
+export ScenariosData, add_uncertainties!, generate_saa, get_load, get_scenarios
 
 end

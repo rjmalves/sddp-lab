@@ -88,55 +88,91 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Hydros)
     num_hydros = length(ses)
 
-    @variable(
+    m[STORED_VOLUME] = @variable(
         m,
-        ses.entities[n].min_storage <=
-            earm[n = 1:num_hydros] <=
-            ses.entities[n].max_storage,
+        [n = 1:num_hydros],
+        base_name = String(STORED_VOLUME),
         SDDP.State,
         initial_value = ses.entities[n].initial_storage
     )
 
-    @variables(
+    @constraint(
         m,
-        begin
-            ses.entities[n].min_generation <=
-            gh[n = 1:num_hydros] <=
+        [n = 1:num_hydros],
+        ses.entities[n].min_storage <=
+            m[STORED_VOLUME][n].in <=
+            ses.entities[n].max_storage
+    )
+
+    @constraint(
+        m,
+        [n = 1:num_hydros],
+        ses.entities[n].min_storage <=
+            m[STORED_VOLUME][n].out <=
+            ses.entities[n].max_storage
+    )
+
+    m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
+
+    m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
+
+    @constraint(m, m[TURBINED_FLOW] .>= 0)
+
+    m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
+
+    @constraint(m, m[SPILLAGE] .>= 0)
+
+    m[OUTFLOW] = @variable(m, [1:num_hydros], base_name = String(OUTFLOW))
+
+    @constraint(m, m[OUTFLOW] .== m[TURBINED_FLOW] + m[SPILLAGE])
+
+    m[HYDRO_GENERATION] = @variable(
+        m, [n = 1:num_hydros], base_name = String(HYDRO_GENERATION)
+    )
+
+    @constraint(
+        m,
+        [n = 1:num_hydros],
+        m[HYDRO_GENERATION][n] == ses.entities[n].productivity * m[TURBINED_FLOW][n]
+    )
+
+    @constraint(
+        m,
+        [n = 1:num_hydros],
+        ses.entities[n].min_generation <=
+            m[HYDRO_GENERATION][n] <=
             ses.entities[n].max_generation
-            slack_ghmin[n = 1:num_hydros] >= 0
-            vert[n = 1:num_hydros] >= 0
-        end
     )
 
-    @variable(m, ena[1:num_hydros])
-
-    @constraint(
-        m, [n = 1:num_hydros], gh[n] + slack_ghmin[n] >= ses.entities[n].min_generation
+    m[HYDRO_MIN_GENERATION_SLACK] = @variable(
+        m, [n = 1:num_hydros], base_name = String(HYDRO_MIN_GENERATION_SLACK)
     )
 
+    @constraint(m, m[HYDRO_MIN_GENERATION_SLACK] .>= 0)
+
     @constraint(
-        m, fim_horizonte[n = 1:num_hydros], earm[n].out >= ses.entities[n].min_storage
+        m,
+        [n = 1:num_hydros],
+        m[HYDRO_GENERATION][n] + m[HYDRO_MIN_GENERATION_SLACK][n] >=
+            ses.entities[n].min_generation
     )
 end
 
-function __add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
+function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
     num_hydros = length(hydros)
 
-    @constraint(
+    m[HYDRO_BALANCE] = @constraint(
         m,
-        balanco_hidrico[n = 1:num_hydros],
-        m[:earm][n].out ==
-            m[:earm][n].in - m[:gh][n] - m[:vert][n] +
-        m[:ena][n] +
+        [n = 1:num_hydros],
+        m[STORED_VOLUME][n].out ==
+            m[STORED_VOLUME][n].in - m[OUTFLOW][n] +
+        m[INFLOW][n] +
         sum(
-            m[:gh][j] for j in 1:num_hydros if
-            downstream(hydros.entities[j].id, hydros) == hydros.entities[n]
-        ) +
-        sum(
-            m[:vert][j] for j in 1:num_hydros if
+            m[OUTFLOW][j] for j in 1:num_hydros if
             downstream(hydros.entities[j].id, hydros) == hydros.entities[n]
         )
     )
+    return nothing
 end
 
 # HELPER METHODS ---------------------------------------------------------------------------

@@ -176,7 +176,11 @@ function __try_conversion!(d::Dict, k::String, t::Type{String})
 end
 
 function __try_conversion!(d::Dict, k::String, t::Union{Type{DateTime},Type{Date}})
-    return d[k] = parse(t, d[k])
+    if t === DateTime
+        return d[k] = DateTime(d[k])
+    else
+        return d[k] = Date(d[k])
+    end
 end
 
 function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})

@@ -37,13 +37,12 @@ end
 
 # HELPERS -------------------------------------------------------------------
 
-function __kind_factory!(
-    m::Module, d::Dict{String,Any}, key::String, e::CompositeException
-)::Bool
-    factory_d = d[key]
+function __single_object_factory(
+    m::Module, factory_d::Dict{String,Any}, e::CompositeException
+)
     valid_key_types = __validate_kind_params_keys!(factory_d, e)
     if !valid_key_types
-        return false
+        return nothing
     end
 
     kind = factory_d["kind"]
@@ -61,8 +60,31 @@ function __kind_factory!(
         kind_obj = kind_type(params, e)
     end
 
-    d[key] = kind_obj
-    return kind_obj !== nothing
+    return kind_obj
+end
+
+function __kind_factory!(
+    m::Module, d::Dict{String,Any}, key::String, e::CompositeException
+)::Bool
+    factory_d = d[key]
+
+    valid = true
+    if typeof(factory_d) === Vector{Dict{String,Any}}
+        result = []
+        for f in factory_d
+            obj = __single_object_factory(m, f, e)
+            valid = valid && obj !== nothing
+            if valid
+                push!(result, obj)
+            end
+        end
+    else
+        result = __single_object_factory(m, factory_d, e)
+        valid = result !== nothing
+    end
+
+    d[key] = result
+    return valid
 end
 
 function __validate_cast_from_jsonc_file!(d::Dict{String,Any}, e::CompositeException)::Bool

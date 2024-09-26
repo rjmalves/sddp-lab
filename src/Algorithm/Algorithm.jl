@@ -5,17 +5,29 @@ using CSV
 using DataFrames
 using JuMP
 using Graphs
-using SDDP
+using SDDP: SDDP
 using Dates
 
+using ..Core
 using ..Utils
 
 import Base: length
 
+# TYPES ------------------------------------------------------------------------
+
 abstract type ScenarioGraph end
 abstract type Horizon end
-abstract type RiskMeasure end
-abstract type StoppingCriteria end
+
+struct RegularScenarioGraph <: ScenarioGraph
+    discount_rate::Real
+end
+
+struct CyclicScenarioGraph <: ScenarioGraph
+    discount_rate::Real
+    cycle_length::Integer
+    cycle_stage::Integer
+    max_depth::Integer
+end
 
 struct Stage
     index::Integer
@@ -23,11 +35,16 @@ struct Stage
     end_date::DateTime
 end
 
-struct Convergence
-    min_iterations::Integer
-    max_iterations::Integer
-    stopping_criteria::StoppingCriteria
+struct ExplicitHorizon <: Horizon
+    stages::Vector{Stage}
 end
+
+struct AlgorithmData <: InputModule
+    graph::ScenarioGraph
+    horizon::Horizon
+end
+
+# GENERAL METHODS ------------------------------------------------------------------------
 
 """
 generate_scenario_graph(g::ScenarioGraph)
@@ -44,21 +61,7 @@ Evaluates the length of the study horizon, in number of stages.
 """
 function length(h::Horizon)::Integer end
 
-"""
-generate_risk_measure(m::RiskMeasure)
-
-Generates an `SDDP.AbstractRiskMeasure` object from a `RiskMeasure` object, applying
-study-specific configurations.
-"""
-function generate_risk_measure(m::RiskMeasure)::SDDP.AbstractRiskMeasure end
-
-"""
-generate_stopping_rules(m::RiskMeasure)
-
-Generates an `SDDP.AbstractStoppingRule` object from a `Convergence` object, applying
-study-specific configurations.
-"""
-function generate_stopping_rules(c::Convergence)::SDDP.AbstractStoppingRule end
+# INTERNALS ------------------------------------------------------------------------
 
 include("scenariograph-validators.jl")
 include("scenariograph.jl")
@@ -69,18 +72,15 @@ include("stage.jl")
 include("horizon-validators.jl")
 include("horizon.jl")
 
-include("riskmeasure-validators.jl")
-include("riskmeasure.jl")
+include("algorithmdata-validators.jl")
+include("algorithmdata.jl")
 
-include("stoppingcriteria-validators.jl")
-include("stoppingcriteria.jl")
-
-include("convergence-validators.jl")
-include("convergence.jl")
-
-include("strategy-validators.jl")
-include("strategy.jl")
-
-export Strategy, generate_scenario_graph
+export AlgorithmData,
+    Horizon,
+    ScenarioGraph,
+    get_algorithm,
+    get_number_of_stages,
+    generate_scenario_graph,
+    generate_sampler
 
 end

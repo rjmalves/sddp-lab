@@ -1,9 +1,5 @@
 # CLASS ExplicitHorizon -----------------------------------------------------------------------
 
-struct ExplicitHorizon <: Horizon
-    stages::Vector{Stage}
-end
-
 function ExplicitHorizon(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects

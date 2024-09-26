@@ -87,7 +87,7 @@ function __validate_sequential_deterministic_load_stage_indexes!(
         next_load_value = values[i + 1]
         stage_index = load_value.stage_index
         next_index = next_load_value.stage_index
-        valid_index = next_index == stage_index + 1
+        valid_index = (next_index == stage_index + 1) || (next_index == 1)
         valid_index || push!(
             e,
             AssertionError(

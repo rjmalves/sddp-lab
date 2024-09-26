@@ -1,28 +1,48 @@
+using .Inputs
+using .Tasks
 
-function exit_with_errors(e::CompositeException)
-    @info "Errors found:"
+function __run_tasks!(
+    entrypoint::Union{Entrypoint,Nothing}, e::CompositeException
+)::Vector{TaskArtifact}
+    # Returns empty vector if no entrypoint is given
+    entrypoint === nothing && return Vector{TaskArtifact}()
+
+    path = get_path(entrypoint)
+    files = get_files(entrypoint)
+    tasks = get_tasks(files)
+    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files)])
+    for task in tasks
+        a = run_task(task, artifacts)
+        a !== nothing || push!(e, AssertionError("Task $task failed"))
+        push!(artifacts, a)
+    end
+    return artifacts
+end
+
+function __save_results(artifacts::Vector{TaskArtifact})
+    for a in artifacts
+        basedir = pwd()
+        if should_write_results(a)
+            path = get_task_output_path(a)
+            isdir(path) || mkpath(path)
+            cd(path)
+            save_task(a)
+            cd(basedir)
+        end
+    end
+end
+
+function __log_errors(e::CompositeException)
+    has_errors = length(e) > 0
+    has_errors && @info "Errors found:"
     for m in e
         @error m.msg
     end
-    return exit(1)
+    return has_errors
 end
 
-# TODO - break function in reading - running - exporting
-
-function main()
-    e = CompositeException()
-    # Inputs reading
-    d = read_validate_entrypoint!("main.jsonc", e)
-    d !== nothing || exit_with_errors(e)
-
-    inputs = read_validate_inputs!(d["inputs"], e)
-    outputs = read_validate_outputs!(d["outputs"], e)
-    length(e) == 0 || exit_with_errors(e)
-
-    tasks = read_validate_tasks!(d["tasks"], inputs, e)
-    tasks !== nothing || exit_with_errors(e)
-    # Running tasks
-    artifacts = run_tasks!(tasks, e)
-    # Output exporting
-    return write_outputs(outputs, artifacts, e)
+function main(; e = CompositeException())
+    entrypoint = Entrypoint("main.jsonc", e)
+    artifacts = __run_tasks!(entrypoint, e)
+    return __log_errors(e) || __save_results(artifacts)
 end

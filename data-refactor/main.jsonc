@@ -1,6 +1,4 @@
 {
-    // policy | simulation - lower_simulation | upper_simulation
-    "tasks": ["Policy", "Simulation"],
     "inputs": {
         "path": "data",
         // Each file defines settings for a specific
@@ -29,11 +27,5 @@
             // problems, in a generic way
             "constraints": "constraints.jsonc"
         }
-    },
-    "outputs":{
-        "path": "out",
-        // can disable some of the outputs
-        "policy": true,
-        "simulation": true
     }
 }
