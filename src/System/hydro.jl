@@ -96,31 +96,23 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
         initial_value = ses.entities[n].initial_storage
     )
 
-    @constraint(
-        m,
-        [n = 1:num_hydros],
-        ses.entities[n].min_storage <=
-            m[STORED_VOLUME][n].in <=
-            ses.entities[n].max_storage
-    )
-
-    @constraint(
-        m,
-        [n = 1:num_hydros],
-        ses.entities[n].min_storage <=
-            m[STORED_VOLUME][n].out <=
-            ses.entities[n].max_storage
-    )
+    for n in 1:num_hydros
+        # no bounds are set on the 'in' field because this variable is always internally fixed
+        # to the previous' stage 'out' with JuMP.fix; this throws an error when the variable being
+        # fixed is bounded
+        # Indeed, even when a state variable is created the canonical way
+        # (using @variable(..., SDDP.State)), only the 'out' half receives the bound information
+        set_lower_bound(m[STORED_VOLUME][n].out, ses.entities[n].min_storage)
+        set_upper_bound(m[STORED_VOLUME][n].out, ses.entities[n].max_storage)
+    end
 
     m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
 
     m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
-
-    @constraint(m, m[TURBINED_FLOW] .>= 0)
-
+    set_lower_bound.(m[TURBINED_FLOW], 0)
+    
     m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
-
-    @constraint(m, m[SPILLAGE] .>= 0)
+    set_lower_bound.(m[SPILLAGE], 0)
 
     m[OUTFLOW] = @variable(m, [1:num_hydros], base_name = String(OUTFLOW))
 
@@ -129,6 +121,10 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     m[HYDRO_GENERATION] = @variable(
         m, [n = 1:num_hydros], base_name = String(HYDRO_GENERATION)
     )
+    for n in 1:num_hydros
+        set_lower_bound.(m[HYDRO_GENERATION][n], ses.entities[n].min_generation)
+        set_upper_bound.(m[HYDRO_GENERATION][n], ses.entities[n].max_generation)
+    end
 
     @constraint(
         m,
@@ -136,19 +132,10 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
         m[HYDRO_GENERATION][n] == ses.entities[n].productivity * m[TURBINED_FLOW][n]
     )
 
-    @constraint(
-        m,
-        [n = 1:num_hydros],
-        ses.entities[n].min_generation <=
-            m[HYDRO_GENERATION][n] <=
-            ses.entities[n].max_generation
-    )
-
     m[HYDRO_MIN_GENERATION_SLACK] = @variable(
         m, [n = 1:num_hydros], base_name = String(HYDRO_MIN_GENERATION_SLACK)
     )
-
-    @constraint(m, m[HYDRO_MIN_GENERATION_SLACK] .>= 0)
+    set_lower_bound.(m[HYDRO_MIN_GENERATION_SLACK], 0)
 
     @constraint(
         m,
