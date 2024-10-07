@@ -45,7 +45,8 @@ function add_system_elements!(m::JuMP.Model, ses::Buses)
     m[LOAD] = @variable(m, [1:num_buses], base_name = String(LOAD))
     m[DEFICIT] = @variable(m, [1:num_buses], base_name = String(DEFICIT))
 
-    @constraint(m, m[DEFICIT] .>= 0)
+    set_lower_bound.(m[DEFICIT], 0)
+
     return nothing
 end
 
