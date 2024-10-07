@@ -70,9 +70,7 @@ function add_system_elements!(m::JuMP.Model, ses::Lines)
         set_upper_bound(m[REVERSE_EXCHANGE][n], ses.entities[n].capacity)
     end
         
-    m[NET_EXCHANGE] = @variable(m, [n = 1:num_lines], base_name = String(NET_EXCHANGE))
-
-    @constraint(m, m[NET_EXCHANGE] .== m[DIRECT_EXCHANGE] - m[REVERSE_EXCHANGE])
+    m[NET_EXCHANGE] = @expression(m, m[DIRECT_EXCHANGE] - m[REVERSE_EXCHANGE])
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------

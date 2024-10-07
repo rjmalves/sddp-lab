@@ -109,27 +109,16 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
 
     m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
-    set_lower_bound.(m[TURBINED_FLOW], 0)
+    set_lower_bound.(m[TURBINED_FLOW], [e.min_generation / e.productivity for e in ses.entities])
+    set_upper_bound.(m[TURBINED_FLOW], [e.max_generation / e.productivity for e in ses.entities])
     
     m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
     set_lower_bound.(m[SPILLAGE], 0)
 
-    m[OUTFLOW] = @variable(m, [1:num_hydros], base_name = String(OUTFLOW))
+    m[OUTFLOW] = @expression(m, m[TURBINED_FLOW] + m[SPILLAGE])
 
-    @constraint(m, m[OUTFLOW] .== m[TURBINED_FLOW] + m[SPILLAGE])
-
-    m[HYDRO_GENERATION] = @variable(
-        m, [n = 1:num_hydros], base_name = String(HYDRO_GENERATION)
-    )
-    for n in 1:num_hydros
-        set_lower_bound.(m[HYDRO_GENERATION][n], ses.entities[n].min_generation)
-        set_upper_bound.(m[HYDRO_GENERATION][n], ses.entities[n].max_generation)
-    end
-
-    @constraint(
-        m,
-        [n = 1:num_hydros],
-        m[HYDRO_GENERATION][n] == ses.entities[n].productivity * m[TURBINED_FLOW][n]
+    m[HYDRO_GENERATION] = @expression(
+        m, [n = 1:num_hydros], ses.entities[n].productivity * m[TURBINED_FLOW][n]
     )
 
     m[HYDRO_MIN_GENERATION_SLACK] = @variable(
