@@ -15,13 +15,13 @@
                 "convergence": {
                     // Min/Max number of iterations
                     "min_iterations": 10,
-                    "max_iterations": 50,
+                    "max_iterations": 1000,
                     // Early stopping criteria and params
                     "stopping_criteria": {
                         // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
                         "kind": "IterationLimit",
                         "params": {
-                            "num_iterations": 50
+                            "num_iterations": 1000
                         }
                         // "kind": "LowerBoundStability",
                         // "params": {
@@ -50,6 +50,14 @@
                 //         "lambda": 0.5
                 //     }
                 // },
+                "parallel_scheme": {
+                    "kind": "Asynchronous",
+                    "params": {}
+                },
+                // "parallel_scheme": {
+                //     "kind": "Serial",
+                //     "params": {}
+                // },
                 "results": {
                     "path": "out/policy",
                     "save": true
@@ -59,8 +67,12 @@
         {
             "kind": "Simulation",
             "params": {
-                "num_simulated_series": 500,
+                "num_simulated_series": 2000,
                 "policy_path": "out/policy",
+                "parallel_scheme": {
+                    "kind": "Asynchronous",
+                    "params": {}
+                },
                 "results": {
                     "path": "out/simulation",
                     "save": true

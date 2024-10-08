@@ -40,7 +40,7 @@ end
 function save_task(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
     write_model_cuts(cuts)
-    plot_model_cuts(cuts, get_system(a.files))
+    # plot_model_cuts(cuts, get_system(a.files))
     return true
 end
 
@@ -56,6 +56,6 @@ end
 
 function save_task(a::SimulationArtifact)
     write_simulation_results(a.simulations, get_system(a.files))
-    plot_simulation_results(a.simulations, get_system(a.files))
+    # plot_simulation_results(a.simulations, get_system(a.files))
     return true
 end

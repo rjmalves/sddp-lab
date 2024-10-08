@@ -133,19 +133,27 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __train_model(model::SDDP.PolicyGraph, convergence::Convergence, risk::RiskMeasure)
+function __train_model(
+    model::SDDP.PolicyGraph,
+    convergence::Convergence,
+    risk::RiskMeasure,
+    parallel::ParallelScheme,
+)
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
     @info "Calculando política"
     max_iterations = convergence.max_iterations
     stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
     risk_measure = generate_risk_measure(risk)
+    setup_parallel_scheme(parallel)
     return SDDP.train(
         model;
         iteration_limit = max_iterations,
         stopping_rules = [stopping_rule],
         risk_measure = risk_measure,
+        parallel_scheme = generate_parallel_scheme(parallel),
     )
+    return clean_parallel_scheme(parallel)
 end
 
 """
@@ -158,12 +166,16 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
 """
 function __simulate_model(
-    model::SDDP.PolicyGraph, files::Vector{InputModule}, number_simulated_series::Integer
+    model::SDDP.PolicyGraph,
+    files::Vector{InputModule},
+    number_simulated_series::Integer,
+    parallel::ParallelScheme,
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
     sampler = generate_sampler(get_algorithm(files))
     @info "Realizando simulação"
-    return SDDP.simulate(
+    setup_parallel_scheme(parallel)
+    simulation_result = SDDP.simulate(
         model,
         number_simulated_series,
         [
@@ -183,5 +195,8 @@ function __simulate_model(
             WATER_VALUE => (sp::JuMP.Model) -> JuMP.dual.(sp[HYDRO_BALANCE]),
             TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
+        parallel_scheme = generate_parallel_scheme(parallel),
     )
+    clean_parallel_scheme(parallel)
+    return simulation_result
 end

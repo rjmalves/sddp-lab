@@ -47,7 +47,7 @@ function Policy(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_policy_consistency!(d, e)
 
     return if valid_consistency
-        Policy(d["convergence"], d["risk_measure"], d["results"])
+        Policy(d["convergence"], d["risk_measure"], d["parallel_scheme"], d["results"])
     else
         nothing
     end
@@ -57,7 +57,7 @@ function run_task(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Noth
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[input_index].files
     model = __build_model(files)
-    __train_model(model, get_convergence(t), get_risk_measure(t))
+    __train_model(model, get_convergence(t), get_risk_measure(t), get_parallel_scheme(t))
     return PolicyArtifact(t, model, files)
 end
 
@@ -78,7 +78,9 @@ function Simulation(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_simulation_consistency!(d, e)
 
     return if valid_consistency
-        Simulation(d["num_simulated_series"], d["policy_path"], d["results"])
+        Simulation(
+            d["num_simulated_series"], d["policy_path"], d["parallel_scheme"], d["results"]
+        )
     else
         nothing
     end
@@ -89,7 +91,7 @@ function run_task(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtif
     files = a[files_index].files
     policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
     policy = a[policy_index].policy
-    sims = __simulate_model(policy, files, t.num_simulated_series)
+    sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
     return SimulationArtifact(t, sims, files)
 end
 
