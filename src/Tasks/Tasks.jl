@@ -7,6 +7,7 @@ using ..System
 using ..Utils
 using ..Scenarios
 using ..Outputs
+using Distributed
 using JuMP
 using GLPK
 using SDDP: SDDP
@@ -45,6 +46,12 @@ struct Convergence
     stopping_criteria::StoppingCriteria
 end
 
+abstract type ParallelScheme end
+
+struct Serial <: ParallelScheme end
+
+struct Asynchronous <: ParallelScheme end
+
 abstract type RiskMeasure end
 
 struct Expectation <: RiskMeasure end
@@ -63,12 +70,14 @@ end
 struct Policy <: TaskDefinition
     convergence::Convergence
     risk_measure::RiskMeasure
+    parallel_scheme::ParallelScheme
     results::Results
 end
 
 struct Simulation <: TaskDefinition
     num_simulated_series::Integer
     policy_path::String
+    parallel_scheme::ParallelScheme
     results::Results
 end
 
@@ -109,6 +118,14 @@ Return the StoppingRule object that is used by the algorithm
 to decide if the training should be stopped.
 """
 function generate_stopping_rule(s::StoppingCriteria)::SDDP.AbstractStoppingRule end
+
+"""
+generate_parallel_scheme(p::ParallelScheme)
+
+Generates an `SDDP.AbstractParallelScheme` object from a `ParallelScheme` object, applying
+study-specific configurations.
+"""
+function generate_parallel_scheme(p::ParallelScheme)::SDDP.AbstractParallelScheme end
 
 """
 generate_risk_measure(m::RiskMeasure)
@@ -154,6 +171,9 @@ include("stoppingcriteria.jl")
 include("convergence-validators.jl")
 include("convergence.jl")
 
+include("parallelscheme-validators.jl")
+include("parallelscheme.jl")
+
 include("riskmeasure-validators.jl")
 include("riskmeasure.jl")
 
@@ -180,6 +200,7 @@ export TasksData,
     should_write_results,
     get_tasks,
     generate_stopping_rule,
-    generate_risk_measure
+    generate_risk_measure,
+    generate_parallel_scheme
 
 end

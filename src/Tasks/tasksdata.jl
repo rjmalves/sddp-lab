@@ -70,4 +70,13 @@ function get_risk_measure(t::Policy)::RiskMeasure
     return t.risk_measure
 end
 
+"""
+get_parallel_scheme(t::Policy)::ParallelScheme
+
+Return the task definition objects from files.
+"""
+function get_parallel_scheme(t::Policy)::ParallelScheme
+    return t.parallel_scheme
+end
+
 # SDDP METHODS --------------------------------------------------------------------------
