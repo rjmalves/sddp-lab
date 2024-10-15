@@ -254,10 +254,10 @@ function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
-    df[!, "estagio"] = fill(node, length(cutdata))
+    df[!, "stage"] = fill(parse(Int64, node), length(cutdata))
     df[!, "statevar"] = fill(state_var, length(cutdata))
-    df[!, "estado"] = [s["state"][state_var] for s in cutdata]
-    df[!, "coeficiente"] = [s["coefficients"][state_var] for s in cutdata]
+    df[!, "state"] = [s["state"][state_var] for s in cutdata]
+    df[!, "coefficient"] = [s["coefficients"][state_var] for s in cutdata]
     df[!, "intercept"] = [s["intercept"] for s in cutdata]
     return df
 end
@@ -278,7 +278,7 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
         node_df = __process_node_cut(nodecuts, state_var)
         append!(df, node_df)
     end
-    return df
+    return sort!(df, ["stage", "statevar"])
 end
 
 """
@@ -294,6 +294,7 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
+    # SDDP.write_cuts_to_file(model, "debug_rawcuts.json") # DEBUG
     jsondata = JSON.parsefile(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
@@ -301,6 +302,8 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
         sv_df = __process_cuts(jsondata, sv)
         append!(df, sv_df)
     end
+    print("DEBUG")
+    print(df)
     return df
 end
 
@@ -315,7 +318,7 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_model_cuts(cuts::DataFrame)
-    PROCESSED_CUTS_PATH = "cortes.csv"
+    PROCESSED_CUTS_PATH = "cuts.csv"
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
     return CSV.write(PROCESSED_CUTS_PATH, cuts)
 end
