@@ -145,15 +145,14 @@ function __train_model(
     max_iterations = convergence.max_iterations
     stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
     risk_measure = generate_risk_measure(risk)
-    setup_parallel_scheme(parallel)
+    parallel_scheme = generate_parallel_scheme(parallel)
     return SDDP.train(
         model;
         iteration_limit = max_iterations,
         stopping_rules = [stopping_rule],
         risk_measure = risk_measure,
-        parallel_scheme = generate_parallel_scheme(parallel),
+        parallel_scheme = parallel_scheme,
     )
-    return clean_parallel_scheme(parallel)
 end
 
 """
@@ -173,8 +172,8 @@ function __simulate_model(
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
     sampler = generate_sampler(get_algorithm(files))
+    parallel_scheme = generate_parallel_scheme(parallel)
     @info "Realizando simulação"
-    setup_parallel_scheme(parallel)
     simulation_result = SDDP.simulate(
         model,
         number_simulated_series,
@@ -195,8 +194,7 @@ function __simulate_model(
             WATER_VALUE => (sp::JuMP.Model) -> JuMP.dual.(sp[HYDRO_BALANCE]),
             TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
-        parallel_scheme = generate_parallel_scheme(parallel),
+        parallel_scheme = parallel_scheme,
     )
-    clean_parallel_scheme(parallel)
     return simulation_result
 end

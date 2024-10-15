@@ -46,14 +46,6 @@ function generate_parallel_scheme(p::Asynchronous)::SDDP.AbstractParallelScheme
     return SDDP.Asynchronous()
 end
 
-function setup_parallel_scheme(p::Serial) end
-
-function setup_parallel_scheme(p::Asynchronous) end
-
-function clean_parallel_scheme(p::Serial) end
-
-function clean_parallel_scheme(p::Asynchronous) end
-
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_parallel_scheme!(d::Dict{String,Any}, e::CompositeException)::Bool

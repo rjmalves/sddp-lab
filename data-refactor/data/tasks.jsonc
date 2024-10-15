@@ -51,7 +51,7 @@
                 //     }
                 // },
                 "parallel_scheme": {
-                    "kind": "Asynchronous",
+                    "kind": "Serial",
                     "params": {}
                 },
                 // "parallel_scheme": {
@@ -70,7 +70,7 @@
                 "num_simulated_series": 2000,
                 "policy_path": "out/policy",
                 "parallel_scheme": {
-                    "kind": "Asynchronous",
+                    "kind": "Serial",
                     "params": {}
                 },
                 "results": {

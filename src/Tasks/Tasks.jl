@@ -128,21 +128,7 @@ study-specific configurations.
 function generate_parallel_scheme(p::ParallelScheme)::SDDP.AbstractParallelScheme end
 
 """
-setup_parallel_scheme(p::ParallelScheme)
-
-Setup resources for an execution that may follow a ParallelScheme.
-"""
-function setup_parallel_scheme(p::ParallelScheme) end
-
-"""
-clean_parallel_scheme(p::ParallelScheme)
-
-Celan resources after an execution that followed a ParallelScheme.
-"""
-function clean_parallel_scheme(p::ParallelScheme) end
-
-"""
-generate_parallel_scheme(m::RiskMeasure)
+generate_risk_measure(m::RiskMeasure)
 
 Generates an `SDDP.AbstractRiskMeasure` object from a `RiskMeasure` object, applying
 study-specific configurations.
@@ -215,8 +201,6 @@ export TasksData,
     get_tasks,
     generate_stopping_rule,
     generate_risk_measure,
-    generate_parallel_scheme,
-    setup_parallel_scheme,
-    clean_parallel_scheme
+    generate_parallel_scheme
 
 end
