@@ -294,7 +294,6 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Coletando cortes gerados"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
-    # SDDP.write_cuts_to_file(model, "debug_rawcuts.json") # DEBUG
     jsondata = JSON.parsefile(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
@@ -302,8 +301,6 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
         sv_df = __process_cuts(jsondata, sv)
         append!(df, sv_df)
     end
-    print("DEBUG")
-    print(df)
     return df
 end
 
