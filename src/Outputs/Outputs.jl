@@ -75,7 +75,7 @@ function __increase_dataframe!(
         index = indexes[j]
         internal_df = DataFrame()
         internal_df.stage = 1:length(simulations[1])
-        internal_df[!, "variable"] = fill(name, length(simulations[1]))
+        internal_df[!, "variable_name"] = fill(name, length(simulations[1]))
         internal_df[!, index_name] = fill(index, length(simulations[1]))
         for i in eachindex(simulations)
             internal_df[!, string(i)] = [
@@ -118,7 +118,7 @@ function __increase_dataframe!(
         element = elements[j]
         internal_df = DataFrame()
         internal_df.stage = 1:length(simulations[1])
-        internal_df[!, "variable"] = fill(name, length(simulations[1]))
+        internal_df[!, "variable_name"] = fill(name, length(simulations[1]))
         internal_df[!, index_name] = fill(element, length(simulations[1]))
         for i in eachindex(simulations)
             internal_df[!, string(i)] = [
@@ -147,40 +147,49 @@ function write_simulation_results(
 )
     @info "Escrevendo resultados da simulação"
 
-    # variaveis de barra
-    df_barra = DataFrame()
-    names = map(u -> u.name, system.buses.entities)
-    for variavel in [DEFICIT, MARGINAL_COST]
+    entity_column = "entity_name"
+    num_simulations = size(simulations)[1]
+
+    # buses variables
+    df_bus = DataFrame()
+    entities_names = map(u -> u.name, system.buses.entities)
+    for variable in [DEFICIT, MARGINAL_COST]
         __increase_dataframe!(
-            df_barra, variavel, string(variavel), names, "bus_name", simulations
+            df_bus, variable, string(variable), entities_names, entity_column, simulations
         )
     end
-    CSV.write("operation_buses.csv", df_barra)
+    df_bus = stack(df_bus, string.(Array((1:num_simulations))))
+    rename!(df_bus,"variable" => "scenario")
+    CSV.write("operation_buses.csv", df_bus)
 
-    # variaveis de linha
-    df_linha = DataFrame()
-    names = map(u -> u.name, system.lines.entities)
-    for variavel in [NET_EXCHANGE]
+    # lines variables
+    df_line = DataFrame()
+    entities_names = map(u -> u.name, system.lines.entities)
+    for variable in [NET_EXCHANGE]
         __increase_dataframe!(
-            df_linha, variavel, string(variavel), names, "line_name", simulations
+            df_line, variable, string(variable), entities_names, entity_column, simulations
         )
     end
-    CSV.write("operation_lines.csv", df_linha)
+    df_line = stack(df_line, string.(Array((1:num_simulations))))
+    rename!(df_line,"variable" => "scenario")
+    CSV.write("operation_lines.csv", df_line)
 
-    # variaveis de termica
-    df_termo = DataFrame()
-    names = map(u -> u.name, system.thermals.entities)
-    for variavel in [THERMAL_GENERATION]
+    # thermals variables
+    df_themal = DataFrame()
+    entities_names = map(u -> u.name, system.thermals.entities)
+    for variable in [THERMAL_GENERATION]
         __increase_dataframe!(
-            df_termo, variavel, string(variavel), names, "thermal_name", simulations
+            df_themal, variable, string(variable), entities_names, entity_column, simulations
         )
     end
-    CSV.write("operation_thermals.csv", df_termo)
+    df_themal = stack(df_themal, string.(Array((1:num_simulations))))
+    rename!(df_themal,"variable" => "scenario")
+    CSV.write("operation_thermals.csv", df_themal)
 
-    # variaveis de hidro
-    df_hidro = DataFrame()
-    names = map(u -> u.name, system.hydros.entities)
-    for variavel in [
+    # hydros variables
+    df_hydro = DataFrame()
+    entities_names = map(u -> u.name, system.hydros.entities)
+    for variable in [
         STORED_VOLUME,
         INFLOW,
         TURBINED_FLOW,
@@ -189,53 +198,58 @@ function write_simulation_results(
         WATER_VALUE,
         HYDRO_GENERATION,
     ]
-        if variavel == STORED_VOLUME
+        if variable == STORED_VOLUME
             __increase_dataframe!(
-                df_hidro,
+                df_hydro,
                 STORED_VOLUME,
                 String(STORED_VOLUME) * "_IN",
-                names,
-                "hydro_name",
+                entities_names,
+                entity_column,
                 simulations,
                 true,
                 false,
             )
             __increase_dataframe!(
-                df_hidro,
+                df_hydro,
                 STORED_VOLUME,
                 String(STORED_VOLUME) * "_OUT",
-                names,
-                "hydro_name",
+                entities_names,
+                entity_column,
                 simulations,
                 false,
                 true,
             )
         else
             __increase_dataframe!(
-                df_hidro, variavel, string(variavel), names, "hydro_name", simulations
+                df_hydro, variable, string(variable), entities_names, entity_column, simulations
             )
         end
     end
-    CSV.write("operation_hydros.csv", df_hidro)
+    df_hydro = stack(df_hydro, string.(Array((1:num_simulations))))
+    rename!(df_hydro,"variable" => "scenario")
+    CSV.write("operation_hydros.csv", df_hydro)
 
-    # variaveis sistemicas
-    df_sistema = DataFrame()
-    for variavel in [STAGE_COST, FUTURE_COST, TOTAL_COST]
-        if variavel == STAGE_COST
+    # system variables
+    df_system = DataFrame()
+    for variable in [STAGE_COST, FUTURE_COST, TOTAL_COST]
+        if variable == STAGE_COST
             __increase_dataframe!(
-                df_sistema, variavel, "STAGE_COST", [1], "system", simulations
+                df_system, variable, "STAGE_COST", [1],entity_column, simulations
             )
-        elseif variavel == FUTURE_COST
+        elseif variable == FUTURE_COST
             __increase_dataframe!(
-                df_sistema, variavel, "FUTURE_COST", [1], "system", simulations
+                df_system, variable, "FUTURE_COST", [1], entity_column, simulations
             )
         else
             __increase_dataframe!(
-                df_sistema, variavel, string(variavel), [1], "system", simulations
+                df_system, variable, string(variable), [1], entity_column, simulations
             )
         end
     end
-    CSV.write("operation_system.csv", df_sistema)
+    df_system = stack(df_system, string.(Array((1:num_simulations))))
+    # select!(df_system, Not("entity_column"))
+    rename!(df_system,"variable" => "scenario")
+    CSV.write("operation_system.csv", df_system)
 
     return nothing
 end
@@ -254,8 +268,11 @@ function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
+    state_var_name = split(state_var,"[")[1]
+    state_var_id = split(split(state_var,"]")[1],"[")[2]
     df[!, "stage"] = fill(parse(Int64, node), length(cutdata))
-    df[!, "statevar"] = fill(state_var, length(cutdata))
+    df[!, "state_variable_name"] = fill(state_var_name, length(cutdata))
+    df[!, "state_variable_id"] = fill(state_var_id, length(cutdata))
     df[!, "state"] = [s["state"][state_var] for s in cutdata]
     df[!, "coefficient"] = [s["coefficients"][state_var] for s in cutdata]
     df[!, "intercept"] = [s["intercept"] for s in cutdata]
@@ -278,7 +295,7 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
         node_df = __process_node_cut(nodecuts, state_var)
         append!(df, node_df)
     end
-    return sort!(df, ["stage", "statevar"])
+    return sort!(df, ["stage", "state_variable_name", "state_variable_id"])
 end
 
 """
