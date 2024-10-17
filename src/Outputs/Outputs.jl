@@ -4,6 +4,7 @@ using SDDP: SDDP
 using DataFrames
 using JSON
 using CSV
+using Arrow
 # using Plots
 using ..Core
 using ..System
@@ -151,10 +152,10 @@ function write_simulation_results(
     num_simulations = size(simulations)[1]
 
     map_variable_output = Dict(
-        "operation_buses.csv" => [DEFICIT, MARGINAL_COST],
-        "operation_thermals.csv" => [THERMAL_GENERATION],
-        "operation_lines.csv" => [NET_EXCHANGE],
-        "operation_hydros.csv" => [
+        "operation_buses" => [DEFICIT, MARGINAL_COST],
+        "operation_thermals" => [THERMAL_GENERATION],
+        "operation_lines" => [NET_EXCHANGE],
+        "operation_hydros" => [
             STORED_VOLUME,
             INFLOW,
             TURBINED_FLOW,
@@ -163,7 +164,7 @@ function write_simulation_results(
             WATER_VALUE,
             HYDRO_GENERATION,
         ],
-        "operation_system.csv" => [STAGE_COST, FUTURE_COST, TOTAL_COST],
+        "operation_system" => [STAGE_COST, FUTURE_COST, TOTAL_COST],
     )
 
     map_variable_entities = Dict(
@@ -180,6 +181,9 @@ function write_simulation_results(
         WATER_VALUE => get_hydros_entities(system),
         HYDRO_GENERATION => get_hydros_entities(system),
     )
+
+    map_variable_names_to_replace = Dict(STAGE_COST => "STAGE_COST",
+                                        FUTURE_COST => "FUTURE_COST")
 
     for (key, variables) in map_variable_output
         df = DataFrame()
@@ -216,110 +220,14 @@ function write_simulation_results(
         end
         df = stack(df, string.(Array((1:num_simulations))))
         rename!(df, "variable" => "scenario")
+        df[!,"scenario"] = parse.(Int64, df[!,"scenario"])
+        # TODO - refactor replace
+        df[!,"variable_name"] = replace.(df[!,"variable_name"], "stage_objective" => "STAGE_COST")
+        df[!,"variable_name"] = replace.(df[!,"variable_name"], "bellman_term" => "FUTURE_COST")
         sort!(df, ["stage", "variable_name", "entity_name", "scenario"])
-        CSV.write(key, df)
+        CSV.write(key * ".csv", df)
+        Arrow.write(key * ".parquet", df)
     end
-
-    # # buses variables
-    # df_bus = DataFrame()
-    # entities_names = map(u -> u.name, system.buses.entities)
-    # for variable in [DEFICIT, MARGINAL_COST]
-    #     __increase_dataframe!(
-    #         df_bus, variable, string(variable), entities_names, entity_column, simulations
-    #     )
-    # end
-    # df_bus = stack(df_bus, string.(Array((1:num_simulations))))
-    # rename!(df_bus, "variable" => "scenario")
-    # CSV.write("operation_buses.csv", df_bus)
-
-    # # lines variables
-    # df_line = DataFrame()
-    # entities_names = map(u -> u.name, system.lines.entities)
-    # for variable in [NET_EXCHANGE]
-    #     __increase_dataframe!(
-    #         df_line, variable, string(variable), entities_names, entity_column, simulations
-    #     )
-    # end
-    # df_line = stack(df_line, string.(Array((1:num_simulations))))
-    # rename!(df_line, "variable" => "scenario")
-    # CSV.write("operation_lines.csv", df_line)
-
-    # # thermals variables
-    # df_themal = DataFrame()
-    # entities_names = map(u -> u.name, system.thermals.entities)
-    # for variable in [THERMAL_GENERATION]
-    #     __increase_dataframe!(
-    #         df_themal,
-    #         variable,
-    #         string(variable),
-    #         entities_names,
-    #         entity_column,
-    #         simulations,
-    #     )
-    # end
-    # df_themal = stack(df_themal, string.(Array((1:num_simulations))))
-    # rename!(df_themal, "variable" => "scenario")
-    # CSV.write("operation_thermals.csv", df_themal)
-
-    # # hydros variables
-    # df_hydro = DataFrame()
-    # entities_names = map(u -> u.name, system.hydros.entities)
-    # for variable in [
-    #     STORED_VOLUME,
-    #     INFLOW,
-    #     TURBINED_FLOW,
-    #     OUTFLOW,
-    #     SPILLAGE,
-    #     WATER_VALUE,
-    #     HYDRO_GENERATION,
-    # ]
-    #     if variable == STORED_VOLUME
-    #         __increase_dataframe!(
-    #             df_hydro,
-    #             STORED_VOLUME,
-    #             String(STORED_VOLUME) * "_IN",
-    #             entities_names,
-    #             entity_column,
-    #             simulations,
-    #             true,
-    #             false,
-    #         )
-    #         __increase_dataframe!(
-    #             df_hydro,
-    #             STORED_VOLUME,
-    #             String(STORED_VOLUME) * "_OUT",
-    #             entities_names,
-    #             entity_column,
-    #             simulations,
-    #             false,
-    #             true,
-    #         )
-    #     else
-    #         __increase_dataframe!(
-    #             df_hydro,
-    #             variable,
-    #             string(variable),
-    #             entities_names,
-    #             entity_column,
-    #             simulations,
-    #         )
-    #     end
-    # end
-    # df_hydro = stack(df_hydro, string.(Array((1:num_simulations))))
-    # rename!(df_hydro, "variable" => "scenario")
-    # CSV.write("operation_hydros.csv", df_hydro)
-
-    # # system variables
-    # df_system = DataFrame()
-    # for variable in [STAGE_COST, FUTURE_COST, TOTAL_COST]
-    #     __increase_dataframe!(
-    #         df_system, variable, string(variable), [1], entity_column, simulations
-    #     )
-    # end
-    # df_system = stack(df_system, string.(Array((1:num_simulations))))
-    # # select!(df_system, Not("entity_column"))
-    # rename!(df_system, "variable" => "scenario")
-    # CSV.write("operation_system.csv", df_system)
 
     return nothing
 end
@@ -402,9 +310,10 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_model_cuts(cuts::DataFrame)
-    PROCESSED_CUTS_PATH = "cuts.csv"
+    PROCESSED_CUTS_PATH = "cuts"
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
-    return CSV.write(PROCESSED_CUTS_PATH, cuts)
+    Arrow.write(PROCESSED_CUTS_PATH * ".parquet", cuts)
+    return CSV.write(PROCESSED_CUTS_PATH * ".csv", cuts)
 end
 
 # """
