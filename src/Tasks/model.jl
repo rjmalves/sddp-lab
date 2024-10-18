@@ -11,7 +11,7 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
     `Lab.Reader.read_ena()`
 """
 function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
-    @info "Compilando modelo"
+    @info "Compiling model"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
     optimizer = generate_optimizer(get_resources(files))
@@ -141,7 +141,7 @@ function __train_model(
 )
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
-    @info "Calculando política"
+    @info "Evaluating policy"
     max_iterations = convergence.max_iterations
     stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
     risk_measure = generate_risk_measure(risk)
@@ -173,7 +173,7 @@ function __simulate_model(
     SDDP.add_all_cuts(model)
     sampler = generate_sampler(get_algorithm(files))
     parallel_scheme = generate_parallel_scheme(parallel)
-    @info "Realizando simulação"
+    @info "Running simulation"
     simulation_result = SDDP.simulate(
         model,
         number_simulated_series,
