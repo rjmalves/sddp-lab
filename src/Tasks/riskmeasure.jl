@@ -89,7 +89,7 @@ function generate_risk_measure(r::AVaR)::SDDP.AbstractRiskMeasure
 end
 
 function generate_risk_measure(r::CVaR)::SDDP.AbstractRiskMeasure
-    return SDDP.EAVaR(; beta = r.alpha, lambda = r.lambda)
+    return SDDP.EAVaR(; beta = r.alpha, lambda = (1 - r.lambda))
 end
 
 # HELPERS -------------------------------------------------------------------------------------
