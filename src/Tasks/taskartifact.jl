@@ -39,7 +39,9 @@ end
 
 function save_task(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
+    convergence = get_model_convergence(a.policy)
     write_model_cuts(cuts)
+    write_model_convergence(convergence)
     # plot_model_cuts(cuts, get_system(a.files))
     return true
 end

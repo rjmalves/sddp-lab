@@ -146,9 +146,9 @@ Exporta os dados de saídas da simulação final do modelo.
 function write_simulation_results(
     simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
 )
-    @info "Escrevendo resultados da simulação"
+    @info "Writing simulation results"
 
-    entity_column = "entity_name"
+    entity_column = "entity_id"
     num_simulations = size(simulations)[1]
 
     map_variable_output = Dict(
@@ -182,14 +182,15 @@ function write_simulation_results(
         HYDRO_GENERATION => get_hydros_entities(system),
     )
 
-    map_variable_names_to_replace = Dict(STAGE_COST => "STAGE_COST",
-                                        FUTURE_COST => "FUTURE_COST")
+    map_variable_names_to_replace = Dict(
+        STAGE_COST => "STAGE_COST", FUTURE_COST => "FUTURE_COST"
+    )
 
     for (key, variables) in map_variable_output
         df = DataFrame()
         for variable in variables
             if variable in keys(map_variable_entities)
-                entities_names = map(u -> u.name, map_variable_entities[variable])
+                entities_names = map(u -> u.id, map_variable_entities[variable])
             else
                 entities_names = [1]
             end
@@ -220,11 +221,13 @@ function write_simulation_results(
         end
         df = stack(df, string.(Array((1:num_simulations))))
         rename!(df, "variable" => "scenario")
-        df[!,"scenario"] = parse.(Int64, df[!,"scenario"])
+        df[!, "scenario"] = parse.(Int64, df[!, "scenario"])
         # TODO - refactor replace
-        df[!,"variable_name"] = replace.(df[!,"variable_name"], "stage_objective" => "STAGE_COST")
-        df[!,"variable_name"] = replace.(df[!,"variable_name"], "bellman_term" => "FUTURE_COST")
-        sort!(df, ["stage", "variable_name", "entity_name", "scenario"])
+        df[!, "variable_name"] =
+            replace.(df[!, "variable_name"], "stage_objective" => "STAGE_COST")
+        df[!, "variable_name"] =
+            replace.(df[!, "variable_name"], "bellman_term" => "FUTURE_COST")
+        sort!(df, ["stage", "variable_name", entity_column, "scenario"])
         CSV.write(key * ".csv", df)
         Arrow.write(key * ".parquet", df)
     end
@@ -286,9 +289,10 @@ Extrai os cortes gerados pelo modelo no formato de um `DataFrame`.
   - `model::SDDP.PolicyGraph`: modelo no formato do `SDDP.jl`
 """
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
-    @info "Coletando cortes gerados"
+    @info "Collecting generated cuts"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
+    SDDP.write_log_to_csv(model, "/home/marianasimoes/git/sddp-lab/data-refactor/log.csv") # DEBUG
     jsondata = JSON.parsefile(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
@@ -311,9 +315,66 @@ Exporta os dados dos cortes gerados pelo modelo.
 """
 function write_model_cuts(cuts::DataFrame)
     PROCESSED_CUTS_PATH = "cuts"
-    @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
+    @info "Writing cuts to $(PROCESSED_CUTS_PATH)"
     Arrow.write(PROCESSED_CUTS_PATH * ".parquet", cuts)
     return CSV.write(PROCESSED_CUTS_PATH * ".csv", cuts)
+end
+
+"""
+    __process_convergence()
+
+Gera um `DataFrame` com dados de convergência.
+
+# Arguments
+
+  - `cuts::Vector{Any}`: dados dos cortes dos nós, gerados pelo `SDDP.jl`
+  - `state_var::String`: variável de estado a ser extraída
+"""
+function __process_convergence(logdata::DataFrame)::DataFrame
+    df = logdata
+    num_iterations = size(df)[1]
+    map_columns_names = Dict(
+        " simulation" => "simulation", " bound" => "lower_bound", " time" => "time"
+    )
+    rename!(df, map_columns_names)
+    df[!, "upper_bound"] = fill(Inf, num_iterations)
+    df[2:num_iterations, "time"] =
+        df[2:num_iterations, "time"] - df[1:(num_iterations - 1), "time"]
+    return select(df, ["iteration", "lower_bound", "simulation", "upper_bound", "time"])
+end
+
+"""
+    get_model_convergence(model)
+
+Extrai os dados de convergência do modelo no formato de um `DataFrame`.
+
+# Arguments
+
+  - `model::SDDP.PolicyGraph`: modelo no formato do `SDDP.jl`
+"""
+function get_model_convergence(model::SDDP.PolicyGraph)::DataFrame
+    @info "Collecting convergence data"
+    logpath = joinpath(tempdir(), "log.csv")
+    SDDP.write_log_to_csv(model, logpath)
+    logdata = CSV.read(logpath, DataFrame)
+    df = __process_convergence(logdata)
+    return df
+end
+
+"""
+    write_model_convergence(cuts, OUTDIR)
+
+Exporta os dados de convergência do modelo.
+
+# Arguments
+
+  - `convergence::DataFrame`: dados de convergência do `SDDP.jl` processados
+  - `OUTDIR::String`: diretório de saída para escrita dos dados
+"""
+function write_model_convergence(convergence::DataFrame)
+    PROCESSED_CUTS_PATH = "convergence"
+    @info "Writing convergence data to $(PROCESSED_CUTS_PATH)"
+    return CSV.write(PROCESSED_CUTS_PATH * ".csv", convergence)
 end
 
 # """
@@ -516,7 +577,8 @@ end
 #     end
 # end
 
-export write_simulation_results, get_model_cuts, write_model_cuts
+export write_simulation_results,
+    get_model_cuts, write_model_cuts, get_model_convergence, write_model_convergence
 # plot_simulation_results,
 # plot_model_cuts,
 # plot_model_cuts_1var
