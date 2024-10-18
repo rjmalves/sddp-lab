@@ -4,7 +4,7 @@ using SDDP: SDDP
 using DataFrames
 using JSON
 using CSV
-using Arrow
+using Parquet
 # using Plots
 using ..Core
 using ..System
@@ -153,7 +153,7 @@ function write_simulation_results(
 
     map_variable_output = Dict(
         "operation_buses" => [DEFICIT, MARGINAL_COST],
-        "operation_thermals" => [THERMAL_GENERATION],
+        "operation_thermals" => [THERMAL_GENERATION, THERMAL_GENERATION_COST],
         "operation_lines" => [NET_EXCHANGE],
         "operation_hydros" => [
             STORED_VOLUME,
@@ -171,6 +171,7 @@ function write_simulation_results(
         DEFICIT => get_buses_entities(system),
         MARGINAL_COST => get_buses_entities(system),
         THERMAL_GENERATION => get_thermals_entities(system),
+        THERMAL_GENERATION_COST => get_thermals_entities(system),
         NET_EXCHANGE => get_lines_entities(system),
         HYDRO_GENERATION => get_hydros_entities(system),
         STORED_VOLUME => get_hydros_entities(system),
@@ -229,7 +230,7 @@ function write_simulation_results(
             replace.(df[!, "variable_name"], "bellman_term" => "FUTURE_COST")
         sort!(df, ["stage", "variable_name", entity_column, "scenario"])
         CSV.write(key * ".csv", df)
-        Arrow.write(key * ".parquet", df)
+        write_parquet(key * ".parquet", df)
     end
 
     return nothing
@@ -249,8 +250,8 @@ function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
-    state_var_name = split(state_var, "[")[1]
-    state_var_id = split(split(state_var, "]")[1], "[")[2]
+    state_var_name = String.(split(state_var, "[")[1])
+    state_var_id = parse(Int64, split(split(state_var, "]")[1], "[")[2])
     df[!, "stage"] = fill(parse(Int64, node), length(cutdata))
     df[!, "state_variable_name"] = fill(state_var_name, length(cutdata))
     df[!, "state_variable_id"] = fill(state_var_id, length(cutdata))
@@ -316,7 +317,7 @@ Exporta os dados dos cortes gerados pelo modelo.
 function write_model_cuts(cuts::DataFrame)
     PROCESSED_CUTS_PATH = "cuts"
     @info "Writing cuts to $(PROCESSED_CUTS_PATH)"
-    Arrow.write(PROCESSED_CUTS_PATH * ".parquet", cuts)
+    write_parquet(PROCESSED_CUTS_PATH * ".parquet", cuts)
     return CSV.write(PROCESSED_CUTS_PATH * ".csv", cuts)
 end
 
