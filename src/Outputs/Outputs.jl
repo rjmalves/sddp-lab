@@ -153,7 +153,7 @@ function write_simulation_results(
 
     map_variable_output = Dict(
         "operation_buses" => [DEFICIT, MARGINAL_COST],
-        "operation_thermals" => [THERMAL_GENERATION],
+        "operation_thermals" => [THERMAL_GENERATION, THERMAL_GENERATION_COST],
         "operation_lines" => [NET_EXCHANGE],
         "operation_hydros" => [
             STORED_VOLUME,
@@ -171,6 +171,7 @@ function write_simulation_results(
         DEFICIT => get_buses_entities(system),
         MARGINAL_COST => get_buses_entities(system),
         THERMAL_GENERATION => get_thermals_entities(system),
+        THERMAL_GENERATION_COST => get_thermals_entities(system),
         NET_EXCHANGE => get_lines_entities(system),
         HYDRO_GENERATION => get_hydros_entities(system),
         STORED_VOLUME => get_hydros_entities(system),

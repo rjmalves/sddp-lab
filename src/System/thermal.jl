@@ -85,6 +85,10 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals)
         set_upper_bound(m[THERMAL_GENERATION][n], ses.entities[n].max_generation)
     end
 
+    m[THERMAL_GENERATION_COST] = @expression(
+        m, [n = 1:num_thermals], ses.entities[n].cost * m[THERMAL_GENERATION][n]
+    )
+
     return nothing
 end
 

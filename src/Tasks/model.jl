@@ -179,6 +179,7 @@ function __simulate_model(
         number_simulated_series,
         [
             THERMAL_GENERATION,
+            THERMAL_GENERATION_COST,
             INFLOW,
             TURBINED_FLOW,
             SPILLAGE,
