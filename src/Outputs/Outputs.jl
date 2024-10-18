@@ -4,7 +4,7 @@ using SDDP: SDDP
 using DataFrames
 using JSON
 using CSV
-using Arrow
+using Parquet
 # using Plots
 using ..Core
 using ..System
@@ -182,8 +182,9 @@ function write_simulation_results(
         HYDRO_GENERATION => get_hydros_entities(system),
     )
 
-    map_variable_names_to_replace = Dict(STAGE_COST => "STAGE_COST",
-                                        FUTURE_COST => "FUTURE_COST")
+    map_variable_names_to_replace = Dict(
+        STAGE_COST => "STAGE_COST", FUTURE_COST => "FUTURE_COST"
+    )
 
     for (key, variables) in map_variable_output
         df = DataFrame()
@@ -220,13 +221,15 @@ function write_simulation_results(
         end
         df = stack(df, string.(Array((1:num_simulations))))
         rename!(df, "variable" => "scenario")
-        df[!,"scenario"] = parse.(Int64, df[!,"scenario"])
+        df[!, "scenario"] = parse.(Int64, df[!, "scenario"])
         # TODO - refactor replace
-        df[!,"variable_name"] = replace.(df[!,"variable_name"], "stage_objective" => "STAGE_COST")
-        df[!,"variable_name"] = replace.(df[!,"variable_name"], "bellman_term" => "FUTURE_COST")
+        df[!, "variable_name"] =
+            replace.(df[!, "variable_name"], "stage_objective" => "STAGE_COST")
+        df[!, "variable_name"] =
+            replace.(df[!, "variable_name"], "bellman_term" => "FUTURE_COST")
         sort!(df, ["stage", "variable_name", "entity_name", "scenario"])
         CSV.write(key * ".csv", df)
-        Arrow.write(key * ".parquet", df)
+        write_parquet(key * ".parquet", df)
     end
 
     return nothing
@@ -246,8 +249,8 @@ function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
-    state_var_name = split(state_var, "[")[1]
-    state_var_id = split(split(state_var, "]")[1], "[")[2]
+    state_var_name = String.(split(state_var, "[")[1])
+    state_var_id = parse(Int64, split(split(state_var, "]")[1], "[")[2])
     df[!, "stage"] = fill(parse(Int64, node), length(cutdata))
     df[!, "state_variable_name"] = fill(state_var_name, length(cutdata))
     df[!, "state_variable_id"] = fill(state_var_id, length(cutdata))
@@ -312,7 +315,7 @@ Exporta os dados dos cortes gerados pelo modelo.
 function write_model_cuts(cuts::DataFrame)
     PROCESSED_CUTS_PATH = "cuts"
     @info "Escrevendo cortes em $(PROCESSED_CUTS_PATH)"
-    Arrow.write(PROCESSED_CUTS_PATH * ".parquet", cuts)
+    write_parquet(PROCESSED_CUTS_PATH * ".parquet", cuts)
     return CSV.write(PROCESSED_CUTS_PATH * ".csv", cuts)
 end
 
