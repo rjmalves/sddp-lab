@@ -293,7 +293,6 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
     @info "Collecting generated cuts"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
-    SDDP.write_log_to_csv(model, "/home/marianasimoes/git/sddp-lab/data-refactor/log.csv") # DEBUG
     jsondata = JSON.parsefile(jsonpath)
     state_vars = keys(jsondata[1]["single_cuts"][1]["coefficients"])
     df = DataFrame()
