@@ -1,6 +1,6 @@
-# CLASS Results -----------------------------------------------------------------------
+# CLASS TaskResults -----------------------------------------------------------------------
 
-function Results(d::Dict{String,Any}, e::CompositeException)
+function TaskResults(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
     valid_internals = __build_results_internals_from_dicts!(d, e)
@@ -15,7 +15,7 @@ function Results(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_results_consistency!(d, e)
 
     return if valid_consistency
-        Results(d["path"], d["save"])
+        TaskResults(d["path"], d["save"], d["format"])
     else
         nothing
     end
@@ -29,7 +29,12 @@ function __build_results!(d::Dict{String,Any}, e::CompositeException)::Bool
 
     results_d = d["results"]
 
-    d["results"] = Results(results_d, e)
+    valid_key_types = __validate_results_keys_types_before_build!(results_d, e)
+    if !valid_key_types
+        return false
+    end
+
+    d["results"] = TaskResults(results_d, e)
     return d["results"] !== nothing
 end
 

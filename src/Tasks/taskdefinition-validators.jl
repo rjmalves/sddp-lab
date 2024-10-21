@@ -1,15 +1,15 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 ECHO_KEYS = ["results"]
-ECHO_KEY_TYPES = [Results]
+ECHO_KEY_TYPES = [TaskResults]
 ECHO_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}]
 
 POLICY_KEYS = ["convergence", "results"]
-POLICY_KEY_TYPES = [Convergence, Results]
+POLICY_KEY_TYPES = [Convergence, TaskResults]
 POLICY_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}, Dict{String,Any}]
 
 SIMULATION_KEYS = ["num_simulated_series", "policy_path", "results"]
-SIMULATION_KEY_TYPES = [Integer, String, Results]
+SIMULATION_KEY_TYPES = [Integer, String, TaskResults]
 SIMULATION_KEY_TYPES_BEFORE_BUILD = [Integer, String, Dict{String,Any}]
 
 function __validate_tasks_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool

@@ -40,9 +40,10 @@ end
 function save_task(a::PolicyArtifact)
     cuts = get_model_cuts(a.policy)
     convergence = get_model_convergence(a.policy)
-    write_model_cuts(cuts)
-    write_model_convergence(convergence)
-    # plot_model_cuts(cuts, get_system(a.files))
+    writer = get_writer(a.task.results.format)
+    extension = get_extension(a.task.results.format)
+    write_model_cuts(cuts, writer, extension)
+    write_model_convergence(convergence, writer, extension)
     return true
 end
 
@@ -57,7 +58,8 @@ function should_write_results(a::SimulationArtifact)::Bool
 end
 
 function save_task(a::SimulationArtifact)
-    write_simulation_results(a.simulations, get_system(a.files))
-    # plot_simulation_results(a.simulations, get_system(a.files))
+    writer = get_writer(a.task.results.format)
+    extension = get_extension(a.task.results.format)
+    write_simulation_results(a.simulations, get_system(a.files), writer, extension)
     return true
 end

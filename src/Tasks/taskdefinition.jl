@@ -22,7 +22,8 @@ function run_task(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
     if (t.results.save)
         for (root, dirs, files) in walkdir(a[input_index].path)
             for file in files
-                cp(joinpath(root, file), joinpath(t.results.path, file))
+                mkpath(t.results.path)
+                cp(joinpath(root, file), joinpath(t.results.path, file); force = true)
             end
         end
     end

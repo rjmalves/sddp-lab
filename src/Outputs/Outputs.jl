@@ -4,8 +4,6 @@ using SDDP: SDDP
 using DataFrames
 using JSON
 using CSV
-using Parquet
-# using Plots
 using ..Core
 using ..System
 
@@ -144,7 +142,10 @@ Exporta os dados de saídas da simulação final do modelo.
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_simulation_results(
-    simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
+    simulations::Vector{Vector{Dict{Symbol,Any}}},
+    system::SystemData,
+    writer::Function,
+    extension::String,
 )
     @info "Writing simulation results"
 
@@ -229,8 +230,9 @@ function write_simulation_results(
         df[!, "variable_name"] =
             replace.(df[!, "variable_name"], "bellman_term" => "FUTURE_COST")
         sort!(df, ["stage", "variable_name", entity_column, "scenario"])
-        CSV.write(key * ".csv", df)
-        write_parquet(key * ".parquet", df)
+
+        @info "Writing $(key * extension)"
+        writer(key * extension, df)
     end
 
     return nothing
@@ -313,11 +315,10 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
-function write_model_cuts(cuts::DataFrame)
-    PROCESSED_CUTS_PATH = "cuts"
+function write_model_cuts(cuts::DataFrame, writer::Function, extension::String)
+    PROCESSED_CUTS_PATH = "cuts" * extension
     @info "Writing cuts to $(PROCESSED_CUTS_PATH)"
-    write_parquet(PROCESSED_CUTS_PATH * ".parquet", cuts)
-    return CSV.write(PROCESSED_CUTS_PATH * ".csv", cuts)
+    return writer(PROCESSED_CUTS_PATH, cuts)
 end
 
 """
@@ -371,216 +372,15 @@ Exporta os dados de convergência do modelo.
   - `convergence::DataFrame`: dados de convergência do `SDDP.jl` processados
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
-function write_model_convergence(convergence::DataFrame)
-    PROCESSED_CUTS_PATH = "convergence"
+function write_model_convergence(
+    convergence::DataFrame, writer::Function, extension::String
+)
+    PROCESSED_CUTS_PATH = "convergence" * extension
     @info "Writing convergence data to $(PROCESSED_CUTS_PATH)"
-    return CSV.write(PROCESSED_CUTS_PATH * ".csv", convergence)
+    return writer(PROCESSED_CUTS_PATH, convergence)
 end
-
-# """
-#     plot_simulation_results(cuts, cfg, OUTDIR)
-
-# Gera visualizações para as variáveis da operação calculadas durante a simulação final.
-
-# # Arguments
-
-#   - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados da operação na simulação do `SDDP.jl`
-#   - `system::SystemData`: configuração de entrada do sistema para extração dos elementos do estudo
-#   - `OUTDIR::String`: diretório de saída para os plots
-# """
-# function plot_simulation_results(
-#     simulations::Vector{Vector{Dict{Symbol,Any}}}, system::SystemData
-# )
-#     OPERATION_PLOTS_PATH = "operation.html"
-#     @info "Plotando operação em $(OPERATION_PLOTS_PATH)"
-#     plt = SDDP.SpaghettiPlot(simulations)
-
-#     # parte hidro
-#     n_hydros = length(system.hydros)
-#     indexes = collect(Int64, 1:(n_hydros))
-
-#     for i in indexes
-#         name = String(STORED_VOLUME) * "_" * string(system.hydros.entities[i].name)
-#         SDDP.add_spaghetti(
-#             plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_storage
-#         ) do data
-#             return data[STORED_VOLUME][i].out
-#         end
-#     end
-
-#     for i in indexes
-#         name = String(HYDRO_GENERATION) * "_" * string(system.hydros.entities[i].name)
-#         SDDP.add_spaghetti(
-#             plt; title = name, ymin = 0.0, ymax = system.hydros.entities[i].max_generation
-#         ) do data
-#             return data[HYDRO_GENERATION][i]
-#         end
-#     end
-
-#     for i in indexes
-#         name = String(SPILLAGE) * "_" * string(system.hydros.entities[i].name)
-#         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-#             return data[SPILLAGE][i]
-#         end
-#     end
-
-#     for i in indexes
-#         name = String(INFLOW) * "_" * string(system.hydros.entities[i].name)
-#         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-#             return data[INFLOW][i]
-#         end
-#     end
-
-#     for i in indexes
-#         name = String(WATER_VALUE) * "_" * string(system.hydros.entities[i].name)
-#         SDDP.add_spaghetti(plt; title = name, ymin = 0.0) do data
-#             return data[WATER_VALUE][i]
-#         end
-#     end
-
-#     # termo
-#     n_thermals = length(system.thermals)
-#     indexes = collect(Int64, 1:(n_thermals))
-
-#     for i in indexes
-#         name = String(THERMAL_GENERATION) * "_" * string(system.thermals.entities[i].name)
-#         ymin = system.thermals.entities[i].min_generation
-#         ymax = system.thermals.entities[i].max_generation
-#         SDDP.add_spaghetti(plt; title = name, ymin = ymin, ymax = ymax) do data
-#             return data[THERMAL_GENERATION][i]
-#         end
-#     end
-
-#     # barras
-#     n_buses = length(system.buses)
-#     indexes = collect(Int64, 1:(n_buses))
-
-#     for i in indexes
-#         name = String(DEFICIT) * "_" * string(system.buses.entities[i].name)
-#         SDDP.add_spaghetti(plt; title = name) do data
-#             return data[DEFICIT][i]
-#         end
-#     end
-
-#     for i in indexes
-#         name = String(MARGINAL_COST) * "_" * string(system.buses.entities[i].name)
-#         SDDP.add_spaghetti(plt; title = name) do data
-#             return data[MARGINAL_COST][i]
-#         end
-#     end
-
-#     return SDDP.plot(plt, OPERATION_PLOTS_PATH; open = false)
-# end
-
-# """
-#     __compute_fcf1var_value(x, s, cuts)
-
-# Realiza amostragem dos cortes para visualização da FCF de uma variável de estado,
-
-# # Arguments
-
-#   - `x::Vector{Float64}`: vetor de valores para amostragem dos cortes
-#   - `s::String`: estágio para visualização dos cortes
-#   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-# """
-# function __compute_fcf1var_value(x::Vector{Float64}, s::String, cuts::DataFrame)
-#     cuts_stage = cuts[cuts.estagio .== s, :]
-#     n = size(cuts_stage)[1]
-#     plotcut = [
-#         cuts_stage.intercept[i] .+ cuts_stage.coeficiente[i] * (x .- cuts_stage.estado[i])
-#         for i in 1:n
-#     ]
-#     plotcut = hcat(plotcut...)
-#     highest = mapslices(maximum, plotcut; dims = 2)
-
-#     return highest, plotcut
-# end
-
-# function __compute_fcf1var_value_new(x::Vector{Float64}, s::String, cuts::DataFrame)
-#     min_x = minimum(x)
-#     max_x = maximum(x)
-
-#     cuts_stage = cuts[cuts.estagio .== s, :]
-#     plotcut = [
-#         [
-#             c.intercept + c.coeficiente * (min_x - c.estado),
-#             c.intercept + c.coeficiente * (max_x - c.estado),
-#         ] for c in eachrow(cuts_stage)
-#     ]
-#     plotcut = hcat(plotcut...)
-
-#     highest, idxs = findmax(
-#         cuts_stage.intercept .+ cuts_stage.coeficiente .* (x' .- cuts_stage.estado);
-#         dims = 1,
-#     )
-#     watervalue = cuts_stage.coeficiente[[myidx.I[1] for myidx in idxs]]
-#     return highest[:], plotcut, watervalue[:]
-# end
-
-# """
-#     plot_model_cuts_1var(cuts, cfg, OUTDIR)
-
-# Gera visualizações para os cortes produzidos pelo modelo no caso de uma
-# única variável de estado.
-
-# # Arguments
-
-#   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-#   - `system::SystemData`: configuração de entrada do sistema para validação do número de elementos
-#   - `OUTDIR::String`: diretório de saída para os plots
-# """
-# function plot_model_cuts_1var(cuts::DataFrame, system::SystemData, CUTDIR::String)
-#     stages = unique(cuts.estagio)
-#     earmax = system.hydros.entities[1].max_storage
-#     x = collect(Float64, 0:Int(earmax))
-#     for s in stages
-#         highest, plotcut, watervalue = __compute_fcf1var_value_new(x, s, cuts)
-#         plot(
-#             [minimum(x), maximum(x)],
-#             plotcut;
-#             ylim = (0.0, maximum(plotcut)),
-#             color = "orange",
-#             dpi = 300,
-#             linestyle = :dash,
-#             alpha = 0.4,
-#             label = "",
-#         )
-#         plot!(x, highest; color = "orange", label = "FCF Aproximada")
-#         savefig(joinpath(CUTDIR, string("estagio-", s, ".png")))
-#         plot(x, watervalue; color = "blue", label = "Valor da água")
-#         savefig(joinpath(CUTDIR, string("estagio-", s, "-water.png")))
-#     end
-# end
-
-# """
-#     plot_model_cuts(cuts, cfg, OUTDIR)
-
-# Gera visualizações para os cortes produzidos pelo modelo.
-
-# # Arguments
-
-#   - `cuts::DataFrame`: dados dos cortes do `SDDP.jl` processados
-#   - `system::SystemData`: configuração de entrada do sistema para validação do número de elementos
-#   - `OUTDIR::String`: diretório de saída para os plots
-# """
-# function plot_model_cuts(cuts::DataFrame, system::SystemData)
-#     CUTDIR = joinpath(pwd(), "plotcortes")
-#     __check_outdir(CUTDIR)
-#     @info "Plotando cortes em $(CUTDIR)"
-#     n_hydros = length(system.hydros)
-#     if n_hydros == 1
-#         plot_model_cuts_1var(cuts, system, CUTDIR)
-#     elseif n_hydros == 2
-#         @error "ainda nao implementado"
-#     elseif n_hydros > 2
-#         @error "nao e possivel realizar plots para mais de duas UHEs no sistema"
-#     end
-# end
 
 export write_simulation_results,
     get_model_cuts, write_model_cuts, get_model_convergence, write_model_convergence
-# plot_simulation_results,
-# plot_model_cuts,
-# plot_model_cuts_1var
 
 end
