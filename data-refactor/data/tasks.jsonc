@@ -5,7 +5,11 @@
             "params": {
                 "results": {
                     "path": "out/echo",
-                    "save": false
+                    "save": true,
+                    "format": {
+                        "kind": "AnyFormat",
+                        "params": {}
+                    }
                 }
             }
         },
@@ -15,13 +19,13 @@
                 "convergence": {
                     // Min/Max number of iterations
                     "min_iterations": 10,
-                    "max_iterations": 1000,
+                    "max_iterations": 100,
                     // Early stopping criteria and params
                     "stopping_criteria": {
                         // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
                         "kind": "IterationLimit",
                         "params": {
-                            "num_iterations": 1000
+                            "num_iterations": 100
                         }
                         // "kind": "LowerBoundStability",
                         // "params": {
@@ -60,7 +64,11 @@
                 // },
                 "results": {
                     "path": "out/policy",
-                    "save": true
+                    "save": true,
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
                 }
             }
         },
@@ -75,7 +83,11 @@
                 },
                 "results": {
                     "path": "out/simulation",
-                    "save": true
+                    "save": true,
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
                 }
             }
         }
