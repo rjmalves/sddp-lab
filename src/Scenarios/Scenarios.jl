@@ -2,6 +2,7 @@ module Scenarios
 
 using JuMP
 
+using Random
 using ..Core
 using ..Utils
 using ..StochasticProcess
@@ -32,6 +33,7 @@ Return the number of dimensions (elements) in the load scenarios
 function length(s::LoadScenarios) end
 
 struct ScenariosData <: InputModule
+    seed::Integer
     initial_season::Integer
     branchings::Integer
     inflow::InflowScenarios
@@ -54,6 +56,15 @@ Gets the load value for a given bus and stage
 """
 function get_load(bus_id::Integer, stage_index::Integer, scenarios::ScenariosData)::Real
     return __get_load(bus_id, stage_index, scenarios.load)
+end
+
+"""
+    set_seed!(scenarios::ScenariosData)
+
+Sets the seed to be used in RNG
+"""
+function set_seed!(scenarios::ScenariosData)
+    return Random.seed!(scenarios.seed)
 end
 
 """
@@ -89,6 +100,6 @@ include("load.jl")
 include("scenariosdata-validators.jl")
 include("scenariosdata.jl")
 
-export ScenariosData, add_uncertainties!, generate_saa, get_load, get_scenarios
+export ScenariosData, add_uncertainties!, generate_saa, get_load, get_scenarios, set_seed!
 
 end

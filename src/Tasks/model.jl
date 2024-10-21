@@ -27,6 +27,8 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
     scenarios = get_scenarios(files)
     num_stages = get_number_of_stages(get_algorithm(files))
 
+    set_seed!(scenarios)
+
     SAA = generate_saa(scenarios, num_stages)
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
