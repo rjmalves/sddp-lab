@@ -46,28 +46,6 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
 
         add_system_objective!(m, system)
 
-        # open("model.lp", "w") do f
-        #     data = lp_matrix_data(m)
-        #     print(f, "\nA\n")
-        #     for row in eachrow(Matrix(data.A))
-        #         println(f, row)
-        #     end
-        #     print(f, "\nb_lower\n")
-        #     print(f, data.b_lower)
-        #     print(f, "\nb_upper\n")
-        #     print(f, data.b_upper)
-        #     print(f, "\nvariables\n")
-        #     print(f, data.variables)
-        #     terms = m.ext[:sddp_node].stage_objective.terms
-        #     c = zeros(Float64, size(data.c))
-        #     for (v, coef) in terms
-        #         index = findfirst(==(v), data.variables)
-        #         c[index] = coef
-        #     end
-        #     println("\nc")
-        #     println(f, c)
-        # end
-
         return nothing
     end
 
