@@ -238,6 +238,7 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
         node_df = __process_node_cut(nodecuts, state_var)
         append!(df, node_df)
     end
+    transform!(df, ["state","coefficient","intercept"] .=> ByRow(Float64), renamecols=false)
     return sort!(df, ["stage", "state_variable_name", "state_variable_id"])
 end
 
