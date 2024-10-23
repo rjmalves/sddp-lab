@@ -262,6 +262,7 @@ function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
             break
         end
     end
+    state_vars = String.(state_vars)
     df = DataFrame()
     for sv in state_vars
         sv_df = __process_cuts(jsondata, sv)
