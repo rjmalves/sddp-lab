@@ -88,49 +88,6 @@ function __increase_dataframe!(
 end
 
 """
-    __increase_dataframe!(df, variable, name, indexes, index_name, simulations, in_state, out_state)
-
-Acrescenta dados de uma variável da operação a um DataFrame existente.
-
-# Arguments
-
-  - `df::DataFrame`: DataFrame com os dados para exportação
-  - `variable::Symbol`: identificador interno da variável a ser adicionada
-  - `name::String`: identificador externo da variável a ser adicionada
-  - `elements::Vector{String}`: elementos para os quais a variável será extraída
-  - `index_name::String`: nome do índice para exportação
-  - `simulations::Vector{Vector{Dict{Symbol,Any}}}`: dados das séries da simulação gerados pelo `SDDP.jl`
-  - `in_state::Bool`: se a extração é do estado inicial
-  - `out_state::Bool`: se a extração é do estado final
-"""
-function __increase_dataframe!(
-    df::DataFrame,
-    variable::Symbol,
-    name::String,
-    elements::Vector{String},
-    index_name::String,
-    simulations::Vector{Vector{Dict{Symbol,Any}}},
-    in_state::Bool = false,
-    out_state::Bool = false,
-)
-    for j in 1:length(elements)
-        element = elements[j]
-        internal_df = DataFrame()
-        internal_df.stage = 1:length(simulations[1])
-        internal_df[!, "variable_name"] = fill(name, length(simulations[1]))
-        internal_df[!, index_name] = fill(element, length(simulations[1]))
-        for i in eachindex(simulations)
-            internal_df[!, string(i)] = [
-                __extract_variable(s[variable][j], in_state, out_state) for
-                s in simulations[i]
-            ]
-            internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits = 2)
-        end
-        append!(df, internal_df)
-    end
-end
-
-"""
     write_simulation_results(simulations, OUTDIR)
 
 Exporta os dados de saídas da simulação final do modelo.
@@ -184,6 +141,7 @@ function write_simulation_results(
         HYDRO_GENERATION => get_hydros_entities(system),
     )
 
+    # TODO - refactor replace
     map_variable_names_to_replace = Dict(
         STAGE_COST => "STAGE_COST", FUTURE_COST => "FUTURE_COST"
     )
@@ -192,9 +150,12 @@ function write_simulation_results(
         df = DataFrame()
         for variable in variables
             if variable in keys(map_variable_entities)
-                entities_names = map(u -> u.id, map_variable_entities[variable])
+                entities_ids = map(u -> u.id, map_variable_entities[variable])
             else
-                entities_names = [1]
+                entities_ids = Vector{Int64}([1])
+            end
+            if length(entities_ids) == 0
+                break
             end
             if variable == STORED_VOLUME
                 for (direction, in_state, out_state) in
@@ -203,7 +164,7 @@ function write_simulation_results(
                         df,
                         variable,
                         String(variable) * direction,
-                        entities_names,
+                        entities_ids,
                         entity_column,
                         simulations,
                         in_state,
@@ -212,14 +173,12 @@ function write_simulation_results(
                 end
             else
                 __increase_dataframe!(
-                    df,
-                    variable,
-                    string(variable),
-                    entities_names,
-                    entity_column,
-                    simulations,
+                    df, variable, string(variable), entities_ids, entity_column, simulations
                 )
             end
+        end
+        if size(df)[1] == 0
+            continue
         end
         df = stack(df, string.(Array((1:num_simulations))))
         rename!(df, "variable" => "scenario")
