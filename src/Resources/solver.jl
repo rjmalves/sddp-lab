@@ -14,7 +14,7 @@ function CLP(d::Dict{String,Any}, e::CompositeException)
     # Consistency validation
     valid_consistency = valid_content && __validate_clp_consistency!(d, e)
 
-    return valid_consistency ? CLP() : nothing
+    return valid_consistency ? CLP(d) : nothing
 end
 
 function GLPK(d::Dict{String,Any}, e::CompositeException)
@@ -31,7 +31,7 @@ function GLPK(d::Dict{String,Any}, e::CompositeException)
     # Consistency validation
     valid_consistency = valid_content && __validate_glpk_consistency!(d, e)
 
-    return valid_consistency ? GLPK() : nothing
+    return valid_consistency ? GLPK(d) : nothing
 end
 
 function HiGHS(d::Dict{String,Any}, e::CompositeException)
@@ -48,30 +48,33 @@ function HiGHS(d::Dict{String,Any}, e::CompositeException)
     # Consistency validation
     valid_consistency = valid_content && __validate_highs_consistency!(d, e)
 
-    return valid_consistency ? HiGHS() : nothing
+    return valid_consistency ? HiGHS(d) : nothing
 end
 
 # GENERAL METHODS -----------------------------------------------------------------------
 
 function generate_optimizer(s::CLP)
-    @eval begin
-        import Clp: Optimizer
-        return Optimizer
+    optimizer = optimizer_with_attributes(ClpInterface.Optimizer)
+    for (key, value) in s.params
+        set_attribute(optimizer, key, value)
     end
+    return optimizer
 end
 
 function generate_optimizer(s::GLPK)
-    @eval begin
-        import GLPK: Optimizer
-        return Optimizer
+    optimizer = optimizer_with_attributes(GLPKInterface.Optimizer)
+    for (key, value) in s.params
+        set_attribute(optimizer, key, value)
     end
+    return optimizer
 end
 
 function generate_optimizer(s::HiGHS)
-    @eval begin
-        import HiGHS: Optimizer
-        return Optimizer
+    optimizer = optimizer_with_attributes(HiGHSInterface.Optimizer)
+    for (key, value) in s.params
+        set_attribute(optimizer, key, value)
     end
+    return optimizer
 end
 
 # HELPERS -------------------------------------------------------------------------------------

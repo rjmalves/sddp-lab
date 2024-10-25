@@ -2,14 +2,25 @@ module Resources
 
 using ..Core
 using ..Utils
+using JuMP
+
+import GLPK as GLPKInterface
+import Clp as ClpInterface
+import HiGHS as HiGHSInterface
 
 # TYPES ------------------------------------------------------------------------
 
 abstract type Solver end
 
-struct CLP <: Solver end
-struct GLPK <: Solver end
-struct HiGHS <: Solver end
+struct CLP <: Solver
+    params::Dict{String,Any}
+end
+struct GLPK <: Solver
+    params::Dict{String,Any}
+end
+struct HiGHS <: Solver
+    params::Dict{String,Any}
+end
 
 # GENERAL METHODS ------------------------------------------------------------------------
 

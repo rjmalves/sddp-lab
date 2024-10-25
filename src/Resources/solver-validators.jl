@@ -35,14 +35,47 @@ end
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
 
 function __validate_clp_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
+    optimizer = optimizer_with_attributes(ClpInterface.Optimizer)
+    for (key, value) in d
+        set_attribute(optimizer, key, value)
+    end
+    valid = true
+    try
+        JuMP.Model(optimizer)
+    catch
+        valid = false
+        push!(e, AssertionError("$d is not a valid parameter set for CLP solver."))
+    end
+    return valid
 end
 
 function __validate_glpk_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
+    optimizer = optimizer_with_attributes(GLPKInterface.Optimizer)
+    for (key, value) in d
+        set_attribute(optimizer, key, value)
+    end
+    valid = true
+    try
+        JuMP.Model(optimizer)
+    catch
+        valid = false
+        push!(e, AssertionError("$d is not a valid parameter set for GLPK solver."))
+    end
+    return valid
 end
 
 function __validate_highs_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    optimizer = optimizer_with_attributes(HiGHSInterface.Optimizer)
+    for (key, value) in d
+        set_attribute(optimizer, key, value)
+    end
+    valid = true
+    try
+        JuMP.Model(optimizer)
+    catch
+        valid = false
+        push!(e, AssertionError("$d is not a valid parameter set for HiGHS solver."))
+    end
     return true
 end
 
