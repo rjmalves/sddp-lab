@@ -4,13 +4,15 @@ ECHO_KEYS = ["results"]
 ECHO_KEY_TYPES = [TaskResults]
 ECHO_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}]
 
-POLICY_KEYS = ["convergence", "results"]
-POLICY_KEY_TYPES = [Convergence, TaskResults]
-POLICY_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}, Dict{String,Any}]
+POLICY_KEYS = ["convergence", "results", "risk_measure", "parallel_scheme"]
+POLICY_KEY_TYPES = [Convergence, TaskResults, RiskMeasure, ParallelScheme]
+POLICY_KEY_TYPES_BEFORE_BUILD = [
+    Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
+]
 
-SIMULATION_KEYS = ["num_simulated_series", "policy_path", "results"]
-SIMULATION_KEY_TYPES = [Integer, String, TaskResults]
-SIMULATION_KEY_TYPES_BEFORE_BUILD = [Integer, String, Dict{String,Any}]
+SIMULATION_KEYS = ["num_simulated_series", "policy_path", "results", "parallel_scheme"]
+SIMULATION_KEY_TYPES = [Integer, String, TaskResults, ParallelScheme]
+SIMULATION_KEY_TYPES_BEFORE_BUILD = [Integer, String, Dict{String,Any}, Dict{String,Any}]
 
 function __validate_tasks_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(d, ["tasks"], e)
@@ -119,6 +121,7 @@ function __build_policy_internals_from_dicts!(
     valid_risk_measure = __build_risk_measure!(d, e)
     valid_parallel_scheme = __build_parallel_scheme!(d, e)
     valid_results = __build_results!(d, e)
+
     return valid_convergence && valid_risk_measure && valid_parallel_scheme && valid_results
 end
 
