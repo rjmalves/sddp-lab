@@ -109,9 +109,13 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
 
     m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
-    set_lower_bound.(m[TURBINED_FLOW], [e.min_generation / e.productivity for e in ses.entities])
-    set_upper_bound.(m[TURBINED_FLOW], [e.max_generation / e.productivity for e in ses.entities])
-    
+    set_lower_bound.(
+        m[TURBINED_FLOW], [e.min_generation / e.productivity for e in ses.entities]
+    )
+    set_upper_bound.(
+        m[TURBINED_FLOW], [e.max_generation / e.productivity for e in ses.entities]
+    )
+
     m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
     set_lower_bound.(m[SPILLAGE], 0)
 
