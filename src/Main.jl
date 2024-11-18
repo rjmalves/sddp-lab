@@ -13,7 +13,7 @@ function __run_tasks!(entrypoint::Union{Entrypoint,Nothing}, e::CompositeExcepti
         a = run_task(task, artifacts, e)
         push!(artifacts, a)
         a !== nothing || push!(e, AssertionError("Task $task failed"))
-        a !== nothing || __save_results(a)
+        a === nothing || __save_results(a)
     end
     return nothing
 end
