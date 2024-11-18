@@ -32,12 +32,21 @@ POLICY_DICT = convert(
     ),
 )
 
+POLICY_PATH_DICT = convert(
+    Dict{String,Any},
+    Dict(
+        "path" => ".",
+        "load" => true,
+        "format" => Dict("kind" => "AnyFormat", "params" => Dict()),
+    ),
+)
+
 SIMULATION_DICT = convert(
     Dict{String,Any},
     Dict(
-        "results" => RESULT_DICT,
-        "policy_path" => ".",
         "num_simulated_series" => 500,
+        "policy" => POLICY_PATH_DICT,
+        "results" => RESULT_DICT,
         "parallel_scheme" => Dict("kind" => "Serial", "params" => Dict()),
     ),
 )
