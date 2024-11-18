@@ -10,9 +10,11 @@ POLICY_KEY_TYPES_BEFORE_BUILD = [
     Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
 ]
 
-SIMULATION_KEYS = ["num_simulated_series", "policy_path", "results", "parallel_scheme"]
-SIMULATION_KEY_TYPES = [Integer, String, TaskResults, ParallelScheme]
-SIMULATION_KEY_TYPES_BEFORE_BUILD = [Integer, String, Dict{String,Any}, Dict{String,Any}]
+SIMULATION_KEYS = ["num_simulated_series", "policy", "results", "parallel_scheme"]
+SIMULATION_KEY_TYPES = [Integer, SimulationTaskPolicy, TaskResults, ParallelScheme]
+SIMULATION_KEY_TYPES_BEFORE_BUILD = [
+    Integer, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
+]
 
 function __validate_tasks_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(d, ["tasks"], e)
@@ -86,6 +88,11 @@ function __validate_policy_content!(d::Dict{String,Any}, e::CompositeException):
 end
 
 function __validate_simulation_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    # valid_policy_path = true
+    # if (d["policy_path"] !== nothing)
+    #     valid_policy_path = __validate_directory!(d["policy_path"], e)
+    # end
+    # return valid_policy_path
     return true
 end
 
@@ -129,6 +136,7 @@ function __build_simulation_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_parallel_scheme = __build_parallel_scheme!(d, e)
+    valid_policy = __build_simulation_task_policy!(d, e)
     valid_results = __build_results!(d, e)
-    return valid_parallel_scheme && valid_results
+    return valid_parallel_scheme && valid_policy && valid_results
 end

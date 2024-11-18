@@ -4,8 +4,8 @@
             "kind": "Echo",
             "params": {
                 "results": {
-                    "path": "out/echo",
                     "save": true,
+                    "path": "out/echo",
                     "format": {
                         "kind": "AnyFormat",
                         "params": {}
@@ -63,8 +63,8 @@
                 //     "params": {}
                 // },
                 "results": {
-                    "path": "out/policy",
                     "save": true,
+                    "path": "out/policy",
                     "format": {
                         "kind": "ParquetFormat",
                         "params": {}
@@ -76,14 +76,21 @@
             "kind": "Simulation",
             "params": {
                 "num_simulated_series": 2000,
-                "policy_path": "out/policy",
+                "policy": {
+                    "load": false,
+                    "path": "",
+                    "format": {
+                        "kind": "AnyFormat",
+                        "params": {}
+                    }
+                },
                 "parallel_scheme": {
                     "kind": "Serial",
                     "params": {}
                 },
                 "results": {
-                    "path": "out/simulation",
                     "save": true,
+                    "path": "out/simulation",
                     "format": {
                         "kind": "ParquetFormat",
                         "params": {}

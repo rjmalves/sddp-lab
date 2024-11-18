@@ -1,5 +1,6 @@
 module Core
 
+include("files.jl")
 include("types.jl")
 include("variables.jl")
 
@@ -31,6 +32,8 @@ export InputModule,
     FUTURE_COST,
     DIRECT_EXCHANGE,
     REVERSE_EXCHANGE,
-    NET_EXCHANGE
+    NET_EXCHANGE,
+    POLICY_CUTS_OUTPUT_FILENAME,
+    POLICY_CONVERGENCE_OUTPUT_FILENAME
 
 end

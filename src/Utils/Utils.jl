@@ -2,6 +2,7 @@ module Utils
 
 using CSV
 using JSON
+using Parquet: Parquet
 using DataFrames
 using Dates
 
@@ -22,6 +23,7 @@ export __validate_keys!,
     __valid_name_regex_match,
     read_jsonc,
     read_csv,
+    read_parquet,
     __kind_factory!,
     __validate_cast_from_jsonc_file!,
     __validate_cast_from_csv_file!,

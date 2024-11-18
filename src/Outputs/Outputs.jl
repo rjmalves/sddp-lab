@@ -238,7 +238,9 @@ function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
         node_df = __process_node_cut(nodecuts, state_var)
         append!(df, node_df)
     end
-    transform!(df, ["state","coefficient","intercept"] .=> ByRow(Float64), renamecols=false)
+    transform!(
+        df, ["state", "coefficient", "intercept"] .=> ByRow(Float64); renamecols = false
+    )
     return sort!(df, ["stage", "state_variable_name", "state_variable_id"])
 end
 
@@ -283,7 +285,7 @@ Exporta os dados dos cortes gerados pelo modelo.
   - `OUTDIR::String`: diretório de saída para escrita dos dados
 """
 function write_model_cuts(cuts::DataFrame, writer::Function, extension::String)
-    PROCESSED_CUTS_PATH = "cuts" * extension
+    PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
     @info "Writing cuts to $(PROCESSED_CUTS_PATH)"
     return writer(PROCESSED_CUTS_PATH, cuts)
 end
@@ -342,7 +344,7 @@ Exporta os dados de convergência do modelo.
 function write_model_convergence(
     convergence::DataFrame, writer::Function, extension::String
 )
-    PROCESSED_CUTS_PATH = "convergence" * extension
+    PROCESSED_CUTS_PATH = POLICY_CONVERGENCE_OUTPUT_FILENAME * extension
     @info "Writing convergence data to $(PROCESSED_CUTS_PATH)"
     return writer(PROCESSED_CUTS_PATH, convergence)
 end

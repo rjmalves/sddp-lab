@@ -69,6 +69,11 @@ end
 
 # SDDP METHODS --------------------------------------------------------------------------
 
+function get_reader(f::AnyFormat)::Function
+    no_op(p, df) = nothing
+    return no_op
+end
+
 function get_writer(f::AnyFormat)::Function
     no_op(p, df) = nothing
     return no_op
@@ -76,6 +81,10 @@ end
 
 function get_extension(f::AnyFormat)::String
     return ""
+end
+
+function get_reader(f::CSVFormat)::Function
+    return CSV.read
 end
 
 function get_writer(f::CSVFormat)::Function
@@ -86,8 +95,12 @@ function get_extension(f::CSVFormat)::String
     return ".csv"
 end
 
+function get_reader(f::ParquetFormat)::Function
+    return read_parquet
+end
+
 function get_writer(f::ParquetFormat)::Function
-    return write_parquet
+    return Parquet.write_parquet
 end
 
 function get_extension(f::ParquetFormat)::String

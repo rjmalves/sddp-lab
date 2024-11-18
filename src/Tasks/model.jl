@@ -135,6 +135,14 @@ function __train_model(
     )
 end
 
+function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
+    jsonpath = joinpath(tempdir(), "rawcuts.json")
+    # TODO - implement
+    # Convert DataFrame cuts to tmp file
+    # Use read_cuts_from_file(model, tmp_filename)
+    return SDDP.read_cuts_from_file(model, jsonpath)
+end
+
 """
     simulate_model(model, cfg)
 

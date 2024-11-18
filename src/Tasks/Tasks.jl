@@ -8,8 +8,9 @@ using ..Utils
 using ..Scenarios
 using ..Outputs
 using CSV
-using Parquet
+using Parquet: Parquet
 using Distributed
+using DataFrames
 using JuMP
 using GLPK
 using SDDP: SDDP
@@ -85,9 +86,15 @@ struct Policy <: TaskDefinition
     results::TaskResults
 end
 
+struct SimulationTaskPolicy
+    path::String
+    load::Bool
+    format::TaskResultsFormat
+end
+
 struct Simulation <: TaskDefinition
     num_simulated_series::Integer
-    policy_path::String
+    policy::SimulationTaskPolicy
     parallel_scheme::ParallelScheme
     results::TaskResults
 end
@@ -161,6 +168,14 @@ Returns true if the task should write its results.
 function should_write_results(a::TaskArtifact)::Bool end
 
 """
+get_reader(f::TaskResultsFormat)
+
+Gets the reader function that will import the Table data
+from the filesystem.
+"""
+function get_reader(f::TaskResultsFormat)::Function end
+
+"""
 get_writer(f::TaskResultsFormat)
 
 Gets the writer function that will export the Table data
@@ -209,6 +224,9 @@ include("taskresultsformat.jl")
 include("taskresults-validators.jl")
 include("taskresults.jl")
 
+include("simulationtaskpolicy-validators.jl")
+include("simulationtaskpolicy.jl")
+
 include("model.jl")
 
 include("taskdefinition-validators.jl")
@@ -226,6 +244,7 @@ export TasksData,
     run_task,
     save_task,
     get_task_output_path,
+    get_reader,
     get_writer,
     get_extension,
     should_write_results,

@@ -17,7 +17,9 @@ function Echo(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? Echo(d["results"]) : nothing
 end
 
-function run_task(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
+function run_task(
+    t::Echo, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{EchoArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     if (t.results.save)
         for (root, dirs, files) in walkdir(a[input_index].path)
@@ -54,7 +56,9 @@ function Policy(d::Dict{String,Any}, e::CompositeException)
     end
 end
 
-function run_task(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
+function run_task(
+    t::Policy, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{PolicyArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[input_index].files
     model = __build_model(files)
@@ -80,18 +84,37 @@ function Simulation(d::Dict{String,Any}, e::CompositeException)
 
     return if valid_consistency
         Simulation(
-            d["num_simulated_series"], d["policy_path"], d["parallel_scheme"], d["results"]
+            d["num_simulated_series"], d["policy"], d["parallel_scheme"], d["results"]
         )
     else
         nothing
     end
 end
 
-function run_task(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
+function run_task(
+    t::Simulation, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{SimulationArtifact,Nothing}
     files_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[files_index].files
-    policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
-    policy = a[policy_index].policy
+    # TODO - implement support for external (previously evaluated) policies
+    # If t.policy.load: ignore PolicyArtifact -> make a new SDDP.PolicyGraph with
+    #    external cuts.
+    # Else: require and check for a PolicyArtifact in the TaskArtifact vector
+    if t.policy.load
+        reader = get_reader(t.policy.format)
+        extension = get_extension(t.policy.format)
+        PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
+        @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
+        df = reader(PROCESSED_CUTS_PATH, e)
+        # TODO - validate succesfully read df (!== nothing)
+        # TODO - implement in model.jl
+        policy = __build_model(files)
+        __load_external_cuts!(policy, df)
+    else
+        # TODO - check for sanity (policy_index !== nothing)
+        policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
+        policy = a[policy_index].policy
+    end
     sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
     return SimulationArtifact(t, sims, files)
 end
