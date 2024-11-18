@@ -198,7 +198,7 @@ function write_simulation_results(
 end
 
 """
-    __process_node_cut(nodecuts, state_var)
+    __process_node_cut_for_state_var(nodecuts, state_var)
 
 Gera um `DataFrame` com dados dos cortes de um nó.
 
@@ -207,23 +207,69 @@ Gera um `DataFrame` com dados dos cortes de um nó.
   - `nodecuts::Any`: dados dos cortes de um nó, gerados pelo `SDDP.jl`
   - `state_var::String`: variável de estado a ser extraída
 """
-function __process_node_cut(nodecuts::Any, state_var::String)::DataFrame
+function __process_node_cut_for_intercept(nodecuts::Any)::DataFrame
+    df = DataFrame()
+    node = nodecuts["node"]
+    cutdata = nodecuts["single_cuts"]
+    state_var_name = POLICY_CUTS_OUTPUT_INTERCEPT_NAME
+    state_var_id = 0
+    n_cuts = length(cutdata)
+    df[!, "stage"] = fill(parse(Int64, node), n_cuts)
+    df[!, "cut_index"] = 1:n_cuts
+    df[!, "state_variable_name"] = fill(state_var_name, n_cuts)
+    df[!, "state_variable_id"] = fill(state_var_id, n_cuts)
+    df[!, "state"] = [s["intercept"] for s in cutdata]
+    df[!, "coefficient"] = fill(0.0, n_cuts)
+    return df
+end
+
+"""
+    __process_node_cut_for_state_var(nodecuts, state_var)
+
+Gera um `DataFrame` com dados dos cortes de um nó.
+
+# Arguments
+
+  - `nodecuts::Any`: dados dos cortes de um nó, gerados pelo `SDDP.jl`
+  - `state_var::String`: variável de estado a ser extraída
+"""
+function __process_node_cut_for_state_var(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
     cutdata = nodecuts["single_cuts"]
     state_var_name = String.(split(state_var, "[")[1])
     state_var_id = parse(Int64, split(split(state_var, "]")[1], "[")[2])
-    df[!, "stage"] = fill(parse(Int64, node), length(cutdata))
-    df[!, "state_variable_name"] = fill(state_var_name, length(cutdata))
-    df[!, "state_variable_id"] = fill(state_var_id, length(cutdata))
+    n_cuts = length(cutdata)
+    df[!, "stage"] = fill(parse(Int64, node), n_cuts)
+    df[!, "cut_index"] = 1:n_cuts
+    df[!, "state_variable_name"] = fill(state_var_name, n_cuts)
+    df[!, "state_variable_id"] = fill(state_var_id, n_cuts)
     df[!, "state"] = [s["state"][state_var] for s in cutdata]
     df[!, "coefficient"] = [s["coefficients"][state_var] for s in cutdata]
-    df[!, "intercept"] = [s["intercept"] for s in cutdata]
     return df
 end
 
 """
-    __process_cuts(cuts, state_var)
+    __process_cuts_for_intercepts(cuts)
+
+Gera um `DataFrame` com dados dos cortes de um nó.
+
+# Arguments
+
+  - `cuts::Vector{Any}`: dados dos cortes dos nós, gerados pelo `SDDP.jl`
+"""
+function __process_cuts_for_intercepts(cuts::Vector{Any})::DataFrame
+    df = DataFrame()
+    for nodecuts in cuts
+        node_df = __process_node_cut_for_intercept(nodecuts)
+        append!(df, node_df)
+    end
+    transform!(df, ["state", "coefficient"] .=> ByRow(Float64); renamecols = false)
+    return df
+end
+
+"""
+    __process_cuts_for_state_vars(cuts, state_var)
 
 Gera um `DataFrame` com dados dos cortes de um nó.
 
@@ -232,16 +278,26 @@ Gera um `DataFrame` com dados dos cortes de um nó.
   - `cuts::Vector{Any}`: dados dos cortes dos nós, gerados pelo `SDDP.jl`
   - `state_var::String`: variável de estado a ser extraída
 """
-function __process_cuts(cuts::Vector{Any}, state_var::String)::DataFrame
-    df = DataFrame()
-    for nodecuts in cuts
-        node_df = __process_node_cut(nodecuts, state_var)
-        append!(df, node_df)
+function __process_cuts_for_state_vars(cuts::Vector{Any})::DataFrame
+    state_vars = Vector{String}([])
+    for node in cuts
+        if length(node["single_cuts"]) > 0
+            state_vars = keys(node["single_cuts"][1]["coefficients"])
+            break
+        end
     end
-    transform!(
-        df, ["state", "coefficient", "intercept"] .=> ByRow(Float64); renamecols = false
-    )
-    return sort!(df, ["stage", "state_variable_name", "state_variable_id"])
+    state_vars = String.(state_vars)
+    df = DataFrame()
+    for sv in state_vars
+        sv_df = DataFrame()
+        for nodecuts in cuts
+            node_df = __process_node_cut_for_state_var(nodecuts, sv)
+            append!(sv_df, node_df)
+        end
+        transform!(sv_df, ["state", "coefficient"] .=> ByRow(Float64); renamecols = false)
+        append!(df, sv_df)
+    end
+    return df
 end
 
 """
@@ -254,24 +310,16 @@ Extrai os cortes gerados pelo modelo no formato de um `DataFrame`.
   - `model::SDDP.PolicyGraph`: modelo no formato do `SDDP.jl`
 """
 function get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
+    # TODO - add support for multicuts
     @info "Collecting generated cuts"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
     jsondata = JSON.parsefile(jsonpath)
-    state_vars = Vector{String}([])
-    for cut in jsondata
-        if length(cut["single_cuts"]) > 0
-            state_vars = keys(cut["single_cuts"][1]["coefficients"])
-            break
-        end
-    end
-    state_vars = String.(state_vars)
-    df = DataFrame()
-    for sv in state_vars
-        sv_df = __process_cuts(jsondata, sv)
-        append!(df, sv_df)
-    end
-    return df
+    intercept_df = __process_cuts_for_intercepts(jsondata)
+    sv_df = __process_cuts_for_state_vars(jsondata)
+    append!(intercept_df, sv_df)
+    sort!(intercept_df, ["stage", "cut_index", "state_variable_name", "state_variable_id"])
+    return intercept_df
 end
 
 """

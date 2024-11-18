@@ -8,6 +8,7 @@ using ..Utils
 using ..Scenarios
 using ..Outputs
 using CSV
+using JSON
 using Parquet: Parquet
 using Distributed
 using DataFrames

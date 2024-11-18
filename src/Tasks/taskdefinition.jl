@@ -96,26 +96,26 @@ function run_task(
 )::Union{SimulationArtifact,Nothing}
     files_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[files_index].files
-    # TODO - implement support for external (previously evaluated) policies
-    # If t.policy.load: ignore PolicyArtifact -> make a new SDDP.PolicyGraph with
-    #    external cuts.
-    # Else: require and check for a PolicyArtifact in the TaskArtifact vector
     if t.policy.load
         reader = get_reader(t.policy.format)
         extension = get_extension(t.policy.format)
+        curdir = pwd()
+        cd(t.policy.path)
         PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
         @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
         df = reader(PROCESSED_CUTS_PATH, e)
-        # TODO - validate succesfully read df (!== nothing)
-        # TODO - implement in model.jl
+        cd(curdir)
         policy = __build_model(files)
-        __load_external_cuts!(policy, df)
+        df !== nothing || __load_external_cuts!(policy, df)
     else
-        # TODO - check for sanity (policy_index !== nothing)
         policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
         policy = a[policy_index].policy
     end
-    sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
+    sims = if length(e) == 0
+        __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
+    else
+        []
+    end
     return SimulationArtifact(t, sims, files)
 end
 

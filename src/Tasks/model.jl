@@ -135,11 +135,55 @@ function __train_model(
     )
 end
 
+function __add_cuts_from_stage!(
+    cutdata::Vector{Dict{String,Any}}, cuts::DataFrame, node::Int64
+)
+    stage_cuts = filter(row -> row["stage"] == node, cuts)
+    cut_indexes = Int64.(unique(stage_cuts[!, "cut_index"]))
+    nodedata = Dict{String,Any}(
+        "risk_set_cuts" => [], "node" => string(node), "multi_cuts" => []
+    )
+    single_cuts = Dict{String,Any}[]
+    for cut_index in cut_indexes
+        cut_rows = filter(row -> row["cut_index"] == cut_index, stage_cuts)
+        intercept = 0.0
+        states = Dict{String,Float64}()
+        coefficients = Dict{String,Float64}()
+        for cut_coef in eachrow(cut_rows)
+            if (cut_coef["state_variable_name"] == POLICY_CUTS_OUTPUT_INTERCEPT_NAME)
+                intercept += cut_coef["state"]
+            else
+                key = "$(cut_coef["state_variable_name"])[$(cut_coef["state_variable_id"])]"
+                state_value = cut_coef["state"]
+                coefficient_value = cut_coef["coefficient"]
+                push!(states, key => state_value)
+                push!(coefficients, key => coefficient_value)
+            end
+        end
+        push!(
+            single_cuts,
+            Dict{String,Any}(
+                "state" => states, "intercept" => intercept, "coefficients" => coefficients
+            ),
+        )
+    end
+    nodedata["single_cuts"] = single_cuts
+    return push!(cutdata, nodedata)
+end
+
 function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
+    jsondata = Dict{String,Any}[]
+    stages = Int64.(unique(cuts[!, "stage"]))
+    for stage in stages
+        __add_cuts_from_stage!(jsondata, cuts, stage)
+    end
+    # Adds for the last node
+    __add_cuts_from_stage!(jsondata, cuts, maximum(stages) + 1)
+    # Writes and reads json
     jsonpath = joinpath(tempdir(), "rawcuts.json")
-    # TODO - implement
-    # Convert DataFrame cuts to tmp file
-    # Use read_cuts_from_file(model, tmp_filename)
+    open(jsonpath, "w") do f
+        JSON.print(f, jsondata)
+    end
     return SDDP.read_cuts_from_file(model, jsonpath)
 end
 
