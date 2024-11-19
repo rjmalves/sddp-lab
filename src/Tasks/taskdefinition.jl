@@ -111,11 +111,7 @@ function run_task(
         policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
         policy = a[policy_index].policy
     end
-    sims = if length(e) == 0
-        __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
-    else
-        []
-    end
+    sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
     return SimulationArtifact(t, sims, files)
 end
 

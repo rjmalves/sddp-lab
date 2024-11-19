@@ -9,8 +9,8 @@ DICT = convert(
     ),
 )
 
-@testset "tasks-results" begin
-    @testset "results-valid" begin
+@testset "tasks-taskresults" begin
+    @testset "taskresults-valid" begin
         d, e = __renew(DICT)
         @test typeof(Tasks.TaskResults(d, e)) === Tasks.TaskResults
     end

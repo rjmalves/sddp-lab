@@ -180,7 +180,7 @@ function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
     # Adds for the last node
     __add_cuts_from_stage!(jsondata, cuts, maximum(stages) + 1)
     # Writes and reads json
-    jsonpath = joinpath(tempdir(), "rawcuts.json")
+    jsonpath = joinpath(tempdir(), "rawcuts2.json")
     open(jsonpath, "w") do f
         JSON.print(f, jsondata)
     end

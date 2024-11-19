@@ -77,7 +77,7 @@
             "params": {
                 "num_simulated_series": 2000,
                 "policy": {
-                    "load": false,
+                    "load": true,
                     "path": "out/policy",
                     "format": {
                         "kind": "ParquetFormat",
