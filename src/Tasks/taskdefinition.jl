@@ -106,13 +106,20 @@ function run_task(
         df = reader(PROCESSED_CUTS_PATH, e)
         cd(curdir)
         policy = __build_model(files)
-        df !== nothing || __load_external_cuts!(policy, df)
+        success_loading_policy = df !== nothing
+        success_loading_policy || __load_external_cuts!(policy, df)
     else
         policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
-        policy = a[policy_index].policy
+        success_loading_policy = policy_index !== nothing
+        policy = success_loading_policy || a[policy_index].policy
     end
-    sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
-    return SimulationArtifact(t, sims, files)
+
+    if success_loading_policy
+        sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
+        return SimulationArtifact(t, sims, files)
+    else
+        return nothing
+    end
 end
 
 # HELPERS -------------------------------------------------------------------------------------
