@@ -1,11 +1,18 @@
 import SDDPlab: Tasks
 
-DICT = convert(Dict{String,Any}, Dict("path" => ".", "save" => true))
+DICT = convert(
+    Dict{String,Any},
+    Dict(
+        "path" => ".",
+        "save" => true,
+        "format" => Dict("kind" => "AnyFormat", "params" => Dict()),
+    ),
+)
 
-@testset "tasks-results" begin
-    @testset "results-valid" begin
+@testset "tasks-taskresults" begin
+    @testset "taskresults-valid" begin
         d, e = __renew(DICT)
-        @test typeof(Tasks.Results(d, e)) === Tasks.Results
+        @test typeof(Tasks.TaskResults(d, e)) === Tasks.TaskResults
     end
 
     # TODO - currently the 'path' key is not being validated

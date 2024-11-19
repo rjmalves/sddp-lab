@@ -11,7 +11,7 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
     `Lab.Reader.read_ena()`
 """
 function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
-    @info "Compilando modelo"
+    @info "Compiling model"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
     optimizer = generate_optimizer(get_resources(files))
@@ -26,6 +26,8 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
     system = get_system(files)
     scenarios = get_scenarios(files)
     num_stages = get_number_of_stages(get_algorithm(files))
+
+    set_seed!(scenarios)
 
     SAA = generate_saa(scenarios, num_stages)
 
@@ -43,28 +45,6 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
         end
 
         add_system_objective!(m, system)
-
-        # open("model.lp", "w") do f
-        #     data = lp_matrix_data(m)
-        #     print(f, "\nA\n")
-        #     for row in eachrow(Matrix(data.A))
-        #         println(f, row)
-        #     end
-        #     print(f, "\nb_lower\n")
-        #     print(f, data.b_lower)
-        #     print(f, "\nb_upper\n")
-        #     print(f, data.b_upper)
-        #     print(f, "\nvariables\n")
-        #     print(f, data.variables)
-        #     terms = m.ext[:sddp_node].stage_objective.terms
-        #     c = zeros(Float64, size(data.c))
-        #     for (v, coef) in terms
-        #         index = findfirst(==(v), data.variables)
-        #         c[index] = coef
-        #     end
-        #     println("\nc")
-        #     println(f, c)
-        # end
 
         return nothing
     end
@@ -133,19 +113,78 @@ Wrapper para chamada de `SDDP.train` parametrizada de acordo com configuracoes d
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
   - `cfg::ConfigData`: configuracao do estudo como retornado por `Lab.Reader.read_config()`
 """
-function __train_model(model::SDDP.PolicyGraph, convergence::Convergence, risk::RiskMeasure)
+function __train_model(
+    model::SDDP.PolicyGraph,
+    convergence::Convergence,
+    risk::RiskMeasure,
+    parallel::ParallelScheme,
+)
     # Debug subproblema
     # SDDP.write_subproblem_to_file(model[1], "subproblem.lp")
-    @info "Calculando política"
+    @info "Evaluating policy"
     max_iterations = convergence.max_iterations
     stopping_rule = generate_stopping_rule(get_stopping_criteria(convergence))
     risk_measure = generate_risk_measure(risk)
+    parallel_scheme = generate_parallel_scheme(parallel)
     return SDDP.train(
         model;
         iteration_limit = max_iterations,
         stopping_rules = [stopping_rule],
         risk_measure = risk_measure,
+        parallel_scheme = parallel_scheme,
     )
+end
+
+function __add_cuts_from_stage!(
+    cutdata::Vector{Dict{String,Any}}, cuts::DataFrame, node::Int64
+)
+    stage_cuts = filter(row -> row["stage"] == node, cuts)
+    cut_indexes = Int64.(unique(stage_cuts[!, "cut_index"]))
+    nodedata = Dict{String,Any}(
+        "risk_set_cuts" => [], "node" => string(node), "multi_cuts" => []
+    )
+    single_cuts = Dict{String,Any}[]
+    for cut_index in cut_indexes
+        cut_rows = filter(row -> row["cut_index"] == cut_index, stage_cuts)
+        intercept = 0.0
+        states = Dict{String,Float64}()
+        coefficients = Dict{String,Float64}()
+        for cut_coef in eachrow(cut_rows)
+            if (cut_coef["state_variable_name"] == POLICY_CUTS_OUTPUT_INTERCEPT_NAME)
+                intercept += cut_coef["state"]
+            else
+                key = "$(cut_coef["state_variable_name"])[$(cut_coef["state_variable_id"])]"
+                state_value = cut_coef["state"]
+                coefficient_value = cut_coef["coefficient"]
+                push!(states, key => state_value)
+                push!(coefficients, key => coefficient_value)
+            end
+        end
+        push!(
+            single_cuts,
+            Dict{String,Any}(
+                "state" => states, "intercept" => intercept, "coefficients" => coefficients
+            ),
+        )
+    end
+    nodedata["single_cuts"] = single_cuts
+    return push!(cutdata, nodedata)
+end
+
+function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
+    jsondata = Dict{String,Any}[]
+    stages = Int64.(unique(cuts[!, "stage"]))
+    for stage in stages
+        __add_cuts_from_stage!(jsondata, cuts, stage)
+    end
+    # Adds for the last node
+    __add_cuts_from_stage!(jsondata, cuts, maximum(stages) + 1)
+    # Writes and reads json
+    jsonpath = joinpath(tempdir(), "rawcuts2.json")
+    open(jsonpath, "w") do f
+        JSON.print(f, jsondata)
+    end
+    return SDDP.read_cuts_from_file(model, jsonpath)
 end
 
 """
@@ -158,16 +197,21 @@ Realiza simulacao final parametrizada de acordo com configuracoes de estudo forn
   - `model::SDDP.PolicyGraph`: modelo construido por `Lab.Study.build_model()`
 """
 function __simulate_model(
-    model::SDDP.PolicyGraph, files::Vector{InputModule}, number_simulated_series::Integer
+    model::SDDP.PolicyGraph,
+    files::Vector{InputModule},
+    number_simulated_series::Integer,
+    parallel::ParallelScheme,
 )::Vector{Vector{Dict{Symbol,Any}}}
     SDDP.add_all_cuts(model)
     sampler = generate_sampler(get_algorithm(files))
-    @info "Realizando simulação"
-    return SDDP.simulate(
+    parallel_scheme = generate_parallel_scheme(parallel)
+    @info "Running simulation"
+    simulation_result = SDDP.simulate(
         model,
         number_simulated_series,
         [
             THERMAL_GENERATION,
+            THERMAL_GENERATION_COST,
             INFLOW,
             TURBINED_FLOW,
             SPILLAGE,
@@ -183,5 +227,7 @@ function __simulate_model(
             WATER_VALUE => (sp::JuMP.Model) -> JuMP.dual.(sp[HYDRO_BALANCE]),
             TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
+        parallel_scheme = parallel_scheme,
     )
+    return simulation_result
 end

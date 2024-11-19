@@ -1,11 +1,11 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
-UNCERTAINTIES_KEYS = ["initial_season", "branchings", "inflow", "load"]
+UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "inflow", "load"]
 UNCERTAINTIES_KEY_TYPES = [
-    Integer, Integer, T where {T<:InflowScenarios}, T where {T<:LoadScenarios}
+    Integer, Integer, Integer, T where {T<:InflowScenarios}, T where {T<:LoadScenarios}
 ]
 UNCERTAINTIES_KEY_TYPES_BEFORE_BUILD = [
-    Integer, Integer, Dict{String,Any}, Dict{String,Any}
+    Integer, Integer, Integer, Dict{String,Any}, Dict{String,Any}
 ]
 
 function __validate_scenarios_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool

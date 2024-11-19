@@ -17,12 +17,15 @@ function Echo(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? Echo(d["results"]) : nothing
 end
 
-function run_task(t::Echo, a::Vector{TaskArtifact})::Union{EchoArtifact,Nothing}
+function run_task(
+    t::Echo, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{EchoArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     if (t.results.save)
         for (root, dirs, files) in walkdir(a[input_index].path)
             for file in files
-                cp(joinpath(root, file), joinpath(t.results.path, file))
+                mkpath(t.results.path)
+                cp(joinpath(root, file), joinpath(t.results.path, file); force = true)
             end
         end
     end
@@ -47,17 +50,19 @@ function Policy(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_policy_consistency!(d, e)
 
     return if valid_consistency
-        Policy(d["convergence"], d["risk_measure"], d["results"])
+        Policy(d["convergence"], d["risk_measure"], d["parallel_scheme"], d["results"])
     else
         nothing
     end
 end
 
-function run_task(t::Policy, a::Vector{TaskArtifact})::Union{PolicyArtifact,Nothing}
+function run_task(
+    t::Policy, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{PolicyArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[input_index].files
     model = __build_model(files)
-    __train_model(model, get_convergence(t), get_risk_measure(t))
+    __train_model(model, get_convergence(t), get_risk_measure(t), get_parallel_scheme(t))
     return PolicyArtifact(t, model, files)
 end
 
@@ -78,19 +83,43 @@ function Simulation(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_simulation_consistency!(d, e)
 
     return if valid_consistency
-        Simulation(d["num_simulated_series"], d["policy_path"], d["results"])
+        Simulation(
+            d["num_simulated_series"], d["policy"], d["parallel_scheme"], d["results"]
+        )
     else
         nothing
     end
 end
 
-function run_task(t::Simulation, a::Vector{TaskArtifact})::Union{SimulationArtifact,Nothing}
+function run_task(
+    t::Simulation, a::Vector{TaskArtifact}, e::CompositeException
+)::Union{SimulationArtifact,Nothing}
     files_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[files_index].files
-    policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
-    policy = a[policy_index].policy
-    sims = __simulate_model(policy, files, t.num_simulated_series)
-    return SimulationArtifact(t, sims, files)
+    if t.policy.load
+        reader = get_reader(t.policy.format)
+        extension = get_extension(t.policy.format)
+        curdir = pwd()
+        cd(t.policy.path)
+        PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
+        @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
+        df = reader(PROCESSED_CUTS_PATH, e)
+        cd(curdir)
+        policy = __build_model(files)
+        success_loading_policy = df !== nothing
+        success_loading_policy || __load_external_cuts!(policy, df)
+    else
+        policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
+        success_loading_policy = policy_index !== nothing
+        policy = success_loading_policy || a[policy_index].policy
+    end
+
+    if success_loading_policy
+        sims = __simulate_model(policy, files, t.num_simulated_series, t.parallel_scheme)
+        return SimulationArtifact(t, sims, files)
+    else
+        return nothing
+    end
 end
 
 # HELPERS -------------------------------------------------------------------------------------

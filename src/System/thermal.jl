@@ -80,14 +80,15 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals)
     m[THERMAL_GENERATION] = @variable(
         m, [n = 1:num_thermals], base_name = String(THERMAL_GENERATION)
     )
+    for n in 1:num_thermals
+        set_lower_bound(m[THERMAL_GENERATION][n], ses.entities[n].min_generation)
+        set_upper_bound(m[THERMAL_GENERATION][n], ses.entities[n].max_generation)
+    end
 
-    @constraint(
-        m,
-        [n = 1:num_thermals],
-        ses.entities[n].min_generation <=
-            m[THERMAL_GENERATION][n] <=
-            ses.entities[n].max_generation
+    m[THERMAL_GENERATION_COST] = @expression(
+        m, [n = 1:num_thermals], ses.entities[n].cost * m[THERMAL_GENERATION][n]
     )
+
     return nothing
 end
 

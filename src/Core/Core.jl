@@ -1,5 +1,6 @@
 module Core
 
+include("files.jl")
 include("types.jl")
 include("variables.jl")
 
@@ -13,6 +14,7 @@ export InputModule,
     LOAD,
     DEFICIT,
     THERMAL_GENERATION,
+    THERMAL_GENERATION_COST,
     STORED_VOLUME,
     HYDRO_GENERATION,
     HYDRO_MIN_GENERATION_SLACK,
@@ -30,6 +32,9 @@ export InputModule,
     FUTURE_COST,
     DIRECT_EXCHANGE,
     REVERSE_EXCHANGE,
-    NET_EXCHANGE
+    NET_EXCHANGE,
+    POLICY_CUTS_OUTPUT_FILENAME,
+    POLICY_CUTS_OUTPUT_INTERCEPT_NAME,
+    POLICY_CONVERGENCE_OUTPUT_FILENAME
 
 end

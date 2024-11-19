@@ -1,16 +1,20 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 ECHO_KEYS = ["results"]
-ECHO_KEY_TYPES = [Results]
+ECHO_KEY_TYPES = [TaskResults]
 ECHO_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}]
 
-POLICY_KEYS = ["convergence", "results"]
-POLICY_KEY_TYPES = [Convergence, Results]
-POLICY_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}, Dict{String,Any}]
+POLICY_KEYS = ["convergence", "results", "risk_measure", "parallel_scheme"]
+POLICY_KEY_TYPES = [Convergence, TaskResults, RiskMeasure, ParallelScheme]
+POLICY_KEY_TYPES_BEFORE_BUILD = [
+    Dict{String,Any}, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
+]
 
-SIMULATION_KEYS = ["num_simulated_series", "policy_path", "results"]
-SIMULATION_KEY_TYPES = [Integer, String, Results]
-SIMULATION_KEY_TYPES_BEFORE_BUILD = [Integer, String, Dict{String,Any}]
+SIMULATION_KEYS = ["num_simulated_series", "policy", "results", "parallel_scheme"]
+SIMULATION_KEY_TYPES = [Integer, SimulationTaskPolicy, TaskResults, ParallelScheme]
+SIMULATION_KEY_TYPES_BEFORE_BUILD = [
+    Integer, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
+]
 
 function __validate_tasks_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(d, ["tasks"], e)
@@ -84,6 +88,11 @@ function __validate_policy_content!(d::Dict{String,Any}, e::CompositeException):
 end
 
 function __validate_simulation_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    # valid_policy_path = true
+    # if (d["policy_path"] !== nothing)
+    #     valid_policy_path = __validate_directory!(d["policy_path"], e)
+    # end
+    # return valid_policy_path
     return true
 end
 
@@ -117,13 +126,17 @@ function __build_policy_internals_from_dicts!(
 )::Bool
     valid_convergence = __build_convergence!(d, e)
     valid_risk_measure = __build_risk_measure!(d, e)
+    valid_parallel_scheme = __build_parallel_scheme!(d, e)
     valid_results = __build_results!(d, e)
-    return valid_convergence && valid_risk_measure && valid_results
+
+    return valid_convergence && valid_risk_measure && valid_parallel_scheme && valid_results
 end
 
 function __build_simulation_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
+    valid_parallel_scheme = __build_parallel_scheme!(d, e)
+    valid_policy = __build_simulation_task_policy!(d, e)
     valid_results = __build_results!(d, e)
-    return valid_results
+    return valid_parallel_scheme && valid_policy && valid_results
 end

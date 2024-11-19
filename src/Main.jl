@@ -1,9 +1,7 @@
 using .Inputs
 using .Tasks
 
-function __run_tasks!(
-    entrypoint::Union{Entrypoint,Nothing}, e::CompositeException
-)::Vector{TaskArtifact}
+function __run_tasks!(entrypoint::Union{Entrypoint,Nothing}, e::CompositeException)
     # Returns empty vector if no entrypoint is given
     entrypoint === nothing && return Vector{TaskArtifact}()
 
@@ -12,23 +10,22 @@ function __run_tasks!(
     tasks = get_tasks(files)
     artifacts = Vector{TaskArtifact}([InputsArtifact(path, files)])
     for task in tasks
-        a = run_task(task, artifacts)
-        a !== nothing || push!(e, AssertionError("Task $task failed"))
+        a = run_task(task, artifacts, e)
         push!(artifacts, a)
+        a !== nothing || push!(e, AssertionError("Task $task failed"))
+        a === nothing || __save_results(a)
     end
-    return artifacts
+    return nothing
 end
 
-function __save_results(artifacts::Vector{TaskArtifact})
-    for a in artifacts
-        basedir = pwd()
-        if should_write_results(a)
-            path = get_task_output_path(a)
-            isdir(path) || mkpath(path)
-            cd(path)
-            save_task(a)
-            cd(basedir)
-        end
+function __save_results(a::TaskArtifact)
+    basedir = pwd()
+    if should_write_results(a)
+        path = get_task_output_path(a)
+        isdir(path) || mkpath(path)
+        cd(path)
+        save_task(a)
+        cd(basedir)
     end
 end
 
@@ -43,6 +40,6 @@ end
 
 function main(; e = CompositeException())
     entrypoint = Entrypoint("main.jsonc", e)
-    artifacts = __run_tasks!(entrypoint, e)
-    return __log_errors(e) || __save_results(artifacts)
+    __run_tasks!(entrypoint, e)
+    return __log_errors(e)
 end

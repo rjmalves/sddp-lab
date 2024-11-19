@@ -1,6 +1,3 @@
-using JSON
-using CSV
-
 # FILE READERS -------------------------------------------------------------------
 
 function read_jsonc(
@@ -30,6 +27,15 @@ function read_csv(filename::String, e::CompositeException)::Union{DataFrame,Noth
                 stringtype = String,
             ),
         )
+    else
+        nothing
+    end
+end
+
+function read_parquet(filename::String, e::CompositeException)::Union{DataFrame,Nothing}
+    valid_file = __validate_file!(filename, e)
+    return if valid_file
+        DataFrame(Parquet.read_parquet(filename))
     else
         nothing
     end

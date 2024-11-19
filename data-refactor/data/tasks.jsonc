@@ -4,8 +4,12 @@
             "kind": "Echo",
             "params": {
                 "results": {
+                    "save": true,
                     "path": "out/echo",
-                    "save": false
+                    "format": {
+                        "kind": "AnyFormat",
+                        "params": {}
+                    }
                 }
             }
         },
@@ -15,13 +19,13 @@
                 "convergence": {
                     // Min/Max number of iterations
                     "min_iterations": 10,
-                    "max_iterations": 50,
+                    "max_iterations": 100,
                     // Early stopping criteria and params
                     "stopping_criteria": {
                         // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
                         "kind": "IterationLimit",
                         "params": {
-                            "num_iterations": 50
+                            "num_iterations": 100
                         }
                         // "kind": "LowerBoundStability",
                         // "params": {
@@ -50,20 +54,47 @@
                 //         "lambda": 0.5
                 //     }
                 // },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
+                // "parallel_scheme": {
+                //     "kind": "Serial",
+                //     "params": {}
+                // },
                 "results": {
+                    "save": true,
                     "path": "out/policy",
-                    "save": true
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
                 }
             }
         },
         {
             "kind": "Simulation",
             "params": {
-                "num_simulated_series": 500,
-                "policy_path": "out/policy",
+                "num_simulated_series": 2000,
+                "policy": {
+                    "load": true,
+                    "path": "out/policy",
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
                 "results": {
+                    "save": true,
                     "path": "out/simulation",
-                    "save": true
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
                 }
             }
         }

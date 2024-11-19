@@ -63,6 +63,10 @@ end
 # HELPER FUNCTIONS ------------------------------------------------------------------------
 
 function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
+    # TODO - improve this logic for managing current directories
+    curdir = pwd()
+    cd(d["path"])
+
     valid_key_types = __validate_files_main_key_type!(d, e)
     if !valid_key_types
         return false
@@ -83,7 +87,14 @@ function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_scenarios = files_d["scenarios"] !== nothing
     files_d["system"] = SystemData(files_d["system"], e)
     valid_system = files_d["system"] !== nothing
-    files_d["tasks"] = TasksData(files_d["tasks"], e)
+
+    # TODO - improve this logic for managing current directories.
+    # TasksData currently never mentions other files, so it can
+    # be validated by passing the relative path to the tasks.jsonc
+    # file instead of changing to its directory (data/tasks.jsonc)
+    cd(curdir)
+
+    files_d["tasks"] = TasksData(joinpath(d["path"], files_d["tasks"]), e)
     valid_tasks = files_d["tasks"] !== nothing
 
     valid_files =
@@ -105,9 +116,10 @@ end
 function __build_inputsdata_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    curdir = pwd()
     valid_directory = __validate_directory!(d["path"], e)
-    valid_directory && cd(d["path"])
+
+    # TODO - Improve safety coming back to entrypoint dir 
+    curdir = pwd()
     valid_files = valid_directory && __build_files!(d, e)
     cd(curdir)
     return valid_files

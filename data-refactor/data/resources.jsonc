@@ -2,7 +2,9 @@
     "solver": {
         // CLP | GLPK | HiGHS | CPLEX | Gurobi | ...
         "kind": "GLPK",
-        "params": {}
+        "params": {
+            "tm_lim": 10
+        }
     }
     // TODO
     // serial | parallel  

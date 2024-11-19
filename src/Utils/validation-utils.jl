@@ -25,7 +25,7 @@ function __validate_key_lengths!(
 end
 
 function __validate_key_types!(
-    d::Dict, keys::Vector{String}, types::Vector{DataType}, e::CompositeException
+    d::Dict, keys::Vector{String}, types::Vector{<:Type}, e::CompositeException
 )::Bool
     valid = true
     for (k, t) in zip(keys, types)
@@ -97,7 +97,7 @@ function __validate_columns_in_dataframe!(
 end
 
 function __validate_column_types_in_dataframe!(
-    df::DataFrame, columns::Vector{String}, types::Vector{DataType}, e::CompositeException
+    df::DataFrame, columns::Vector{String}, types::Vector{<:Type}, e::CompositeException
 )::Bool
     valid = true
     df_columns = names(df)
@@ -116,7 +116,7 @@ function __validate_column_types_in_dataframe!(
 end
 
 function __validate_dataframe!(
-    df::DataFrame, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
+    df::DataFrame, cols::Vector{String}, types::Vector{<:Type}, e::CompositeException
 )::Union{DataFrame,Nothing}
     valid_cols = __validate_columns_in_dataframe!(df, cols, e)
     valid_df = valid_cols && __validate_column_types_in_dataframe!(df, cols, types, e)
@@ -124,7 +124,7 @@ function __validate_dataframe!(
 end
 
 function __validate_dataframe_content_and_cast!(
-    df::DataFrame, cols::Vector{String}, types::Vector{DataType}, e::CompositeException
+    df::DataFrame, cols::Vector{String}, types::Vector{<:Type}, e::CompositeException
 )::Union{Vector{Dict{String,Any}},Nothing}
     df = __validate_dataframe!(df, cols, types, e)
     valid = df !== nothing
@@ -152,7 +152,7 @@ end
 
 # HELPERS ----------------------------------------------------------------------------------
 
-function __parse_as_type!(d::Dict, k::String, t::DataType)
+function __parse_as_type!(d::Dict, k::String, t::Type)
     if typeof(d[k]) == t
         return nothing
     else
@@ -167,7 +167,7 @@ function __parse_as_type!(d::Dict, k::String, t::DataType)
     end
 end
 
-function __try_conversion!(d::Dict, k::String, t::DataType)
+function __try_conversion!(d::Dict, k::String, t::Type)
     return d[k] = convert(t, d[k])
 end
 

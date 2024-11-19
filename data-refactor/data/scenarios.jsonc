@@ -1,6 +1,7 @@
 {
+    "seed": 42,
     "initial_season": 1,
-    "branchings": 1,
+    "branchings": 50,
     "inflow": {
         "stochastic_process": {
             // AR | PAR | HMM | ...

@@ -15,7 +15,9 @@ function ScenariosData(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_scenarios_consistency!(d, e)
 
     return if valid_consistency
-        ScenariosData(d["initial_season"], d["branchings"], d["inflow"], d["load"])
+        ScenariosData(
+            d["seed"], d["initial_season"], d["branchings"], d["inflow"], d["load"]
+        )
     else
         nothing
     end
