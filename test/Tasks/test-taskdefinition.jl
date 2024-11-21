@@ -1,24 +1,23 @@
 import SDDPlab: Tasks
 
-RESULT_DICT = convert(
-    Dict{String,Any},
-    Dict(
-        "path" => ".",
-        "save" => true,
-        "format" => Dict("kind" => "AnyFormat", "params" => Dict()),
-    ),
-)
+function _create_result_dict()::Dict
+    RESULT_DICT = convert(
+        Dict{String,Any},
+        Dict(
+            "save" => true,
+            "path" => "out/policy",
+            "format" => Dict("kind" => "AnyFormat", "params" => Dict()),
+        ),
+    )
+    return RESULT_DICT
+end
 
-ECHO_DICT = convert(Dict{String,Any}, Dict("results" => RESULT_DICT))
+ECHO_DICT = convert(Dict{String,Any}, Dict("results" => _create_result_dict()))
 
 POLICY_DICT = convert(
     Dict{String,Any},
     Dict(
-        "results" => Dict(
-            "path" => ".",
-            "save" => true,
-            "format" => Dict("kind" => "ParquetFormat", "params" => Dict()),
-        ),
+        "results" => _create_result_dict(),
         "convergence" => Dict(
             "min_iterations" => 10,
             "max_iterations" => 100,
@@ -46,7 +45,7 @@ SIMULATION_DICT = convert(
     Dict(
         "num_simulated_series" => 500,
         "policy" => POLICY_PATH_DICT,
-        "results" => RESULT_DICT,
+        "results" => _create_result_dict(),
         "parallel_scheme" => Dict("kind" => "Serial", "params" => Dict()),
     ),
 )
@@ -62,8 +61,8 @@ SIMULATION_DICT = convert(
         @test typeof(Tasks.Policy(d, e)) === Tasks.Policy
     end
 
-    # @testset "taskdefinition-simulation-valid" begin
-    #     d, e = __renew(SIMULATION_DICT)
-    #     @test typeof(Tasks.Simulation(d, e)) === Tasks.Simulation
-    # end
+    @testset "taskdefinition-simulation-valid" begin
+        d, e = __renew(SIMULATION_DICT)
+        @test typeof(Tasks.Simulation(d, e)) === Tasks.Simulation
+    end
 end
