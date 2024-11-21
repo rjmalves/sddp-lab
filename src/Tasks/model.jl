@@ -132,6 +132,7 @@ function __train_model(
         stopping_rules = [stopping_rule],
         risk_measure = risk_measure,
         parallel_scheme = parallel_scheme,
+        root_node_risk_measure = risk_measure,
     )
 end
 
