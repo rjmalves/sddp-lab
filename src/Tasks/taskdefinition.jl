@@ -111,7 +111,7 @@ function run_task(
     else
         policy_index = findfirst(x -> isa(x, PolicyArtifact), a)
         success_loading_policy = policy_index !== nothing
-        policy = success_loading_policy || a[policy_index].policy
+        policy = success_loading_policy ? a[policy_index].policy : nothing
     end
 
     if success_loading_policy
