@@ -34,7 +34,7 @@ function __validate_simulation_task_policy_load_path(
 )::Bool
     # Validate if policy path exists or is the output path of previous policy task
     simulation = tasks[findfirst(x -> isa(x, Simulation), tasks)]
-    valid_load_path = __validate_directory!(simulation.policy.path, e)
+    valid_load_path = isdir(simulation.policy.path)
 
     policy_index = findfirst(x -> isa(x, Policy), tasks)
     if policy_index == nothing
@@ -52,6 +52,12 @@ function __validate_simulation_task_policy_load_path(
         e,
         ErrorException("The loaded policy path $simulation_policy_path is not valid."),
     )
+
+    if simulation_policy_path != policy_path
+        warn_msg = "The simulation task policy path is different from the policy task results path."
+        @warn warn_msg
+    end
+
     return valid
 end
 
