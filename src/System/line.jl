@@ -54,8 +54,12 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Lines)
     num_lines = length(ses)
 
-    κ_d = κ[DIRECT_EXCHANGE]
-    κ_r = κ[REVERSE_EXCHANGE]
+    mean_capacity = mean([e.capacity for e in ses.entities])
+    mean_exchange_penalty = mean([e.exchange_penalty for e in ses.entities])
+    κ_r = κ_d = 10^-round(log10(mean_capacity) + log10(mean_exchange_penalty))
+
+    κ[DIRECT_EXCHANGE] = κ_d
+    κ[REVERSE_EXCHANGE] = κ_r
 
     m[DIRECT_EXCHANGE] = @variable(
         m, [n = 1:num_lines], base_name = String(DIRECT_EXCHANGE)

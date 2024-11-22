@@ -41,7 +41,10 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Buses)
     num_buses = length(ses)
 
-    κ_def = κ[DEFICIT]
+    mean_deficit_cost = mean([e.deficit_cost for e in ses.entities])
+    κ_def = 10^-round(log10(mean_deficit_cost))
+
+    κ[DEFICIT] = κ_def
 
     # Adds variables registering internal names by symbols
     m[LOAD] = @variable(m, [1:num_buses], base_name = String(LOAD))

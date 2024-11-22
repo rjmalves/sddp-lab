@@ -88,7 +88,10 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Hydros)
     num_hydros = length(ses)
 
-    κ_s = κ[STORED_VOLUME]
+    mean_max_storage = mean([e.max_storage for e in ses.entities])
+    κ_s = 10^-round(log10(mean_max_storage))
+
+    κ[STORED_VOLUME] = κ_s
 
     m[STORED_VOLUME] = @variable(
         m,
