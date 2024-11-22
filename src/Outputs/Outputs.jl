@@ -78,7 +78,7 @@ function __increase_dataframe!(
         internal_df[!, index_name] = fill(index, length(simulations[1]))
         for i in eachindex(simulations)
             internal_df[!, string(i)] = [
-                __extract_variable(s[variable][j], in_state, out_state) for
+                κ[variable] * __extract_variable(s[variable][j], in_state, out_state) for
                 s in simulations[i]
             ]
             internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits = 2)
