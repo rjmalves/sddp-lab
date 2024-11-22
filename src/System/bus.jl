@@ -41,11 +41,13 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Buses)
     num_buses = length(ses)
 
+    κ_def = κ[DEFICIT]
+
     # Adds variables registering internal names by symbols
     m[LOAD] = @variable(m, [1:num_buses], base_name = String(LOAD))
     m[DEFICIT] = @variable(m, [1:num_buses], base_name = String(DEFICIT))
 
-    set_lower_bound.(m[DEFICIT], 0)
+    set_lower_bound.(m[DEFICIT], 0 / κ_def)
 
     return nothing
 end

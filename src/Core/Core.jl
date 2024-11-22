@@ -3,6 +3,7 @@ module Core
 include("files.jl")
 include("types.jl")
 include("variables.jl")
+include("units.jl")
 
 function get_input_module(i::Vector{InputModule}, kind::Type)::InputModule
     index = findfirst(x -> isa(x, kind), i)
@@ -35,6 +36,7 @@ export InputModule,
     NET_EXCHANGE,
     POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CUTS_OUTPUT_INTERCEPT_NAME,
-    POLICY_CONVERGENCE_OUTPUT_FILENAME
+    POLICY_CONVERGENCE_OUTPUT_FILENAME,
+    κ
 
 end

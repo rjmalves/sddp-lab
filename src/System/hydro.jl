@@ -88,12 +88,14 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Hydros)
     num_hydros = length(ses)
 
+    κ_s = κ[STORED_VOLUME]
+
     m[STORED_VOLUME] = @variable(
         m,
         [n = 1:num_hydros],
         base_name = String(STORED_VOLUME),
         SDDP.State,
-        initial_value = ses.entities[n].initial_storage
+        initial_value = ses.entities[n].initial_storage / κ_s
     )
 
     for n in 1:num_hydros
@@ -102,8 +104,8 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
         # fixed is bounded
         # Indeed, even when a state variable is created the canonical way
         # (using @variable(..., SDDP.State)), only the 'out' half receives the bound information
-        set_lower_bound(m[STORED_VOLUME][n].out, ses.entities[n].min_storage)
-        set_upper_bound(m[STORED_VOLUME][n].out, ses.entities[n].max_storage)
+        set_lower_bound(m[STORED_VOLUME][n].out, ses.entities[n].min_storage / κ_s)
+        set_upper_bound(m[STORED_VOLUME][n].out, ses.entities[n].max_storage / κ_s)
     end
 
     m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
@@ -141,11 +143,13 @@ end
 function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
     num_hydros = length(hydros)
 
+    κ_s = κ[STORED_VOLUME]
+
     m[HYDRO_BALANCE] = @constraint(
         m,
         [n = 1:num_hydros],
-        m[STORED_VOLUME][n].out ==
-            m[STORED_VOLUME][n].in - m[OUTFLOW][n] +
+        κ_s * m[STORED_VOLUME][n].out ==
+            κ_s * m[STORED_VOLUME][n].in - m[OUTFLOW][n] +
         m[INFLOW][n] +
         sum(
             m[OUTFLOW][j] for j in 1:num_hydros if

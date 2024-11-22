@@ -136,28 +136,29 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
     num_hydros = length(hydros)
     num_thermals = length(thermals)
 
+    κ_cost = κ[TOTAL_COST]
+    κ_def = κ[DEFICIT]
+    κ_t = κ[THERMAL_GENERATION]
+    κ_d = κ[DIRECT_EXCHANGE]
+    κ_r = κ[REVERSE_EXCHANGE]
+
     SDDP.@stageobjective(
         m,
-        sum(thermals[n].cost * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
-            sum(buses[n].deficit_cost * m[DEFICIT][n] for n in 1:num_buses) +
-            sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n] for n in 1:num_lines) +
-            sum(lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n] for n in 1:num_lines) +
+        κ_cost * (
+            sum(thermals[n].cost * κ_t * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
+            sum(buses[n].deficit_cost * κ_def * m[DEFICIT][n] for n in 1:num_buses) +
+            sum(
+                lines[n].exchange_penalty * κ_d * m[DIRECT_EXCHANGE][n] for n in 1:num_lines
+            ) +
+            sum(
+                lines[n].exchange_penalty * κ_r * m[REVERSE_EXCHANGE][n] for
+                n in 1:num_lines
+            ) +
             sum(
                 hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
                 n in 1:num_hydros
             ) +
             sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
+        )
     )
-    # @objective(
-    #     m,
-    #     sum(thermals[n].cost * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
-    #         sum(buses[n].deficit_cost * m[DEFICIT][n] for n in 1:num_buses) +
-    #         sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n] for n in 1:num_lines) +
-    #         sum(lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n] for n in 1:num_lines) +
-    #         sum(
-    #             hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
-    #             n in 1:num_hydros
-    #         ) +
-    #         sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
-    # )
 end

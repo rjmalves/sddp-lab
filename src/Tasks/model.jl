@@ -66,6 +66,11 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
     num_hydros = length(hydros_entities)
     num_thermals = length(thermals_entities)
 
+    κ_def = κ[DEFICIT]
+    κ_t = κ[THERMAL_GENERATION]
+    κ_d = κ[DIRECT_EXCHANGE]
+    κ_r = κ[REVERSE_EXCHANGE]
+
     m[LOAD_BALANCE] = @constraint(
         m,
         [n = 1:num_buses],
@@ -74,18 +79,18 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
             j in 1:num_hydros if hydros_entities[j].bus_id == bus_ids[n]
         ) +
         sum(
-            m[THERMAL_GENERATION][j] for
+            κ_t * m[THERMAL_GENERATION][j] for
             j in 1:num_thermals if thermals_entities[j].bus_id == bus_ids[n]
         ) +
         sum(
-            m[DIRECT_EXCHANGE][j] - m[REVERSE_EXCHANGE][j] for
+            κ_d * m[DIRECT_EXCHANGE][j] - κ_r * m[REVERSE_EXCHANGE][j] for
             j in 1:num_lines if lines_entities[j].target_bus_id == bus_ids[n]
         ) +
         sum(
-            m[REVERSE_EXCHANGE][j] - m[DIRECT_EXCHANGE][j] for
+            κ_r * m[REVERSE_EXCHANGE][j] - κ_d * m[DIRECT_EXCHANGE][j] for
             j in 1:num_lines if lines_entities[j].source_bus_id == bus_ids[n]
         ) +
-        m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
+        κ_def * m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
     )
     return nothing
 end

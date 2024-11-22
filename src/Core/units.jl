@@ -1,0 +1,8 @@
+κ = Dict{Symbol,Float64}(
+    THERMAL_GENERATION => 1.0,
+    DEFICIT => 0.1,
+    DIRECT_EXCHANGE => 1000.0,
+    REVERSE_EXCHANGE => 1000.0,
+    STORED_VOLUME => 1000.0,
+    TOTAL_COST => 0.001,
+)
