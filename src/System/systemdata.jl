@@ -144,7 +144,7 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
 
     SDDP.@stageobjective(
         m,
-        κ_cost * (
+        (1.0 / κ_cost) * (
             sum(thermals[n].cost * κ_t * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
             sum(buses[n].deficit_cost * κ_def * m[DEFICIT][n] for n in 1:num_buses) +
             sum(

@@ -17,7 +17,7 @@
     LOAD_BALANCE => 1.0,
     MARGINAL_COST => 1.0,
     WATER_VALUE => 1.0,
-    TOTAL_COST => 0.001,
+    TOTAL_COST => 1000.0,
     STAGE_COST => 1.0,
     FUTURE_COST => 1.0,
 )
