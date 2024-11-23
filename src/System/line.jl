@@ -56,7 +56,7 @@ function add_system_elements!(m::JuMP.Model, ses::Lines)
 
     mean_capacity = mean([e.capacity for e in ses.entities])
     mean_exchange_penalty = mean([e.exchange_penalty for e in ses.entities])
-    κ_r = κ_d = 10^-round(log10(mean_capacity) + log10(mean_exchange_penalty))
+    κ_r = κ_d = 10^round(0.5 * (log10(mean_capacity) + log10(mean_exchange_penalty)))
 
     κ[DIRECT_EXCHANGE] = κ_d
     κ[REVERSE_EXCHANGE] = κ_r

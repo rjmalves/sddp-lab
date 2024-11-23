@@ -79,7 +79,7 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals)
     num_thermals = length(ses)
 
     mean_max_generation = mean([e.max_generation for e in ses.entities])
-    κ_t = 10^-round(log10(mean_max_generation))
+    κ_t = 10^round(log10(mean_max_generation))
 
     κ[THERMAL_GENERATION] = κ_t
 
