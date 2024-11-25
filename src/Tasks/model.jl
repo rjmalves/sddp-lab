@@ -203,7 +203,11 @@ function __simulate_model(
     number_simulated_series::Integer,
     parallel::ParallelScheme,
 )::Vector{Vector{Dict{Symbol,Any}}}
-    SDDP.add_all_cuts(model)
+    try
+        SDDP.add_all_cuts(model)
+    catch
+        @warn "Error while adding all cuts for simulation"
+    end
     sampler = generate_sampler(get_algorithm(files))
     parallel_scheme = generate_parallel_scheme(parallel)
     @info "Running simulation"
