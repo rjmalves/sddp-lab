@@ -18,6 +18,10 @@ function __validate_highs_keys_types!(d::Dict{String,Any}, e::CompositeException
     return true
 end
 
+function __validate_gurobi_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_clp_content!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -29,6 +33,10 @@ function __validate_glpk_content!(d::Dict{String,Any}, e::CompositeException)::B
 end
 
 function __validate_highs_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_gurobi_content!(d::Dict{String,Any}, e::CompositeException)::Bool
     return true
 end
 
@@ -79,6 +87,21 @@ function __validate_highs_consistency!(d::Dict{String,Any}, e::CompositeExceptio
     return true
 end
 
+function __validate_gurobi_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    optimizer = optimizer_with_attributes(GurobiInterface.Optimizer)
+    for (key, value) in d
+        set_attribute(optimizer, key, value)
+    end
+    valid = true
+    try
+        JuMP.Model(optimizer)
+    catch
+        valid = false
+        push!(e, AssertionError("$d is not a valid parameter set for Gurobi solver."))
+    end
+    return true
+end
+
 # HELPERS -----------------------------------------------------------------------------------
 
 function __build_clp_internals_from_dicts!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -90,7 +113,14 @@ function __build_glpk_internals_from_dicts!(
 )::Bool
     return true
 end
+
 function __build_highs_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_gurobi_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true

@@ -7,6 +7,7 @@ using JuMP
 import GLPK as GLPKInterface
 import Clp as ClpInterface
 import HiGHS as HiGHSInterface
+import Gurobi as GurobiInterface
 
 # TYPES ------------------------------------------------------------------------
 
@@ -19,6 +20,9 @@ struct GLPK <: Solver
     params::Dict{String,Any}
 end
 struct HiGHS <: Solver
+    params::Dict{String,Any}
+end
+struct Gurobi <: Solver
     params::Dict{String,Any}
 end
 
