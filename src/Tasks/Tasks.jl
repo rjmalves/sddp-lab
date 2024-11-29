@@ -13,7 +13,6 @@ using Parquet: Parquet
 using Distributed
 using DataFrames
 using JuMP
-using GLPK
 using SDDP: SDDP
 
 # TYPES ------------------------------------------------------------------------

@@ -5,6 +5,7 @@ using Suppressor
     @testset "main_success" begin
         e = CompositeException()
         cd(example_dir)
+        using GLPK
         # @suppress begin
         SDDPlab.main(; e = e)
         # end
