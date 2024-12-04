@@ -18,8 +18,7 @@ struct SimpleARparameters <: AbstractARparameters
 end
 
 function SimpleARparameters(d, e)
-    # __validate_ar_parameters(d, e)
-    #     - checa se tem as chaves season, coefs, res_var e scale_par e sao dos tipos certos
+    valid = __validate_ar_parameters_dict!(d, e)
 
     return if valid
         SimpleARparameters(d["coefficients"], d["scale_parameters"], d["season"])
@@ -51,8 +50,7 @@ struct UnivariateAutoRegressive
 end
 
 function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
-    # valid = __validate_univariateautoregressive_dict(d, e)
-    #     - chaves id, init e models existem e sao dos tipos certos
+    valid = __validate_univariateautoregressive_dict!(d, e)
 
     if !valid
         return nothing
@@ -60,7 +58,7 @@ function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
 
     arp = __build_ar_parameters(d, e)
 
-    UnivariateAutoRegressive(d["id"], d["initialization"], arp)
+    UnivariateAutoRegressive(d["id"], d["initial_values"], arp)
 end
 
 # MAIN AR TYPE -----------------------------------------------------------------------------
@@ -71,16 +69,16 @@ struct AutoRegressiveStochasticProcess <: AbstractStochasticProcess
 end
 
 function AutoRegressiveStochasticProcess(d::Dict{String, Any}, e::CompositeException)
-    # valid = __validate_autoregressive_dict(d, e)
-    #     - so checa se existem as chaves "marginal_models" e "copulas" e sao Dicts
+    valid = __validate_autoregressive_dict!(d, e)
+
     return if !valid
         nothing
     end
 
-    signal = Dict{Int,UnivariateAutoRegressive}()
+    signal = Vector{UnivariateAutoRegressive}()
     for marginal_model in d["marginal_models"]
         s = UnivariateAutoRegressive(marginal_model, e)
-        signal[d["id"]] = (signal, s)
+        push!(signal, s)
     end
 
     noise_dict = __build_noise_naive_dict(d, e)
