@@ -29,17 +29,17 @@ function SimpleARparameters(d, e)
 end
 
 struct PeriodicARparameters <: AbstractARparameters
-    parameters::Dict{Int,Vector{SimpleARparameters}}
+    parameters::Vector{SimpleARparameters}
 end
 
-function PeriodicARparameters(d, e)
-    out = Vector{SimpleARparameters}()
-    for model_dict in d["models"]
-        model = SimpleARparameters(model)
-        push!(out, model)
+function PeriodicARparameters(v, e)
+    parameters = Vector{SimpleARparameters}()
+    for model_dict in v
+        model = SimpleARparameters(model_dict, e)
+        push!(parameters, model)
     end
 
-    return out
+    PeriodicARparameters(parameters)
 end
 
 # SIGNAL MODEL TYPE ------------------------------------------------------------------------
