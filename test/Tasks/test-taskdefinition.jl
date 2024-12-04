@@ -1,6 +1,6 @@
 import SDDPlab: Tasks
 
-function _create_result_dict()::Dict
+function _create_result_dict_taskdefinition()::Dict
     RESULT_DICT = convert(
         Dict{String,Any},
         Dict(
@@ -12,12 +12,14 @@ function _create_result_dict()::Dict
     return RESULT_DICT
 end
 
-ECHO_DICT = convert(Dict{String,Any}, Dict("results" => _create_result_dict()))
+ECHO_DICT = convert(
+    Dict{String,Any}, Dict("results" => _create_result_dict_taskdefinition())
+)
 
 POLICY_DICT = convert(
     Dict{String,Any},
     Dict(
-        "results" => _create_result_dict(),
+        "results" => _create_result_dict_taskdefinition(),
         "convergence" => Dict(
             "min_iterations" => 10,
             "max_iterations" => 100,
@@ -45,7 +47,7 @@ SIMULATION_DICT = convert(
     Dict(
         "num_simulated_series" => 500,
         "policy" => POLICY_PATH_DICT,
-        "results" => _create_result_dict(),
+        "results" => _create_result_dict_taskdefinition(),
         "parallel_scheme" => Dict("kind" => "Serial", "params" => Dict()),
     ),
 )

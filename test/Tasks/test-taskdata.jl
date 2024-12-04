@@ -1,6 +1,6 @@
 import SDDPlab: Tasks
 
-function _create_result_dict()::Dict
+function _create_result_dict_taskdata()::Dict
     RESULT_DICT = convert(
         Dict{String,Any},
         Dict(
@@ -16,7 +16,7 @@ function _create_policy_params_dict()::Dict
     POLICY_PARAMS_DICT = convert(
         Dict{String,Any},
         Dict(
-            "results" => _create_result_dict(),
+            "results" => _create_result_dict_taskdata(),
             "convergence" => Dict(
                 "min_iterations" => 10,
                 "max_iterations" => 100,
@@ -54,7 +54,7 @@ function _create_simulation_params_dict(policy_dict::Dict)::Dict
         Dict(
             "num_simulated_series" => 500,
             "policy" => policy_dict,
-            "results" => _create_result_dict(),
+            "results" => _create_result_dict_taskdata(),
             "parallel_scheme" => Dict("kind" => "Serial", "params" => Dict()),
         ),
     )
