@@ -61,7 +61,8 @@ function run_task(
 )::Union{PolicyArtifact,Nothing}
     input_index = findfirst(x -> isa(x, InputsArtifact), a)
     files = a[input_index].files
-    model = __build_model(files)
+    optimizer = a[input_index].optimizer
+    model = __build_model(files, optimizer)
     __train_model(model, get_convergence(t), get_risk_measure(t), get_parallel_scheme(t))
     return PolicyArtifact(t, model, files)
 end
@@ -94,8 +95,9 @@ end
 function run_task(
     t::Simulation, a::Vector{TaskArtifact}, e::CompositeException
 )::Union{SimulationArtifact,Nothing}
-    files_index = findfirst(x -> isa(x, InputsArtifact), a)
-    files = a[files_index].files
+    input_index = findfirst(x -> isa(x, InputsArtifact), a)
+    files = a[input_index].files
+    optimizer = a[input_index].optimizer
     if t.policy.load
         reader = get_reader(t.policy.format)
         extension = get_extension(t.policy.format)
@@ -105,7 +107,7 @@ function run_task(
         @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
         df = reader(PROCESSED_CUTS_PATH, e)
         cd(curdir)
-        policy = __build_model(files)
+        policy = __build_model(files, optimizer)
         success_loading_policy = df !== nothing
         success_loading_policy || __load_external_cuts!(policy, df)
     else
