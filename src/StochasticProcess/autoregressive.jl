@@ -81,6 +81,30 @@ function AutoRegressiveStochasticProcess(d::Dict{String, Any}, e::CompositeExcep
         push!(signal, s)
     end
 
-    noise_dict = __build_noise_naive_dict(d, e)
+    noise_dict = __build_noise_naive_dict(d)
     noise = Naive(d, e)
+
+    AutoRegressiveStochasticProcess(signal, noise)
+end
+
+function __build_noise_naive_dict(d)
+    naive_dict = copy(d)
+
+    for marg_mod in naive_dict["marginal_models"]
+
+        delete!(marg_mod, "initial_values")
+
+        for mod in marg_mod["models"]
+
+            delete!(mod, "scale_parameters")
+            delete!(mod, "coefficients")
+            mod["kind"] = "Gaussian"
+            mod["parameters"] = [0.0, sqrt(pop!(mod, "residual_variance"))]
+
+        end
+
+        marg_mod["distributions"] = pop!(marg_mod, "models")
+    end
+
+    return naive_dict
 end
