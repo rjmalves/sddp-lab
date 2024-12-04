@@ -15,8 +15,11 @@ struct InputsData
     files::Vector{InputModule}
 end
 
+# TODO - for typing optimizer (as MOI.AbstractOptimizer),
+# need to add MOI to dependencies. Is it worth?
 struct Entrypoint
     inputs::InputsData
+    optimizer
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
