@@ -77,3 +77,21 @@ function __validate_univariateautoregressive_dict!(d, e)
     
     return valid
 end
+
+# MAIN AR VALIDATORS -----------------------------------------------------------------------
+
+function __validate_autoregressive_keys_types!(d, e)
+    keys = ["marginal_models", "copulas"]
+    types = [Vector{Dict{String,Any}}, Vector{Dict{String,Any}}]
+    
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, types, e)
+
+    return valid_types
+end
+
+function __validate_autoregressive_dict!(d, e)
+    valid =  __validate_autoregressive_keys_types!(d, e)
+    
+    return valid
+end
