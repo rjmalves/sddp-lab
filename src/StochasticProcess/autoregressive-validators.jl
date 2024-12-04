@@ -43,9 +43,37 @@ function __validate_ar_parameters_keys_content(d, e)
     return valid
 end
 
-function __validate_ar_parameters(d, e)
+function __validate_ar_parameters_dict!(d, e)
     valid = __validate_ar_parameters_keys_types!(d, e) &&
         __validate_ar_parameters_keys_content(d, e)
 
+    return valid
+end
+
+# UNIVARIATE AR VALIDATORS -----------------------------------------------------------------
+
+function __validate_univariateautoregressive_keys_types!(d, e)
+    keys = ["id", "initial_values", "models"]
+    types = [Int, Vector{Float64}, Vector{Dict{String,Any}}]
+    
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, types, e)
+
+    return valid_types
+end
+
+function __validate_univariateautoregressive_season(d, e)
+    id = d["id"]
+    valid = id > 0
+    if !valid
+        push!(e, AssertionError("AutoRegressive model must have positive id value"))
+    end
+    return valid
+end
+
+function __validate_univariateautoregressive_dict!(d, e)
+    valid =  __validate_univariateautoregressive_keys_types!(d, e) &&
+        __validate_univariateautoregressive_season(d, e)
+    
     return valid
 end
