@@ -71,8 +71,8 @@ end
 function AutoRegressiveStochasticProcess(d::Dict{String, Any}, e::CompositeException)
     valid = __validate_autoregressive_dict!(d, e)
 
-    return if !valid
-        nothing
+    if !valid
+        return nothing
     end
 
     signal = Vector{UnivariateAutoRegressive}()
