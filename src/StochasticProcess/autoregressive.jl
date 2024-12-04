@@ -5,9 +5,9 @@ abstract type AbstractARparameters end
 
 function __build_ar_parameters(d, e)
     if length(d["models"]) == 1
-        SimpleARparameters(d, e)
+        SimpleARparameters(d["models"][1], e)
     else
-        PeriodicARparameters(d, e)
+        PeriodicARparameters(d["models"], e)
     end
 end
 
@@ -58,7 +58,7 @@ function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
         return nothing
     end
 
-    arp = __build_ar_parameters(d["models"], e)
+    arp = __build_ar_parameters(d, e)
 
     UnivariateAutoRegressive(d["id"], d["initialization"], arp)
 end
