@@ -174,8 +174,28 @@ function __get_ar_scale(s::AutoRegressive, season::Int)
     [__get_ar_scale(uar, season) for uar in s.signal_model]
 end
 
-function length(s::AutoRegressive)::Integer
+function length(ar::SimpleARparameters)
+    return 1
+end
+
+function length(ar::PeriodicARparameters)
+    return length(ar.parameter_set)
+end
+
+function length(s::AutoRegressive)
     return length(s.signal_model)
+end
+
+function size(s::AutoRegressive)
+    s1 = length(s)
+    period = maximum([length(uar.model) for uar in s.signal_model])
+    max_lag = maximum([__get_lag(uar) for uar in s.signal_model])
+
+    return (s1, period, max_lag)
+end
+
+function size(s::AutoRegressive, i::Int)
+    return size(s)[i]
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
