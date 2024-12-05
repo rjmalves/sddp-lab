@@ -2,7 +2,6 @@ module Tasks
 
 using ..Core
 using ..Algorithm
-using ..Resources
 using ..System
 using ..Utils
 using ..Scenarios
@@ -13,7 +12,6 @@ using Parquet: Parquet
 using Distributed
 using DataFrames
 using JuMP
-using GLPK
 using SDDP: SDDP
 
 # TYPES ------------------------------------------------------------------------
@@ -105,6 +103,7 @@ abstract type TaskArtifact end
 struct InputsArtifact <: TaskArtifact
     path::String
     files::Vector{InputModule}
+    optimizer
 end
 
 struct EchoArtifact <: TaskArtifact

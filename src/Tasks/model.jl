@@ -10,11 +10,10 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
   - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
     `Lab.Reader.read_ena()`
 """
-function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
+function __build_model(files::Vector{InputModule}, optimizer)::SDDP.PolicyGraph
     @info "Compiling model"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
-    optimizer = generate_optimizer(get_resources(files))
     model = SDDP.PolicyGraph(
         sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = optimizer
     )
