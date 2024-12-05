@@ -65,12 +65,12 @@ end
 
 # MAIN AR TYPE -----------------------------------------------------------------------------
 
-struct AutoRegressiveStochasticProcess <: AbstractStochasticProcess
+struct AutoRegressive <: AbstractStochasticProcess
     signal_model::Vector{UnivariateAutoRegressive}
     noise_model::Naive
 end
 
-function AutoRegressiveStochasticProcess(d::Dict{String, Any}, e::CompositeException)
+function AutoRegressive(d::Dict{String, Any}, e::CompositeException)
     valid = __validate_autoregressive_dict!(d, e)
 
     if !valid
@@ -86,7 +86,7 @@ function AutoRegressiveStochasticProcess(d::Dict{String, Any}, e::CompositeExcep
     noise_dict = __build_noise_naive_dict(d)
     noise = Naive(d, e)
 
-    AutoRegressiveStochasticProcess(signal, noise)
+    AutoRegressive(signal, noise)
 end
 
 function __build_noise_naive_dict(d)
@@ -113,7 +113,7 @@ end
 
 # GENERAL METHODS --------------------------------------------------------------------------
 
-function __get_ids(s::AutoRegressiveStochasticProcess)
+function __get_ids(s::AutoRegressive)
     return map(x -> x.id, values(s.signal_model))
 end
 
@@ -148,7 +148,7 @@ function __get_ar_parameters(uar::UnivariateAutoRegressive, season::Int)
     __get_ar_parameters(uar.model, season)
 end
 
-function __get_ar_parameters(s::AutoRegressiveStochasticProcess, season::Int)
+function __get_ar_parameters(s::AutoRegressive, season::Int)
     [__get_ar_parameters(uar, season) for uar in s.signal_model]
 end
 
@@ -170,11 +170,11 @@ function __get_ar_scale(uar::UnivariateAutoRegressive, season::Int)
     __get_ar_scale(uar.model, season)
 end
 
-function __get_ar_scale(s::AutoRegressiveStochasticProcess, season::Int)
+function __get_ar_scale(s::AutoRegressive, season::Int)
     [__get_ar_scale(uar, season) for uar in s.signal_model]
 end
 
-function length(s::AutoRegressiveStochasticProcess)::Integer
+function length(s::AutoRegressive)::Integer
     return length(s.signal_model)
 end
 
@@ -182,7 +182,7 @@ end
 
 function __generate_saa(
     rng::AbstractRNG,
-    s::AutoRegressiveStochasticProcess,
+    s::AutoRegressive,
     initial_season::Integer,
     N::Integer,
     B::Integer)
@@ -191,7 +191,7 @@ function __generate_saa(
     
 end
 
-function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressiveStochasticProcess,
+function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     season::Int)
 
     n_hydro = length(s)
@@ -262,7 +262,7 @@ function __block_diagonal_matrix(matrices::Vector{Matrix{T}} where T <: Real)
     return out
 end
 
-function __build_state_transition_matrix(s::AutoRegressiveStochasticProcess, season::Int,
+function __build_state_transition_matrix(s::AutoRegressive, season::Int,
     max_lags::Vector{Int})
 
     st_mat = __get_ar_parameters(s, season)
