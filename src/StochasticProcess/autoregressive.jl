@@ -108,3 +108,30 @@ function __build_noise_naive_dict(d)
 
     return naive_dict
 end
+
+# GENERAL METHODS --------------------------------------------------------------------------
+
+function __get_ids(s::AutoRegressiveStochasticProcess)
+    return map(x -> x.id, values(s.signal_model))
+end
+
+function __get_lag(ar::SimpleARparameters)
+    length(ar.parameters)
+end
+
+function __get_lag(ar::PeriodicARparameters)
+    max_lags = [__get_lag(i) for i in ar.parameters]
+    maximum(max_lags)
+end
+
+function __get_lag(ar::UnivariateAutoRegressive)
+    __get_lag(ar.parameters)
+end
+
+function length(s::AutoRegressiveStochasticProcess)::Integer
+    return length(s.signal_model)
+end
+
+function size(s::AutoRegressiveStochasticProcess)::Tuple
+    # return (n_ids, n_seasons, Vector{max_lag_per_id})
+end
