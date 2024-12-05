@@ -18,6 +18,7 @@ OUTFLOW = Symbol("OUTFLOW")
 SPILLAGE = Symbol("SPILLAGE")
 # Scenarios
 ω_INFLOW = Symbol("ω_INFLOW")
+STCHP = Symbol("STCHP")
 # Constraints
 HYDRO_BALANCE = Symbol("HYDRO_BALANCE")
 LOAD_BALANCE = Symbol("LOAD_BALANCE")
