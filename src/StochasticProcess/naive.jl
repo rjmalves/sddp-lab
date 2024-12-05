@@ -91,6 +91,10 @@ function size(s::Naive)::Tuple{Integer, Vararg{Integer}}
     return (length(__get_ids(s)), length(first_us.distributions))
 end
 
+function size(s::Naive, i::Int)
+    return size(s)[i]
+end
+
 # SDDP METHODS -----------------------------------------------------------------------------
 
 function __generate_saa(
@@ -121,7 +125,7 @@ end
 #     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 # end
 
-function add_inflow_uncertainty!(m::JuMP.Model, s::Naive)::JuMP.Model
+function add_inflow_uncertainty!(m::JuMP.Model, s::Naive, ::Int)::JuMP.Model
     n_hydro = length(s)
 
     m[ω_INFLOW] = @variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
