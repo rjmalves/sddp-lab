@@ -33,7 +33,7 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
-        add_uncertainties!(m, scenarios)
+        add_uncertainties!(m, scenarios, node)
 
         # TODO - this will change once we have a proper load representation
         # as an stochastic process
