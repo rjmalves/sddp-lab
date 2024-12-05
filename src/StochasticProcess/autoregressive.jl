@@ -135,3 +135,16 @@ end
 function size(s::AutoRegressiveStochasticProcess)::Tuple
     # return (n_ids, n_seasons, Vector{max_lag_per_id})
 end
+
+# SDDP METHODS -----------------------------------------------------------------------------
+
+function __generate_saa(
+    rng::AbstractRNG,
+    s::AutoRegressiveStochasticProcess,
+    initial_season::Integer,
+    N::Integer,
+    B::Integer)::Vector{Vector{Vector{Float64}}}
+
+    __generate_saa(rng, s.noise_model, initial_season, N, B)
+    
+end
