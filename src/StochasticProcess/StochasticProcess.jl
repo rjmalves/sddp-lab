@@ -3,6 +3,9 @@ module StochasticProcess
 using Random, Distributions, Copulas
 using LinearAlgebra
 using JuMP
+using SDDP: SDDP
+using ..Core
+using ..Utils
 
 import Copulas: Copula
 import Base: length, size
@@ -14,14 +17,14 @@ abstract type AbstractStochasticProcess end
 
 Return the `id`s of elements represented in a stochastic process object
 """
-__get_ids(s::AbstractStochasticProcess)
+function __get_ids(s::AbstractStochasticProcess)::Vector{Integer} end
 
 """
     length(s::AbstractStochasticProcess)
 
 Return the number of dimensions (elements) in a stochastic process
 """
-length(s::AbstractStochasticProcess)
+function length(s::AbstractStochasticProcess)::Integer end
 
 """
     size(s::AbstractStochasticProcess)
@@ -31,17 +34,26 @@ Return the size of the process, a tuple with (number_of_elements, number_of_seas
 Depending on the type of model, it is possible that there are extra elements in the returned
 tuple, so refer to the corresponding documentation for more details
 """
-size(s::AbstractStochasticProcess)
+function size(s::AbstractStochasticProcess)::Tuple{Integer, Vararg{Integer}} end
 
 """
     generate_saa([rng::AbstractRNG, ]s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
 
 Generate a Sample Average Approximation of the noise (uncertainty) terms in model `s`
 """
-generate_saa(rng::AbstractRNG, s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+function __generate_saa(
+    rng::AbstractRNG,
+    s::AbstractStochasticProcess,
+    initial_season::Integer,
+    N::Integer,
+    B::Integer,
+)::Vector{Vector{Vector{Float64}}}
+end
 
-function generate_saa(s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
-    generate_saa(Random.default_rng(), s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
+function generate_saa(
+    s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
+)::Vector{Vector{Vector{Float64}}}
+    return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
 """
@@ -49,15 +61,36 @@ end
 
 Add stochastic variables and inflow model recurrence constraints to a JuMP model `m`
 """
-add_inflow_uncertainty!(m::JuMP.Model, s::AbstractStochasticProcess)
+function add_inflow_uncertainty!(m::JuMP.Model, s::AbstractStochasticProcess)::nothing end
 
 """
     __validate(s::AbstractStochasticProcess)
 
 Return `true` if `s` is a valid instance of stochastic process; raise errors otherwise
 """
-__validate(s::AbstractStochasticProcess)
+function __validate(s::AbstractStochasticProcess) end
 
+function __cast_stochastic_process_internals_from_files!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    stochastic_process_d = d["stochastic_process"]
+    valid_file_key = __validate_file_key!(stochastic_process_d, e)
+    valid = valid_file_key && __validate_cast_from_jsonc_file!(stochastic_process_d, e)
+    return valid
+end
+
+include("naive-validators.jl")
 include("naive.jl")
+
+include("autoregressive-validators.jl")
+include("autoregressive.jl")
+
+export
+    Naive,
+    AutoRegressive,
+    AbstractStochasticProcess,
+    generate_saa,
+    add_inflow_uncertainty!,
+    __cast_stochastic_process_internals_from_files!
 
 end

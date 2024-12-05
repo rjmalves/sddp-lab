@@ -13,3 +13,18 @@ function __list_test_files(test_dir)
 
     return test_files
 end
+
+function __remove_key(d, k)
+    out = copy(d)
+    delete!(out, k)
+end
+
+function __modif_key(d, k, v)
+    out = copy(d)
+    out[k] = v
+    return out
+end
+
+function __renew(d)
+    return (copy(d), CompositeException())
+end

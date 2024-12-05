@@ -1,44 +1,46 @@
-"""
-    compute_simulate_policy(execution)
+using .Inputs
+using .Tasks
 
-Realiza um estudo completo: aproxima politica, realiza simulacao e escreve todos os resultados
+function __run_tasks!(entrypoint::Union{Entrypoint,Nothing}, e::CompositeException)
+    # Returns empty vector if no entrypoint is given
+    entrypoint === nothing && return Vector{TaskArtifact}()
 
-# Arguments
-
- * `execution::Dict{String,Any}`: dicionario de parametros de execucao (arquivo execucao.json)
-"""
-function compute_simulate_policy(execution::Dict{String,Any})
-    cfg = read_config(execution["INDIR"])
-    ena = read_ena(execution["INDIR"], cfg)
-
-    model = build_model(cfg, ena)
-    train_model(model, cfg)
-
-    if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"]
-        sims = simulate_model(model, cfg)
+    path = get_path(entrypoint)
+    files = get_files(entrypoint)
+    optimizer = get_optimizer(entrypoint)
+    tasks = get_tasks(files)
+    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files, optimizer)])
+    for task in tasks
+        a = run_task(task, artifacts, e)
+        push!(artifacts, a)
+        a !== nothing || push!(e, AssertionError("Task $task failed"))
+        a === nothing || __save_results(a)
     end
-    if execution["ESCREVEOPERACAO"]
-        write_simulation_results(sims, cfg, execution["OUTDIR"])
-    end
-    if execution["PLOTAOPERACAO"]
-        plot_simulation_results(sims, cfg, execution["OUTDIR"])
-    end
+    return artifacts
+end
 
-    if execution["ESCREVECORTES"] || execution["PLOTACORTES"]
-        cuts = get_model_cuts(model)
+function __save_results(a::TaskArtifact)
+    basedir = pwd()
+    if should_write_results(a)
+        path = get_task_output_path(a)
+        isdir(path) || mkpath(path)
+        cd(path)
+        save_task(a)
+        cd(basedir)
     end
-    if execution["ESCREVECORTES"]
-        write_model_cuts(cuts, execution["OUTDIR"])
-    end
-    if execution["PLOTACORTES"]
-        plot_model_cuts(cuts, cfg, execution["OUTDIR"])
-    end
+end
 
-    if execution["ESCREVEOPERACAO"] || execution["PLOTAOPERACAO"] || execution["ESCREVECORTES"] || execution["PLOTACORTES"]
-        @info "Escrevendo eco dos arquivos de entrada em " * execution["OUTDIR"]
-        cp(joinpath(execution["INDIR"], "config.json"), joinpath(execution["OUTDIR"], "config.json"), force=true)
-        cp(joinpath(execution["INDIR"], "ena.csv"), joinpath(execution["OUTDIR"], "ena.csv"), force=true)
+function __log_errors(e::CompositeException)
+    has_errors = length(e) > 0
+    has_errors && @info "Errors found:"
+    for m in e
+        @error m.msg
     end
+    return has_errors
+end
 
-    @info "Execucao completa"
+function main(optimizer; e = CompositeException())
+    entrypoint = Entrypoint("main.jsonc", optimizer, e)
+    __run_tasks!(entrypoint, e)
+    return __log_errors(e)
 end

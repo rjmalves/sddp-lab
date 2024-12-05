@@ -3,8 +3,13 @@ using SDDPlab
 
 include("utils.jl")
 
+example_dir = joinpath(@__DIR__, "..", "example", "1dtoy")
+example_data_dir = joinpath(example_dir, "data")
+
 test_files = __list_test_files(".")
 
-for tf in test_files
-    include(tf)
+@testset "SDDPlab" begin
+    for tf in test_files
+        include(tf)
+    end
 end
