@@ -12,7 +12,7 @@ function __build_ar_parameters(d, e)
 end
 
 struct SimpleARparameters <: AbstractARparameters
-    parameters::Vector{Float64}
+    phis::Vector{Float64}
     scale::Vector{Float64}
     season::Int
 end
@@ -28,25 +28,25 @@ function SimpleARparameters(d, e)
 end
 
 struct PeriodicARparameters <: AbstractARparameters
-    parameters::Vector{SimpleARparameters}
+    parameter_set::Vector{SimpleARparameters}
 end
 
 function PeriodicARparameters(v, e)
-    parameters = Vector{SimpleARparameters}()
+    parameter_set = Vector{SimpleARparameters}()
     for model_dict in v
         model = SimpleARparameters(model_dict, e)
-        push!(parameters, model)
+        push!(parameter_set, model)
     end
 
-    PeriodicARparameters(parameters)
+    PeriodicARparameters(parameter_set)
 end
 
 # SIGNAL MODEL TYPE ------------------------------------------------------------------------
 
 struct UnivariateAutoRegressive
     id::Int
-    initialization::Vector{Float64}
-    parameters::AbstractARparameters
+    initial_values::Vector{Float64}
+    model::AbstractARparameters
 end
 
 function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
@@ -117,57 +117,57 @@ function __get_ids(s::AutoRegressiveStochasticProcess)
     return map(x -> x.id, values(s.signal_model))
 end
 
-function __get_lag(ar::SimpleARparameters)
-    length(ar.parameters)
+function __get_lag(arp::SimpleARparameters)
+    length(arp.phis)
 end
 
-function __get_lag(ar::PeriodicARparameters)
-    max_lags = [__get_lag(i) for i in ar.parameters]
+function __get_lag(arp::PeriodicARparameters)
+    max_lags = [__get_lag(i) for i in arp.parameter_set]
     maximum(max_lags)
 end
 
-function __get_lag(ar::UnivariateAutoRegressive)
-    __get_lag(ar.parameters)
+function __get_lag(uar::UnivariateAutoRegressive)
+    __get_lag(uar.model)
 end
 
-function __get_ar_parameters(ar::SimpleARparameters)
-    ar.parameters
+function __get_ar_parameters(arp::SimpleARparameters)
+    arp.phis
 end
 
-function __get_ar_parameters(ar::SimpleARparameters, ::Int)
-    __get_ar_parameters(ar)
+function __get_ar_parameters(arp::SimpleARparameters, ::Int)
+    __get_ar_parameters(arp)
 end
 
-function __get_ar_parameters(ar::PeriodicARparameters, season::Int)
-    seasons = map(x -> x.season, ar.parameters)
+function __get_ar_parameters(arp::PeriodicARparameters, season::Int)
+    seasons = map(x -> x.season, arp.parameter_set)
     index = findfirst(x -> x == season, seasons)
-    __get_ar_parameters(ar.parameters[index])
+    __get_ar_parameters(arp.parameter_set[index])
 end
 
 function __get_ar_parameters(uar::UnivariateAutoRegressive, season::Int)
-    __get_ar_parameters(uar.parameters, season)
+    __get_ar_parameters(uar.model, season)
 end
 
 function __get_ar_parameters(s::AutoRegressiveStochasticProcess, season::Int)
     [__get_ar_parameters(uar, season) for uar in s.signal_model]
 end
 
-function __get_ar_scale(ar::SimpleARparameters)
-    ar.scale
+function __get_ar_scale(arp::SimpleARparameters)
+    arp.scale
 end
 
-function __get_ar_scale(ar::SimpleARparameters, ::Int)
-    __get_ar_scale(ar)
+function __get_ar_scale(arp::SimpleARparameters, ::Int)
+    __get_ar_scale(arp)
 end
 
-function __get_ar_scale(ar::PeriodicARparameters, season::Int)
-    seasons = map(x -> x.season, ar.parameters)
+function __get_ar_scale(arp::PeriodicARparameters, season::Int)
+    seasons = map(x -> x.season, arp.parameter_set)
     index = findfirst(x -> x == season, seasons)
-    __get_ar_scale(ar.parameters[index])
+    __get_ar_scale(arp.parameter_set[index])
 end
 
 function __get_ar_scale(uar::UnivariateAutoRegressive, season::Int)
-    __get_ar_scale(uar.parameters, season)
+    __get_ar_scale(uar.model, season)
 end
 
 function __get_ar_scale(s::AutoRegressiveStochasticProcess, season::Int)
@@ -176,10 +176,6 @@ end
 
 function length(s::AutoRegressiveStochasticProcess)::Integer
     return length(s.signal_model)
-end
-
-function size(s::AutoRegressiveStochasticProcess)::Tuple
-    # return (n_ids, n_seasons, Vector{max_lag_per_id})
 end
 
 # SDDP METHODS -----------------------------------------------------------------------------
@@ -203,7 +199,7 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressiveStochasticProce
     stchp_size = sum(max_lags)
     
     scales = __get_ar_scale(s, season)
-    inits = vcat([uar.initialization for uar in s.signal_model]...)
+    inits = vcat([uar.initial_values for uar in s.signal_model]...)
 
     index_t = ones(Int,length(s))
     for i in 1:(length(s) - 1)
