@@ -70,8 +70,6 @@ Return `true` if `s` is a valid instance of stochastic process; raise errors oth
 """
 function __validate(s::AbstractStochasticProcess) end
 
-include("naive.jl")
-
 function __cast_stochastic_process_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -81,7 +79,15 @@ function __cast_stochastic_process_internals_from_files!(
     return valid
 end
 
-export Naive,
+include("naive-validators.jl")
+include("naive.jl")
+
+include("autoregressive-validators.jl")
+include("autoregressive.jl")
+
+export
+    Naive,
+    AutoRegressive,
     AbstractStochasticProcess,
     generate_saa,
     add_inflow_uncertainty!,
