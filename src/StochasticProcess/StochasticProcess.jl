@@ -3,6 +3,7 @@ module StochasticProcess
 using Random, Distributions, Copulas
 using LinearAlgebra
 using JuMP
+using SDDP: SDDP
 using ..Core
 using ..Utils
 
