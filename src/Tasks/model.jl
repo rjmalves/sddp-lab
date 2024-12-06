@@ -224,6 +224,7 @@ function __simulate_model(
             STORED_VOLUME,
             DEFICIT,
             NET_EXCHANGE,
+            VERTEX_COVERAGE_DISTANCE,
         ];
         sampling_scheme = sampler,
         custom_recorders = Dict{Symbol,Function}(
@@ -232,6 +233,7 @@ function __simulate_model(
             TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
         parallel_scheme = parallel_scheme,
+        skip_undefined_variables = true,
     )
     return simulation_result
 end
