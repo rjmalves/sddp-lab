@@ -14,67 +14,102 @@
                     // distribution kind, should be one implemented by Distributions.jl
                     "kind": "Normal",
                     // parameter vector in the order defined by Distributions.jl
-                    "parameters": [70.0, 7.0]
+                    "parameters": [
+                        87651.0050,
+                        8765.0
+                    ]
                 },
                 {
                     "season": 2,
                     "kind": "Normal",
-                    "parameters": [80.0, 8.0]
+                    "parameters": [
+                        101485.7670,
+                        1014.0
+                    ]
                 },
                 {
                     "season": 3,
                     "kind": "Normal",
-                    "parameters": [95.0, 9.5]
+                    "parameters": [
+                        102845.1710,
+                        1028.0
+                    ]
                 },
                 {
                     "season": 4,
                     "kind": "Normal",
-                    "parameters": [60.0, 6.0]
+                    "parameters": [
+                        89890.9975,
+                        8989.0
+                    ]
                 },
                 {
                     "season": 5,
                     "kind": "Normal",
-                    "parameters": [50.0, 5.0]
+                    "parameters": [
+                        66462.8195,
+                        6646.0
+                    ]
                 },
                 {
                     "season": 6,
                     "kind": "Normal",
-                    "parameters": [45.0, 4.5]
+                    "parameters": [
+                        51953.0735,
+                        5195.0
+                    ]
                 },
                 {
                     "season": 7,
                     "kind": "Normal",
-                    "parameters": [35.0, 3.5]
+                    "parameters": [
+                        41260.3210,
+                        4126.0
+                    ]
                 },
                 {
                     "season": 8,
                     "kind": "Normal",
-                    "parameters": [25.0, 2.5]
+                    "parameters": [
+                        31899.5985,
+                        3189.0
+                    ]
                 },
                 {
                     "season": 9,
                     "kind": "Normal",
-                    "parameters": [20.0, 2.0]
+                    "parameters": [
+                        29274.7655,
+                        2927.0
+                    ]
                 },
                 {
                     "season": 10,
                     "kind": "Normal",
-                    "parameters": [20.0, 2.0]
+                    "parameters": [
+                        35792.7950,
+                        3579.0
+                    ]
                 },
                 {
                     "season": 11,
                     "kind": "Normal",
-                    "parameters": [35.0, 3.5]
+                    "parameters": [
+                        40981.3755,
+                        4098.0
+                    ]
                 },
                 {
                     "season": 12,
                     "kind": "Normal",
-                    "parameters": [45.0, 4.5]
+                    "parameters": [
+                        63087.8490,
+                        6308.0
+                    ]
                 }
             ]
         }
     ],
-
     // defines the copulas used for multivariate simulation
     // to achieve independent models one may use GaussianCopula with identity R matrix
     "copulas": [
@@ -88,84 +123,108 @@
             // used to construct the matrix IN A ROW MAJOR FASHION, i.e. each sub-array
             // will become an individual row
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 2,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 3,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 4,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 5,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 6,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 7,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 8,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 9,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 10,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 11,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         },
         {
             "season": 12,
             "kind": "GaussianCopula",
             "parameters": [
-                [1.0]
+                [
+                    1.0
+                ]
             ]
         }
     ]
