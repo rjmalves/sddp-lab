@@ -1,11 +1,11 @@
 {
-    "seed": 42,
+    "seed": 41,
     "initial_season": 1,
     "branchings": 10,
     "inflow": {
         "stochastic_process": {
             // AR | PAR | HMM | ...
-            "kind": "Naive",
+            "kind": "AutoRegressive",
             "params": {
                 "file": "inflow_scenarios.jsonc"
                 // "marginal_models": [],
