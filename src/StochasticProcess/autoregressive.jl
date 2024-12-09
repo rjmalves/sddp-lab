@@ -191,9 +191,9 @@ end
 function size(s::AutoRegressive)
     s1 = length(s)
     period = maximum([length(uar.model) for uar in s.signal_model])
-    max_lag = maximum([__get_lag(uar) for uar in s.signal_model])
+    max_lags = [__get_lag(uar) for uar in s.signal_model]
 
-    return (s1, period, max_lag)
+    return (s1, period, max_lags)
 end
 
 function size(s::AutoRegressive, i::Int)
@@ -216,8 +216,7 @@ end
 function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     season::Int)
 
-    n_hydro = length(s)
-    max_lags = [__get_lag(i) for i in s.signal_model]
+    n_hydro, period, max_lags = size(s)
     stchp_size = sum(max_lags)
     
     scales = __get_ar_scale(s, season)
