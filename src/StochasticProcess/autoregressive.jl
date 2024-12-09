@@ -235,10 +235,8 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     for i in 1:(length(s) - 1)
         index_t[i+1] = sum(max_lags[1:i]) + 1
     end
-
-    st_mat = __build_state_transition_matrix(s, season, max_lags)
-    sel_mat = __build_selector_matrix(index_t, n_hydro)
-
+    memory_states = [n for n in 1:stchp_size if !(n in index_t)]
+    
     m[ω_INFLOW] = @variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
     m[STCHP] = @variable(m,
         [n = 1:stchp_size],
@@ -246,69 +244,38 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
         SDDP.State,
         initial_value = inits[n])
 
-    @constraint(m, ar_model[n = 1:stchp_size], 
-        m[STCHP][n].out == st_mat[n,:]' * [var.in for var in m[STCHP]] + sel_mat[n,:]' * m[ω_INFLOW])
-    @constraint(m, inflow_model[n = 1:n_hydro],
-        m[INFLOW][n] .== m[STCHP][index_t[n]].out  * scales[n][2] + scales[n][1])
+    lagged_scales = __get_lag_scales(s, season)
+    ar_coefs = __get_ar_parameters(s, season, true)
+
+    # main AR state transition (model)
+    for (n, t) in enumerate(zip(ar_coefs, lagged_scales, index_t, max_lags))
+        ar_c, l_s, i, m_l = t
+        s_t = scales[n]
+        @constraint(m,
+            (m[STCHP][i].out - s_t[1]) / s_t[2] == 
+                sum(ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2] for l in 1:m_l) +
+                m[ω_INFLOW][n],
+            base_name = "ar_main" * string(n))
+    end
+    @constraint(m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out)
+
+    # memory mapping of lags
+    @constraint(m, ar_memory[n in memory_states], m[STCHP][n].out == m[STCHP][n - 1].in)
 
     return m
 end
 
-function __arp2statematrix(phis::Vector{T} where T <: Real, size::Int)
-
-    out = zeros((size, size))
-
-    for i in 1:length(phis)
-        out[1, i] = phis[i]
-    end
-
-    for i in 2:size
-        out[i, i-1] = 1
-    end
-
-    return out
-
-end
-
-function __block_diagonal_matrix(matrices::Vector{Matrix{T}} where T <: Real)
-    
-    sizes = [size(m, 1) for m in matrices]
-    full_size = sum(sizes)
-    
-    offsets = zeros(Int, length(matrices))
-    for i in 1:(length(offsets) - 1)
-        offsets[i+1] = sum(sizes[1:i])
-    end
-
-    out = zeros(full_size, full_size)
-    for k in 1:length(matrices)
-        offset = offsets[k]
-        m = matrices[k]
-        for i in 1:sizes[k], j in 1:sizes[k]
-            out[offset + i, offset + j] = m[i, j]
+function __get_lag_scales(s::AutoRegressive, season::Int)
+    lag_scales = []
+    N, P, M_Ls = size(s)
+    for n in 1:N
+        aux = []
+        for l in 1:M_Ls[n]
+            ls = __lagged_season(season, l, P)
+            push!(aux, __get_ar_scale(s.signal_model[n], ls))
         end
+        push!(lag_scales, aux)
     end
 
-    return out
-end
-
-function __build_state_transition_matrix(s::AutoRegressive, season::Int,
-    max_lags::Vector{Int})
-
-    st_mat = __get_ar_parameters(s, season)
-    st_mat = [__arp2statematrix(m, l) for (m,l) in zip(st_mat, max_lags)]
-    st_mat = __block_diagonal_matrix(st_mat)
-    
-    return st_mat
-end
-
-function __build_selector_matrix(Is::Vector{Int}, J)
-    I = sum(Is)
-    sel_mat = zeros(Int, (I, J))
-
-    for (i,j) in zip(Is, 1:J)
-        sel_mat[i,j] = 1
-    end
-
-    return sel_mat
+    return lag_scales
 end
