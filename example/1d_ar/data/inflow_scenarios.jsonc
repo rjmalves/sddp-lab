@@ -6,8 +6,8 @@
 
             // last `max_lag` observations of the time series as was for model fitting,
             // where `max_lag` represents the maximum lag over all seasonal models
-            // Note that if the series was preprocessed by affine transformations, this
-            // key should correspond to the transformed values, NOT RAW THE TIME SERIES
+            // Note it should be ordered [t-1, t-2, ..., t-max_lag], i.e, reversed as the
+            // normal time series data
             "initial_values": [0.0],
 
             // array of model parameters
