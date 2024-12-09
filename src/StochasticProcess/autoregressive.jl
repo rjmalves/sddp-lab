@@ -136,22 +136,31 @@ function __get_ar_parameters(arp::SimpleARparameters)
     arp.phis
 end
 
-function __get_ar_parameters(arp::SimpleARparameters, ::Int)
+function __get_ar_parameters(arp::SimpleARparameters, ::Int, ::Bool)
     __get_ar_parameters(arp)
 end
 
-function __get_ar_parameters(arp::PeriodicARparameters, season::Int)
+function __get_ar_parameters(arp::PeriodicARparameters, season::Int, pad::Bool = false)
     seasons = map(x -> x.season, arp.parameter_set)
     index = findfirst(x -> x == season, seasons)
-    __get_ar_parameters(arp.parameter_set[index])
+    if pad
+        aux = __get_ar_parameters(arp.parameter_set[index])
+        out = zeros(Float64, __get_lag(arp))
+        for i in 1:length(aux)
+            out[i] += aux[i]
+        end
+    else 
+        out = __get_ar_parameters(arp.parameter_set[index])
+    end
+    return out
 end
 
-function __get_ar_parameters(uar::UnivariateAutoRegressive, season::Int)
-    __get_ar_parameters(uar.model, season)
+function __get_ar_parameters(uar::UnivariateAutoRegressive, season::Int, pad::Bool = false)
+    __get_ar_parameters(uar.model, season, pad)
 end
 
-function __get_ar_parameters(s::AutoRegressive, season::Int)
-    [__get_ar_parameters(uar, season) for uar in s.signal_model]
+function __get_ar_parameters(s::AutoRegressive, season::Int, pad::Bool = false)
+    [__get_ar_parameters(uar, season, pad) for uar in s.signal_model]
 end
 
 function __get_ar_scale(arp::SimpleARparameters)
