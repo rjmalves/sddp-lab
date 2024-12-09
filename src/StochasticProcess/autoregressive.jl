@@ -35,7 +35,9 @@ function PeriodicARparameters(v, e)
     parameter_set = Vector{SimpleARparameters}()
     for model_dict in v
         model = SimpleARparameters(model_dict, e)
-        push!(parameter_set, model)
+        if !isnothing(model)
+            push!(parameter_set, model)
+        end
     end
 
     PeriodicARparameters(parameter_set)
