@@ -9,3 +9,16 @@ function __node2season(node::Int, period::Int, initial_season::Int)
 
     return season
 end
+
+function __lagged_season(current_season::Int, lag::Int, period::Int)
+    m = current_season - lag
+    if m >= 1
+        lagged_season = m
+    elseif (m < 1) & (m > -period)
+        lagged_season = period + m
+    elseif m <= -period
+        lagged_season = period + Int(rem(m, period))
+    end
+
+    return lagged_season
+end

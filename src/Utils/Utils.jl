@@ -36,5 +36,6 @@ export __validate_keys!,
     __validate_required_default_values!,
     __get_dataframe_columns_for_default_value_fill,
     __fill_default_values!,
-    __node2season
+    __node2season,
+    __lagged_season
 end
