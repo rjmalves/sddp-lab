@@ -1,0 +1,102 @@
+{
+    "tasks": [
+        {
+            "kind": "Echo",
+            "params": {
+                "results": {
+                    "save": true,
+                    "path": "out/echo",
+                    "format": {
+                        "kind": "AnyFormat",
+                        "params": {}
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Policy",
+            "params": {
+                "convergence": {
+                    // Min/Max number of iterations
+                    "min_iterations": 10,
+                    "max_iterations": 256,
+                    // Early stopping criteria and params
+                    "stopping_criteria": {
+                        // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 256
+                        }
+                        // "kind": "LowerBoundStability",
+                        // "params": {
+                        //     // Threshold for the early
+                        //     // stopping in % of zinf delta
+                        //     // per iteration
+                        //     "threshold": 0.1,
+                        //     "num_iterations": 6
+                        // }
+                    }
+                },
+                "risk_measure": {
+                    // Expectation | WorstCase | AVaR | CVaR | ...
+                    "kind": "Expectation",
+                    // each risk measure might need different params,
+                    // such as the confidence level for AVaR, etc.
+                    "params": {}
+                },
+                // "risk_measure": {
+                //     // Expectation | WorstCase | AVaR | CVaR | ...
+                //     "kind": "CVaR",
+                //     // each risk measure might need different params,
+                //     // such as the confidence level for AVaR, etc.
+                //     "params": {
+                //         "alpha": 0.5,
+                //         "lambda": 0.5
+                //     }
+                // },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
+                // "parallel_scheme": {
+                //     "kind": "Serial",
+                //     "params": {}
+                // },
+                "results": {
+                    "save": true,
+                    "path": "out/policy",
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Simulation",
+            "params": {
+                "num_simulated_series": 2000,
+                "policy": {
+                    "load": false,
+                    "path": "out/policy",
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
+                "results": {
+                    "save": true,
+                    "path": "out/simulation",
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                }
+            }
+        }
+    ]
+}

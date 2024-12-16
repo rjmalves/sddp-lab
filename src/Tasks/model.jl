@@ -10,11 +10,10 @@ Gera `SDDP.LinearPolicyGraph` parametrizado de acordo com configuracoes de estud
   - `ena_dist::Dict{Int64,Dict{Int64,Vector{Float64}}})`: dicionario de ENAs como retornado por
     `Lab.Reader.read_ena()`
 """
-function __build_model(files::Vector{InputModule})::SDDP.PolicyGraph
+function __build_model(files::Vector{InputModule}, optimizer)::SDDP.PolicyGraph
     @info "Compiling model"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
-    optimizer = generate_optimizer(get_resources(files))
     model = SDDP.PolicyGraph(
         sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = optimizer
     )
@@ -33,7 +32,7 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
-        add_uncertainties!(m, scenarios)
+        add_uncertainties!(m, scenarios, node)
 
         # TODO - this will change once we have a proper load representation
         # as an stochastic process
@@ -225,6 +224,7 @@ function __simulate_model(
             STORED_VOLUME,
             DEFICIT,
             NET_EXCHANGE,
+            VERTEX_COVERAGE_DISTANCE,
         ];
         sampling_scheme = sampler,
         custom_recorders = Dict{Symbol,Function}(
@@ -233,6 +233,7 @@ function __simulate_model(
             TOTAL_COST => (sp::JuMP.Model) -> JuMP.objective_value(sp),
         ),
         parallel_scheme = parallel_scheme,
+        skip_undefined_variables = true,
     )
     return simulation_result
 end

@@ -39,7 +39,7 @@ end
 function __validate_files_keys_types_before_build!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    keys = ["algorithm", "resources", "scenarios", "system", "tasks"]
+    keys = ["algorithm", "scenarios", "system", "tasks"]
     keys_types = [String, String, String, String, String]
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
@@ -81,8 +81,6 @@ function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
 
     files_d["algorithm"] = AlgorithmData(files_d["algorithm"], e)
     valid_algorithm = files_d["algorithm"] !== nothing
-    files_d["resources"] = ResourcesData(files_d["resources"], e)
-    valid_resources = files_d["resources"] !== nothing
     files_d["scenarios"] = ScenariosData(files_d["scenarios"], e)
     valid_scenarios = files_d["scenarios"] !== nothing
     files_d["system"] = SystemData(files_d["system"], e)
@@ -97,16 +95,11 @@ function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
     files_d["tasks"] = TasksData(joinpath(d["path"], files_d["tasks"]), e)
     valid_tasks = files_d["tasks"] !== nothing
 
-    valid_files =
-        valid_algorithm && valid_resources && valid_scenarios && valid_system && valid_tasks
+    valid_files = valid_algorithm && valid_scenarios && valid_system && valid_tasks
 
     if valid_files
         d["files"] = [
-            files_d["algorithm"],
-            files_d["resources"],
-            files_d["scenarios"],
-            files_d["system"],
-            files_d["tasks"],
+            files_d["algorithm"], files_d["scenarios"], files_d["system"], files_d["tasks"]
         ]
     end
 

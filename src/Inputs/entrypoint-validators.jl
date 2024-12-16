@@ -52,3 +52,14 @@ function __cast_entrypoint_internals_from_files!(
     valid_key_types = __validate_entrypoint_keys_types_before_build!(d, e)
     return valid_key_types
 end
+
+function __validate_optimizer(optimizer, e::CompositeException)
+    valid = true
+    try
+        JuMP.Model(optimizer)
+    catch
+        valid = false
+        push!(e, AssertionError("given optimizer is invalid for JuMP models"))
+    end
+    return valid
+end

@@ -5,7 +5,7 @@
     "inflow": {
         "stochastic_process": {
             // AR | PAR | HMM | ...
-            "kind": "Naive",
+            "kind": "AutoRegressive",
             "params": {
                 "file": "inflow_scenarios.jsonc"
                 // "marginal_models": [],

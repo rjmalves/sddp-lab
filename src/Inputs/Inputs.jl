@@ -2,11 +2,11 @@ module Inputs
 
 using ..Core
 using ..Algorithm
-using ..Resources
 using ..System
 using ..Utils
 using ..Scenarios
 using ..Tasks
+using JuMP
 
 # TYPES ------------------------------------------------------------------------
 
@@ -15,8 +15,11 @@ struct InputsData
     files::Vector{InputModule}
 end
 
+# TODO - for typing optimizer (as MOI.AbstractOptimizer),
+# need to add MOI to dependencies. Is it worth?
 struct Entrypoint
     inputs::InputsData
+    optimizer
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
@@ -39,6 +42,15 @@ function get_files(e::Entrypoint)::Vector{InputModule}
     return e.inputs.files
 end
 
+"""
+get_optimizer(e::Entrypoint)
+
+Return the optimizer object given to the optimization process.
+"""
+function get_optimizer(e::Entrypoint)
+    return e.optimizer
+end
+
 # INTERNALS ------------------------------------------------------------------------
 
 include("inputsdata-validators.jl")
@@ -47,5 +59,5 @@ include("inputsdata.jl")
 include("entrypoint-validators.jl")
 include("entrypoint.jl")
 
-export Entrypoint, get_files, get_path
+export Entrypoint, get_files, get_path, get_optimizer
 end

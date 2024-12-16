@@ -7,8 +7,9 @@ function __run_tasks!(entrypoint::Union{Entrypoint,Nothing}, e::CompositeExcepti
 
     path = get_path(entrypoint)
     files = get_files(entrypoint)
+    optimizer = get_optimizer(entrypoint)
     tasks = get_tasks(files)
-    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files)])
+    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files, optimizer)])
     for task in tasks
         a = run_task(task, artifacts, e)
         push!(artifacts, a)
@@ -38,8 +39,8 @@ function __log_errors(e::CompositeException)
     return has_errors
 end
 
-function main(; e = CompositeException())
-    entrypoint = Entrypoint("main.jsonc", e)
+function main(optimizer; e = CompositeException())
+    entrypoint = Entrypoint("main.jsonc", optimizer, e)
     __run_tasks!(entrypoint, e)
     return __log_errors(e)
 end

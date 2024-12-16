@@ -18,6 +18,7 @@ OUTFLOW = Symbol("OUTFLOW")
 SPILLAGE = Symbol("SPILLAGE")
 # Scenarios
 ω_INFLOW = Symbol("ω_INFLOW")
+STCHP = Symbol("STCHP")
 # Constraints
 HYDRO_BALANCE = Symbol("HYDRO_BALANCE")
 LOAD_BALANCE = Symbol("LOAD_BALANCE")
@@ -27,3 +28,4 @@ WATER_VALUE = Symbol("WATER_VALUE")
 TOTAL_COST = Symbol("TOTAL_COST")
 STAGE_COST = Symbol("stage_objective")
 FUTURE_COST = Symbol("bellman_term")
+VERTEX_COVERAGE_DISTANCE = Symbol("bellman_vertex_coverage_distance")
