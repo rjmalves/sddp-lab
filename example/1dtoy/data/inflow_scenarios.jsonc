@@ -11,100 +11,36 @@
                     // TODO better documentation for the collateral effect of arbitrary 
                     // numbers of seasons
                     "season": 1,
-                    // distribution kind, should be one implemented by Distributions.jl
-                    "kind": "Normal",
+                    // distribution name, should be one implemented by Distributions.jl
+                    "kind": "LogNormal",
                     // parameter vector in the order defined by Distributions.jl
                     "parameters": [
-                        87651.0050,
-                        8765.0
+                        3.6,
+                        0.48
                     ]
                 },
                 {
                     "season": 2,
-                    "kind": "Normal",
+                    "kind": "LogNormal",
                     "parameters": [
-                        101485.7670,
-                        1014.0
+                        3.6,
+                        0.48
                     ]
                 },
                 {
                     "season": 3,
-                    "kind": "Normal",
+                    "kind": "LogNormal",
                     "parameters": [
-                        102845.1710,
-                        1028.0
+                        3.6,
+                        0.48
                     ]
                 },
                 {
                     "season": 4,
-                    "kind": "Normal",
+                    "kind": "LogNormal",
                     "parameters": [
-                        89890.9975,
-                        8989.0
-                    ]
-                },
-                {
-                    "season": 5,
-                    "kind": "Normal",
-                    "parameters": [
-                        66462.8195,
-                        6646.0
-                    ]
-                },
-                {
-                    "season": 6,
-                    "kind": "Normal",
-                    "parameters": [
-                        51953.0735,
-                        5195.0
-                    ]
-                },
-                {
-                    "season": 7,
-                    "kind": "Normal",
-                    "parameters": [
-                        41260.3210,
-                        4126.0
-                    ]
-                },
-                {
-                    "season": 8,
-                    "kind": "Normal",
-                    "parameters": [
-                        31899.5985,
-                        3189.0
-                    ]
-                },
-                {
-                    "season": 9,
-                    "kind": "Normal",
-                    "parameters": [
-                        29274.7655,
-                        2927.0
-                    ]
-                },
-                {
-                    "season": 10,
-                    "kind": "Normal",
-                    "parameters": [
-                        35792.7950,
-                        3579.0
-                    ]
-                },
-                {
-                    "season": 11,
-                    "kind": "Normal",
-                    "parameters": [
-                        40981.3755,
-                        4098.0
-                    ]
-                },
-                {
-                    "season": 12,
-                    "kind": "Normal",
-                    "parameters": [
-                        63087.8490,
-                        6308.0
+                        3.6,
+                        0.48
                     ]
                 }
             ]
@@ -115,7 +51,7 @@
     "copulas": [
         {
             "season": 1,
-            // copula kind, should be one implemented by Copulas.jl
+            // copula name, should be one implemented by Copulas.jl
             "kind": "GaussianCopula",
             // copula parameters, check the individual documentations for how each copula is
             // parametrized
@@ -148,78 +84,6 @@
         },
         {
             "season": 4,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 5,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 6,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 7,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 8,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 9,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 10,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 11,
-            "kind": "GaussianCopula",
-            "parameters": [
-                [
-                    1.0
-                ]
-            ]
-        },
-        {
-            "season": 12,
             "kind": "GaussianCopula",
             "parameters": [
                 [

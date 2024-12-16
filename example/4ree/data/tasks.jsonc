@@ -18,14 +18,14 @@
       "params": {
         "convergence": {
           // Min/Max number of iterations
-          "min_iterations": 10,
-          "max_iterations": 128,
+          "min_iterations": 2,
+          "max_iterations": 1024,
           // Early stopping criteria and params
           "stopping_criteria": {
             // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
             "kind": "IterationLimit",
             "params": {
-              "num_iterations": 128
+              "num_iterations": 1024
             }
           }
         },
@@ -35,8 +35,8 @@
           // each risk measure might need different params,
           // such as the confidence level for AVaR, etc.
           "params": {
-            "alpha": 0.2,
-            "lambda": 0.9
+            "alpha": 0.5,
+            "lambda": 0.5
           }
         },
         "parallel_scheme": {
@@ -56,7 +56,7 @@
     {
       "kind": "Simulation",
       "params": {
-        "num_simulated_series": 100,
+        "num_simulated_series": 2000,
         "policy": {
           "load": false,
           "path": "out/policy",
