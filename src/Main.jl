@@ -39,8 +39,11 @@ function __log_errors(e::CompositeException)
     return has_errors
 end
 
-function main(optimizer; e = CompositeException())
+function main(data_dir, optimizer; e = CompositeException())
+    original_pwd = pwd()
+    cd(data_dir)
     entrypoint = Entrypoint("main.jsonc", optimizer, e)
     __run_tasks!(entrypoint, e)
+    cd(original_pwd)
     return __log_errors(e)
 end

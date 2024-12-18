@@ -4,7 +4,7 @@
 
 - Supports Asynchronous execution using SDDP.jl implementation (#14)
 - Adds buses and lines as system elements (#11, #12)
-- Optimizer now is a required argument for invoking the `main()` function
+- Function `main()` now takes two required arguments: `data_dir` and `optimizer`
 - Adds support to abstract Stochastic Processes for inflow, with Naive and AutoRegressive implemented
 - Execution modularized in Tasks, enabling to run only policy evaluation or simulation separately
 - Supports general SDDP.jl abstractions via parameters in the input files: Graph, StoppingCriteria, RiskMeasure, etc.
