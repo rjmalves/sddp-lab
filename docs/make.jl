@@ -1,3 +1,9 @@
 using Documenter, SDDPlab
 
-makedocs(; sitename = "SDDPlab.jl")
+makedocs(;
+    pages = Any[
+        "Introduction" => "index.md",
+        "User Guide" => Any["Getting Started" => "man/getting_started.md"],
+    ],
+    sitename = "SDDPlab.jl",
+)
