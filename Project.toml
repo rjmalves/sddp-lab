@@ -24,6 +24,7 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
 
 [compat]
+julia = "1.10"
 GLPK = "1.2.1"
 
 [extras]
