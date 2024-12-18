@@ -1,6 +1,6 @@
 name = "SDDPlab"
 uuid = "5c1c4b2a-157d-4661-af07-65cbafd6173d"
-version = "1.0.2"
+version = "2.0.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
