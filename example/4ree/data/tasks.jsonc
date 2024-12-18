@@ -1,0 +1,83 @@
+{
+  "tasks": [
+    {
+      "kind": "Echo",
+      "params": {
+        "results": {
+          "path": "out/echo",
+          "save": false,
+          "format": {
+            "kind": "AnyFormat",
+            "params": {}
+          }
+        }
+      }
+    },
+    {
+      "kind": "Policy",
+      "params": {
+        "convergence": {
+          // Min/Max number of iterations
+          "min_iterations": 2,
+          "max_iterations": 1024,
+          // Early stopping criteria and params
+          "stopping_criteria": {
+            // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
+            "kind": "IterationLimit",
+            "params": {
+              "num_iterations": 1024
+            }
+          }
+        },
+        "risk_measure": {
+          // Expectation | WorstCase | AVaR | CVaR | ...
+          "kind": "CVaR",
+          // each risk measure might need different params,
+          // such as the confidence level for AVaR, etc.
+          "params": {
+            "alpha": 0.5,
+            "lambda": 0.5
+          }
+        },
+        "parallel_scheme": {
+          "kind": "Serial",
+          "params": {}
+        },
+        "results": {
+          "path": "out/policy",
+          "save": true,
+          "format": {
+            "kind": "ParquetFormat",
+            "params": {}
+          }
+        }
+      }
+    },
+    {
+      "kind": "Simulation",
+      "params": {
+        "num_simulated_series": 2000,
+        "policy": {
+          "load": false,
+          "path": "out/policy",
+          "format": {
+            "kind": "ParquetFormat",
+            "params": {}
+          }
+        },
+        "parallel_scheme": {
+          "kind": "Serial",
+          "params": {}
+        },
+        "results": {
+          "path": "out/simulation",
+          "save": true,
+          "format": {
+            "kind": "ParquetFormat",
+            "params": {}
+          }
+        }
+      }
+    }
+  ]
+}
