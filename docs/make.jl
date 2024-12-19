@@ -16,3 +16,5 @@ makedocs(;
         "User Guide" => ["Getting Started" => "man/getting_started.md"],
     ],
 )
+
+deploydocs(; repo = "github.com/rjmalves/sddp-lab.git")
