@@ -27,9 +27,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup julia
-        uses: julia-actions/setup-julia@v2
-        with:
-            version: ${{ matrix.julia-version }}
-            arch: ${{ matrix.julia-arch }}
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      uses: julia-actions/setup-julia@v2
+      with:
+          version: ${{ matrix.julia-version }}
+          arch: ${{ matrix.julia-arch }}
+    - uses: julia-actions/julia-buildpkg@v1
+    - uses: julia-actions/julia-runtest@v1
