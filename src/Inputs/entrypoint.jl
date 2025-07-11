@@ -1,6 +1,6 @@
 # CLASS Entrypoint -----------------------------------------------------------------------
 
-function Entrypoint(d::Dict{String,Any}, e::CompositeException)
+function Entrypoint(d::Dict{String,Any}, optimizer, e::CompositeException)
 
     # Build internal objects
     valid_internals = __build_entrypoint_internals_from_dicts!(d, e)
@@ -15,18 +15,21 @@ function Entrypoint(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_entrypoint_consistency!(d, e)
 
     return if valid_consistency
-        Entrypoint(d["inputs"])
+        Entrypoint(d["inputs"], optimizer)
     else
         nothing
     end
 end
 
-function Entrypoint(filename::String, e::CompositeException)
+function Entrypoint(filename::String, optimizer, e::CompositeException)
     d = read_jsonc(filename, e)
     valid_jsonc = d !== nothing
 
     # Cast data from files into the dictionary
     valid = valid_jsonc && __cast_entrypoint_internals_from_files!(d, e)
 
-    return valid ? Entrypoint(d, e) : nothing
+    # Validate optimizer
+    valid = valid && __validate_optimizer(optimizer, e)
+
+    return valid ? Entrypoint(d, optimizer, e) : nothing
 end

@@ -8,6 +8,7 @@ using Dates
 
 include("validation-utils.jl")
 include("reading-utils.jl")
+include("stochasticprocess-utils.jl")
 
 export __validate_keys!,
     __validate_key_lengths!,
@@ -34,5 +35,7 @@ export __validate_keys!,
     __validate_dataframe_content_and_cast!,
     __validate_required_default_values!,
     __get_dataframe_columns_for_default_value_fill,
-    __fill_default_values!
+    __fill_default_values!,
+    __node2season,
+    __lagged_season
 end

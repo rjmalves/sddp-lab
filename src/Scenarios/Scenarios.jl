@@ -84,11 +84,14 @@ end
 
 Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
 """
-function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
+function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
     inflow = scenarios.inflow.stochastic_process
+    
     # TODO - for when we have a proper load representation
     # add_load_uncertainty!(m, load)
-    return add_inflow_uncertainty!(m, inflow)
+
+    season = __node2season(node, size(inflow, 2), scenarios.initial_season)
+    return add_inflow_uncertainty!(m, inflow, season)
 end
 
 include("inflow-validators.jl")

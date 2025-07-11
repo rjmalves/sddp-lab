@@ -7,15 +7,16 @@ function __run_tasks!(entrypoint::Union{Entrypoint,Nothing}, e::CompositeExcepti
 
     path = get_path(entrypoint)
     files = get_files(entrypoint)
+    optimizer = get_optimizer(entrypoint)
     tasks = get_tasks(files)
-    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files)])
+    artifacts = Vector{TaskArtifact}([InputsArtifact(path, files, optimizer)])
     for task in tasks
         a = run_task(task, artifacts, e)
         push!(artifacts, a)
         a !== nothing || push!(e, AssertionError("Task $task failed"))
         a === nothing || __save_results(a)
     end
-    return nothing
+    return artifacts
 end
 
 function __save_results(a::TaskArtifact)
@@ -38,8 +39,11 @@ function __log_errors(e::CompositeException)
     return has_errors
 end
 
-function main(; e = CompositeException())
-    entrypoint = Entrypoint("main.jsonc", e)
+function main(data_dir, optimizer; e = CompositeException())
+    original_pwd = pwd()
+    cd(data_dir)
+    entrypoint = Entrypoint("main.jsonc", optimizer, e)
     __run_tasks!(entrypoint, e)
+    cd(original_pwd)
     return __log_errors(e)
 end

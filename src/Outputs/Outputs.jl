@@ -122,7 +122,8 @@ function write_simulation_results(
             WATER_VALUE,
             HYDRO_GENERATION,
         ],
-        "operation_system" => [STAGE_COST, FUTURE_COST, TOTAL_COST],
+        "operation_system" =>
+            [STAGE_COST, FUTURE_COST, TOTAL_COST, VERTEX_COVERAGE_DISTANCE],
     )
 
     map_variable_entities = Dict(
@@ -188,6 +189,11 @@ function write_simulation_results(
             replace.(df[!, "variable_name"], "stage_objective" => "STAGE_COST")
         df[!, "variable_name"] =
             replace.(df[!, "variable_name"], "bellman_term" => "FUTURE_COST")
+        df[!, "variable_name"] =
+            replace.(
+                df[!, "variable_name"],
+                "bellman_vertex_coverage_distance" => "VERTEX_COVERAGE_DISTANCE",
+            )
         sort!(df, ["stage", "variable_name", entity_column, "scenario"])
 
         @info "Writing $(key * extension)"

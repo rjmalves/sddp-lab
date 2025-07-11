@@ -4,10 +4,10 @@ using Suppressor
 @testset "main" begin
     @testset "main_success" begin
         e = CompositeException()
-        cd(example_dir)
-        # @suppress begin
-        SDDPlab.main(; e = e)
-        # end
+        using GLPK
+        @suppress begin
+        SDDPlab.main(example_dir, GLPK.Optimizer; e = e)
+        end
         @test length(e) == 0
     end
 end
