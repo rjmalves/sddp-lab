@@ -4,10 +4,6 @@
         // Each file defines settings for a specific
         // component of the lab
         "files": {
-            // Settings regarding the tasks that are being
-            // performed in the current run
-            // (policy optimization, simulation, etc.)
-            "tasks": "tasks.jsonc",
             // Settings regarding the solution algorithm
             // that is used to solve the optimization problem
             // (decomposition strategy, discretization, etc.)
@@ -24,5 +20,46 @@
             // problems, in a generic way
             "constraints": "constraints.jsonc"
         }
-    }
+    },
+    "tasks": [
+        {
+            "kind": "Echo",
+            "params": {
+                "results": {
+                    "path": "out/echo",
+                    "save": false,
+                    "format": {
+                        "kind": "AnyFormat",
+                        "params": {}
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Policy",
+            "params": {
+                "results": {
+                    "path": "out/policy",
+                    "save": true,
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Simulation",
+            "params": {
+                "results": {
+                    "path": "out/simulation",
+                    "save": true,
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                }
+            }
+        }
+    ]
 }

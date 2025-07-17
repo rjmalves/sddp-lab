@@ -1,7 +1,10 @@
 module Core
 
+import MathOptInterface as MOI
+
 include("files.jl")
 include("types.jl")
+include("tasks.jl")
 include("variables.jl")
 
 function get_input_module(i::Vector{InputModule}, kind::Type)::InputModule

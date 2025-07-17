@@ -1,22 +1,79 @@
 {
-    // Scenario graph constructor for defining
-    // if the graph is regular, cyclic, etc.
-    "scenario_graph": {
+    "engine": "SDDP",
+    "graph": {
         "kind": "RegularScenarioGraph",
         "params": {
-            // Parameters for the scenario graph
-            "discount_rate": 1.00
+            "file": "graph.jsonc"
         }
     },
-    "horizon": {
-        // explicit | daily | weekly | monthly | yearly
-        "kind": "ExplicitHorizon",
+    "policy": {
+        "kind": "SDDPPolicy",
         "params": {
-            "file": "stages.csv"
+            "convergence": {
+                // Min/Max number of iterations
+                "min_iterations": 10,
+                "max_iterations": 128,
+                // Early stopping criteria and params
+                "stopping_criteria": {
+                    // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
+                    "kind": "IterationLimit",
+                    "params": {
+                        "num_iterations": 128
+                    }
+                }
+            },
+            "risk_measure": {
+                // Expectation | WorstCase | AVaR | CVaR | ...
+                "kind": "CVaR",
+                // each risk measure might need different params,
+                // such as the confidence level for AVaR, etc.
+                "params": {
+                    "alpha": 0.2,
+                    "lambda": 0.9
+                }
+            },
+            "parallel_scheme": {
+                "kind": "Serial",
+                "params": {}
+            },
+            "results": {
+                "path": "out/policy",
+                "save": true,
+                "format": {
+                    "kind": "ParquetFormat",
+                    "params": {}
+                }
+            }
         }
-        // TODO - stages with different lengths demand
-        // unit conversions when constructing each subproblem
+    },
+    "simulation": {
+        "kind": "SDDPSimulation",
+        "params": {
+            "num_simulated_series": 100,
+            "policy": {
+                "load": false,
+                "path": "out/policy",
+                "format": {
+                    "kind": "ParquetFormat",
+                    "params": {}
+                }
+            },
+            "parallel_scheme": {
+                "kind": "Serial",
+                "params": {}
+            },
+            "results": {
+                "path": "out/simulation",
+                "save": true,
+                "format": {
+                    "kind": "ParquetFormat",
+                    "params": {}
+                }
+            }
+        }
     }
+    // TODO - stages with different lengths demand
+    // unit conversions when constructing each subproblem
     // TODO - policy graph x stochastic processes
     // some other fields may influence the policy graph
     // like scenarios, load, costs, etc.
