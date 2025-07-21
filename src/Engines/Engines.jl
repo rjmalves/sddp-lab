@@ -2,8 +2,9 @@ module Engines
 
 using ..Core
 
+using DataFrames
 using SDDP: SDDP
-
+using JuMP
 
 # SDDP TYPES
 
@@ -13,11 +14,54 @@ struct SDDPModel <: Model
     policy_graph::SDDP.PolicyGraph
 end
 
+abstract type StoppingCriteria end
+
+struct IterationLimit <: StoppingCriteria
+    num_iterations::Integer
+end
+
+struct TimeLimit <: StoppingCriteria
+    time_seconds::Integer
+end
+
+struct LowerBoundStability <: StoppingCriteria
+    threshold::Real
+    num_iterations::Integer
+end
+
+struct Convergence
+    min_iterations::Integer
+    max_iterations::Integer
+    stopping_criteria::StoppingCriteria
+end
+
+abstract type ParallelScheme end
+
+struct Serial <: ParallelScheme end
+
+struct Asynchronous <: ParallelScheme end
+
+abstract type RiskMeasure end
+
+struct Expectation <: RiskMeasure end
+
+struct WorstCase <: RiskMeasure end
+
+struct AVaR <: RiskMeasure
+    alpha::Real
+end
+
+struct CVaR <: RiskMeasure
+    alpha::Real
+    lambda::Real
+end
+
 struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     convergence::Convergence
     risk_measure::RiskMeasure
     parallel_scheme::ParallelScheme
 end
+
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
     definition::SDDPPolicyTaskDefinition
     policy::SDDP.PolicyGraph
@@ -29,12 +73,12 @@ struct SDDPSimulationTaskDefinition <: SimulationTaskDefinition
     policy::SimulationTaskPolicy
     parallel_scheme::ParallelScheme
 end
+
 struct SDDPSimulationTaskArtifact <: SimulationTaskArtifact
     definition::SDDPSimulationTaskDefinition
     simulations::Vector{Vector{Dict{Symbol,Any}}}
     files::Vector{InputModule}
 end
-
 
 include("sddp.jl")
 

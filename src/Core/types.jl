@@ -12,3 +12,15 @@ abstract type PolicyTaskArtifact end
 # Main types for simulation tasks
 abstract type SimulationTaskDefinition end
 abstract type SimulationTaskArtifact end
+
+# Abstract and concrete IO types
+abstract type TaskResultsFormat end
+struct AnyFormat <: TaskResultsFormat end
+struct CSVFormat <: TaskResultsFormat end
+struct ParquetFormat <: TaskResultsFormat end
+
+struct TaskResults
+    path::String
+    save::Bool
+    format::TaskResultsFormat
+end

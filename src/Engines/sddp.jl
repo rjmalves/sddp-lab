@@ -1,9 +1,8 @@
-function build(::SDDPEngine,
-    files::Vector{InputModule},
-    optimizer::MOI.AbstractOptimizer)::SDDPModel end
-
-function train(model::SDDPModel,
-    definition::SDDPPolciyTaskDefinition)::SDDPPolciyTaskArtifact end
-
-function simulate(model::SDDPModel,
-    definition::SDDPSimulationTaskDefinition)::SDDPSimulationTaskArtifact end
+include("sddp/input.jl")
+include("sddp/input-validators.jl")
+include("sddp/build.jl")
+include("sddp/train.jl")
+include("sddp/save_policy.jl")
+include("sddp/load_policy.jl")
+include("sddp/simulate.jl")
+include("sddp/save_simulation.jl")

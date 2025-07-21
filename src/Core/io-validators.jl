@@ -1,0 +1,127 @@
+# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
+
+function __validate_task_results_format_main_key_type!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["format"], e)
+    valid_types = valid_keys && __validate_key_types!(d, ["format"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_any_format_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_csv_format_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_parquet_format_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+RESULTS_KEYS = ["path", "save", "format"]
+RESULTS_KEY_TYPES = [String, Bool, TaskResultsFormat]
+RESULTS_KEY_TYPES_BEFORE_BUILD = [String, Bool, Dict{String,Any}]
+
+function __validate_results_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_keys = __validate_keys!(d, ["results"], e)
+    valid_types = valid_keys && __validate_key_types!(d, ["results"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_results_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
+    keys = RESULTS_KEYS
+    keys_types = RESULTS_KEY_TYPES
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+function __validate_results_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    keys = RESULTS_KEYS
+    keys_types = RESULTS_KEY_TYPES_BEFORE_BUILD
+    valid_keys = __validate_keys!(d, keys, e)
+    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
+    return valid_types
+end
+
+# CONTENT VALIDATORS -----------------------------------------------------------------------
+
+function __validate_any_format_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_csv_format_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_parquet_format_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_results_path!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_results_content!(d::Dict{String,Any}, e::CompositeException)::Bool
+    valid_path = __validate_results_path!(d, e)
+    return valid_path
+end
+
+# CONSISTENCY VALIDATORS -------------------------------------------------------------------
+
+function __validate_any_format_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_csv_format_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_parquet_format_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_results_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+# HELPERS -----------------------------------------------------------------------------------
+
+function __build_any_format_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_csv_format_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_parquet_format_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __build_results_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_format = __build_results_format!(d, e)
+    return valid_format
+end

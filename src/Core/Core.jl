@@ -6,6 +6,8 @@ include("files.jl")
 include("types.jl")
 include("tasks.jl")
 include("variables.jl")
+include("io.jl")
+include("io-validators.jl")
 
 function get_input_module(i::Vector{InputModule}, kind::Type)::InputModule
     index = findfirst(x -> isa(x, kind), i)

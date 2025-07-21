@@ -2,6 +2,12 @@
   "seed": 42,
   "initial_season": 1,
   "branchings": 10,
+  "graph": {
+    "kind": "RegularScenarioGraph",
+    "params": {
+      "file": "graph.jsonc"
+    }
+  },
   "inflow": {
     "stochastic_process": {
       // AR | PAR | HMM | ...
