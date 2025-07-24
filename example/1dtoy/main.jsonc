@@ -4,10 +4,6 @@
         // Each file defines settings for a specific
         // component of the lab
         "files": {
-            // Settings regarding the solution algorithm
-            // that is used to solve the optimization problem
-            // (decomposition strategy, discretization, etc.)
-            "algorithm": "algorithm.jsonc",
             // Defines the scenarios that are used to the
             // optimization, including the scenario generation
             // model and its parameters
@@ -21,23 +17,37 @@
             "constraints": "constraints.jsonc"
         }
     },
-    "tasks": [
-        {
-            "kind": "Echo",
-            "params": {
-                "results": {
-                    "path": "out/echo",
-                    "save": false,
-                    "format": {
-                        "kind": "AnyFormat",
-                        "params": {}
+    "engine": {
+        "kind": "SDDPEngine",
+        "params": {
+            "policy": {
+                "convergence": {
+                    // Min/Max number of iterations
+                    "min_iterations": 10,
+                    "max_iterations": 128,
+                    // Early stopping criteria and params
+                    "stopping_criteria": {
+                        // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 128
+                        }
                     }
-                }
-            }
-        },
-        {
-            "kind": "Policy",
-            "params": {
+                },
+                "risk_measure": {
+                    // Expectation | WorstCase | AVaR | CVaR | ...
+                    "kind": "CVaR",
+                    // each risk measure might need different params,
+                    // such as the confidence level for AVaR, etc.
+                    "params": {
+                        "alpha": 0.2,
+                        "lambda": 0.9
+                    }
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
                 "results": {
                     "path": "out/policy",
                     "save": true,
@@ -46,11 +56,21 @@
                         "params": {}
                     }
                 }
-            }
-        },
-        {
-            "kind": "Simulation",
-            "params": {
+            },
+            "simulation": {
+                "num_simulated_series": 100,
+                "policy": {
+                    "load": false,
+                    "path": "out/policy",
+                    "format": {
+                        "kind": "ParquetFormat",
+                        "params": {}
+                    }
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                },
                 "results": {
                     "path": "out/simulation",
                     "save": true,
@@ -61,5 +81,5 @@
                 }
             }
         }
-    ]
+    }
 }
