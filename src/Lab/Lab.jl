@@ -1,6 +1,8 @@
-module Core
+module Lab
 
 import MathOptInterface as MOI
+using CSV
+using Parquet
 
 include("files.jl")
 include("types.jl")

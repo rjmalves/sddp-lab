@@ -3,7 +3,9 @@
   "initial_season": 1,
   "branchings": 10,
   "graph": {
-    "file": "graph.jsonc"
+    "params": {
+      "file": "graph.jsonc"
+    }
   },
   "inflow": {
     "stochastic_process": {

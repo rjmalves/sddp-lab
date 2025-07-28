@@ -3,9 +3,7 @@ build(engine, files, optimizer)
 
 Builds the model as expected by a given engine.
 """
-function build(
-    engine::Engine, files::Vector{InputModule}, optimizer::MOI.AbstractOptimizer
-)::Model end
+function build(engine::Engine, files::Vector{InputModule}, optimizer)::Model end
 
 """
 train(model, definition)
@@ -43,5 +41,8 @@ save_simulation(artifact, path, format)
 Saves a simulation to the filesystem as expected by a given engine.
 """
 function save_simulation(
-    artifact::SimulationTaskArtifact, path::String, format::TaskResultsFormat
+    artifact::SimulationTaskArtifact,
+    path::String,
+    format::TaskResultsFormat,
+    files::Vector{InputModule},
 ) end

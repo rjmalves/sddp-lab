@@ -1,6 +1,4 @@
-function build(
-    ::SDDPEngine, files::Vector{InputModule}, optimizer::MOI.AbstractOptimizer
-)::SDDPModel
+function Lab.build(::SDDPEngine, files::Vector{InputModule}, optimizer)::SDDPModel
     @info "Compiling model"
     graph = __build_graph(files)
     sp_builder = __generate_subproblem_builder(files)
@@ -15,13 +13,16 @@ end
 
 function __build_graph(files::Vector{InputModule})::SDDP.Graph
     g = get_graph(get_scenarios(files))
-    graph = SDDP.Graph(0)
+    root_node_id = get_root_node_id(g)
+    graph = SDDP.Graph(root_node_id)
 
     for n in g.nodes
-        SDDP.add_node(graph, n.id)
+        if n.id !== root_node_id
+            SDDP.add_node(graph, n.id)
+        end
     end
     for e in g.edges
-        SDDP.add_edge(graph, e.source.id => e.target.id, e.probability)
+        SDDP.add_edge(graph, e.source[].id => e.target[].id, e.probability)
     end
 
     return graph
@@ -30,7 +31,7 @@ end
 function __generate_subproblem_builder(files::Vector{InputModule})::Function
     system = get_system(files)
     scenarios = get_scenarios(files)
-    num_stages = get_number_of_stages(get_algorithm(files))
+    num_stages = get_number_of_stages(get_graph(scenarios))
 
     set_seed!(scenarios)
 

@@ -1,6 +1,7 @@
-using .Core
+using .Lab
 using .Inputs
 using .Engines
+using .Utils
 
 import MathOptInterface as MOI
 
@@ -64,14 +65,26 @@ end
 
 # Wrapper for engine-specific functions --------------------------------------------
 
-function build(study::Study, optimizer::MOI.AbstractOptimizer)::Model
-    return build(study.engine, study.inputs.files, optimizer)
+function build(study::Study, optimizer)::Model
+    return Lab.build(study.engine, study.inputs.files, optimizer)
 end
 
 function train(study::Study, model::Model)::PolicyTaskArtifact
-    return train(model, get_policy_definition(study.engine))
+    return Lab.train(model, get_policy_definition(study.engine))
+end
+
+function save_policy(
+    study::Study, artifact::PolicyTaskArtifact, path::String, format::TaskResultsFormat
+)
+    return Lab.save_policy(artifact, path, format)
 end
 
 function simulate(study::Study, model::Model)::SimulationTaskArtifact
-    return simulate(model, get_simulation_definition(study.engine))
+    return Lab.simulate(model, get_simulation_definition(study.engine))
+end
+
+function save_simulation(
+    study::Study, artifact::SimulationTaskArtifact, path::String, format::TaskResultsFormat
+)
+    return Lab.save_simulation(artifact, path, format, study.inputs.files)
 end

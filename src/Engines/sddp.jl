@@ -14,3 +14,7 @@ end
 function get_simulation_definition(e::SDDPEngine)::SDDPSimulationTaskDefinition
     return e.simulation
 end
+
+function get_stopping_criteria(convergence::Convergence)::StoppingCriteria
+    return convergence.stopping_criteria
+end

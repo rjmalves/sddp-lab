@@ -29,8 +29,8 @@ end
 function __build_edge(d::Dict{String,Any}, nodes::Vector{Node})::Edge
     source_id = Int(d["source"]) # should be validated
     target_id = Int(d["target"]) # should be validated
-    source_node = findfirst(==(source_id), [node.id for node in nodes])
-    target_node = findfirst(==(target_id), [node.id for node in nodes])
+    source_node = nodes[findfirst(==(source_id), [node.id for node in nodes])]
+    target_node = nodes[findfirst(==(target_id), [node.id for node in nodes])]
     probability = Real(d["probability"]) # should be validated
     discount_rate = Real(d["discount_rate"]) # should be validated
 
@@ -42,12 +42,20 @@ end
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
-    d["graph"] = Graph(d["graph"]["file"], e)
+    d["graph"] = Graph(d["graph"]["params"], e)
     return d["graph"] !== nothing
 end
 
-function __cast_scenario_graph_internals_from_files!(
+function __cast_graph_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    return true
+    graph_d = d["graph"]
+    should_cast_from_file = __validate_file_key!(graph_d, e)
+
+    valid = !should_cast_from_file
+    if should_cast_from_file
+        valid = __validate_cast_from_jsonc_file!(graph_d, e)
+    end
+
+    return valid
 end

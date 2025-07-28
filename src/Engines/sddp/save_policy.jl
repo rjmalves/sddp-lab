@@ -1,4 +1,4 @@
-function save_policy(
+function Lab.save_policy(
     artifact::SDDPPolicyTaskArtifact, path::String, format::TaskResultsFormat
 )
     cuts = __get_model_cuts(artifact.policy)

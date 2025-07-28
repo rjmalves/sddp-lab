@@ -1,11 +1,13 @@
-function simulate(
+function Lab.simulate(
     model::SDDPModel, definition::SDDPSimulationTaskDefinition
 )::SDDPSimulationTaskArtifact
     sims = __simulate_model(model, definition)
-    return SDDPSimulationTaskArtifact(definition, sims, files)
+    return SDDPSimulationTaskArtifact(definition, sims)
 end
 
 # HELPERS -------------------------------------------------------------------------------------
+
+function __generate_sampler()::SDDP.AbstractSamplingScheme end
 
 function __simulate_model(
     model::SDDPModel, definition::SDDPSimulationTaskDefinition
@@ -15,12 +17,14 @@ function __simulate_model(
     catch
         @warn "Error while adding all cuts for simulation"
     end
-    sampler = generate_sampler(get_algorithm(definition.files))
+    sampler = SDDP.InSampleMonteCarlo(;
+        max_depth = length(model.policy_graph.nodes), terminate_on_dummy_leaf = false
+    )
     parallel_scheme = generate_parallel_scheme(definition.parallel_scheme)
     @info "Running simulation"
     simulation_result = SDDP.simulate(
         model.policy_graph,
-        definition.number_simulated_series,
+        definition.num_simulated_series,
         [
             THERMAL_GENERATION,
             THERMAL_GENERATION_COST,

@@ -1,6 +1,6 @@
 module SDDPlab
 
-include("Core/Core.jl")
+include("Lab/Lab.jl")
 include("Utils/Utils.jl")
 include("StochasticProcess/StochasticProcess.jl")
 include("System/System.jl")

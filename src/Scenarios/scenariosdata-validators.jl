@@ -78,7 +78,8 @@ function __cast_scenarios_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_key_types = __validate_scenarios_keys_types_before_build!(d, e)
+    valid_graph = valid_key_types && __cast_graph_internals_from_files!(d, e)
     valid_inflow = valid_key_types && __cast_inflow_scenarios_internals_from_files!(d, e)
     valid_load = valid_key_types && __cast_load_scenarios_internals_from_files!(d, e)
-    return valid_inflow && valid_load
+    return valid_graph && valid_inflow && valid_load
 end

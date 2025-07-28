@@ -4,7 +4,7 @@ using Random, Distributions, Copulas
 using LinearAlgebra
 using JuMP
 using SDDP: SDDP
-using ..Core
+using ..Lab
 using ..Utils
 
 import Copulas: Copula
@@ -34,7 +34,7 @@ Return the size of the process, a tuple with (number_of_elements, number_of_seas
 Depending on the type of model, it is possible that there are extra elements in the returned
 tuple, so refer to the corresponding documentation for more details
 """
-function size(s::AbstractStochasticProcess)::Tuple{Integer, Vararg{Integer}} end
+function size(s::AbstractStochasticProcess)::Tuple{Integer,Vararg{Integer}} end
 
 """
     generate_saa([rng::AbstractRNG, ]s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
@@ -47,8 +47,7 @@ function __generate_saa(
     initial_season::Integer,
     N::Integer,
     B::Integer,
-)::Vector{Vector{Vector{Float64}}}
-end
+)::Vector{Vector{Vector{Float64}}} end
 
 function generate_saa(
     s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
@@ -85,8 +84,7 @@ include("naive.jl")
 include("autoregressive-validators.jl")
 include("autoregressive.jl")
 
-export
-    Naive,
+export Naive,
     AutoRegressive,
     AbstractStochasticProcess,
     generate_saa,

@@ -1,11 +1,11 @@
-function load_policy(model::SDDPModel, path::String, format::TaskResultsFormat)
+function Lab.load_policy(model::SDDPModel, path::String, format::TaskResultsFormat)
     reader = get_reader(format)
     extension = get_extension(format)
     curdir = pwd()
     cd(path)
     PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
     @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
-    df = reader(PROCESSED_CUTS_PATH, e)
+    df = reader(PROCESSED_CUTS_PATH)
     cd(curdir)
     success_loading_policy = df !== nothing
     # TODO - remove existing cuts from model
@@ -14,7 +14,7 @@ end
 
 # HELPERS -------------------------------------------------------------------------------------
 
-function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
+function __load_external_cuts!(policy_graph::SDDP.PolicyGraph, cuts::DataFrame)
     jsondata = Dict{String,Any}[]
     stages = Int64.(unique(cuts[!, "stage"]))
     for stage in stages
@@ -27,5 +27,5 @@ function __load_external_cuts!(model::SDDP.PolicyGraph, cuts::DataFrame)
     open(jsonpath, "w") do f
         JSON.print(f, jsondata)
     end
-    return SDDP.read_cuts_from_file(model, jsonpath)
+    return SDDP.read_cuts_from_file(policy_graph, jsonpath)
 end

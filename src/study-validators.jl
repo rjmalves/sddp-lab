@@ -40,7 +40,7 @@ function __build_study_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     d["inputs"] = InputsData(d["inputs"], e)
-    d["engine"] = __build_engine!(d["engine"], e)
+    __build_engine!(d, e)
     valid_inputs = d["inputs"] !== nothing
     valid_engine = d["engine"] !== nothing
     return valid_inputs && valid_engine

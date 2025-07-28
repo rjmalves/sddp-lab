@@ -7,7 +7,7 @@ using JuMP
 using Graphs
 using SDDP: SDDP
 
-using ..Core
+using ..Lab
 using ..Utils
 
 import Base: length

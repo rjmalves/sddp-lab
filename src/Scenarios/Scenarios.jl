@@ -4,7 +4,7 @@ using JuMP
 
 using Random
 using Dates
-using ..Core
+using ..Lab
 using ..Utils
 using ..StochasticProcess
 
@@ -124,6 +124,31 @@ function get_graph(scenarios::ScenariosData)
     return scenarios.graph
 end
 
+"""
+    get_number_of_stages(g::Graph)
+
+Gets the number of stages defined acconding to the graph topology
+"""
+function get_number_of_stages(g::Graph)::Integer
+    node_stages = [n.stage for n in g.nodes]
+    unique!(node_stages)
+    return length(node_stages)
+end
+
+"""
+    get_root_node(g::Graph)
+
+Gets the root node acconding to the graph topology
+"""
+function get_root_node_id(g::Graph)::Integer
+    node_ids = [n.id for n in g.nodes]
+    nodes_with_targets = [e.target[].id for e in g.edges]
+    unique!(node_ids)
+    unique!(nodes_with_targets)
+    node_ids = setdiff(node_ids, nodes_with_targets)
+    return node_ids[1]
+end
+
 include("graph-validators.jl")
 include("graph.jl")
 
@@ -137,6 +162,13 @@ include("scenariosdata-validators.jl")
 include("scenariosdata.jl")
 
 export ScenariosData,
-    add_uncertainties!, generate_saa, get_load, get_scenarios, get_graph, set_seed!
+    add_uncertainties!,
+    generate_saa,
+    get_load,
+    get_scenarios,
+    get_graph,
+    get_number_of_stages,
+    get_root_node_id,
+    set_seed!
 
 end

@@ -1,6 +1,6 @@
 module Inputs
 
-using ..Core
+using ..Lab
 using ..System
 using ..Utils
 using ..Scenarios

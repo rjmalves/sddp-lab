@@ -5,6 +5,35 @@ using Dates
 using DataFrames
 using JSON
 
+GRAPH_DICT = Dict{String,Any}(
+    Dict{String,Any}(
+        "params" => Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 2,
+                    "probability" => 1.0,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        ),
+    ),
+)
+
 NAIVE_INFLOW_DICT = Dict{String,Any}(
     "marginal_models" => [
         Dict{String,Any}(
@@ -40,6 +69,7 @@ DICT = Dict{String,Any}(
     "seed" => 42,
     "initial_season" => 1,
     "branchings" => 1,
+    "graph" => GRAPH_DICT,
     "inflow" => INFLOW_DICT,
     "load" => LOAD_DICT,
 )

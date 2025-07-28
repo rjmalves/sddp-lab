@@ -1,13 +1,14 @@
-function save_simulation(
-    artifact::SDDPSimulationTaskArtifact, path::String, format::TaskResultsFormat
+function Lab.save_simulation(
+    artifact::SDDPSimulationTaskArtifact,
+    path::String,
+    format::TaskResultsFormat,
+    files::Vector{InputModule},
 )
     writer = get_writer(format)
     extension = get_extension(format)
     curdir = pwd()
     cd(path)
-    __write_simulation_results(
-        artifact.simulations, get_system(artifact.files), writer, extension
-    )
+    __write_simulation_results(artifact.simulations, get_system(files), writer, extension)
     return cd(curdir)
 end
 

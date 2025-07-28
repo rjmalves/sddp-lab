@@ -1,12 +1,15 @@
 module Engines
 
-using ..Core
+using ..Lab
+using ..Scenarios
 using ..System
 using ..Utils
 
 using DataFrames
 using SDDP: SDDP
 using JuMP: JuMP
+using JSON
+using CSV
 import MathOptInterface as MOI
 
 # SDDP TYPES
@@ -65,7 +68,6 @@ end
 
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
     policy::SDDP.PolicyGraph
-    files::Vector{InputModule}
 end
 
 struct SDDPSimulationTaskDefinition <: SimulationTaskDefinition
@@ -76,7 +78,6 @@ end
 struct SDDPSimulationTaskArtifact <: SimulationTaskArtifact
     definition::SDDPSimulationTaskDefinition
     simulations::Vector{Vector{Dict{Symbol,Any}}}
-    files::Vector{InputModule}
 end
 
 struct SDDPEngine <: Engine
@@ -106,6 +107,15 @@ include("sddp.jl")
 include("input.jl")
 include("input-validators.jl")
 
-export SDDPEngine
+export SDDPEngine,
+    __build_engine!,
+    build,
+    train,
+    save_policy,
+    load_policy,
+    simulate,
+    save_simulation,
+    get_policy_definition,
+    get_simulation_definition
 
 end

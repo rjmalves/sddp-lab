@@ -1,5 +1,5 @@
 
-function train(
+function Lab.train(
     model::SDDPModel, definition::SDDPPolicyTaskDefinition
 )::SDDPPolicyTaskArtifact
     @info "Evaluating policy"
@@ -15,5 +15,5 @@ function train(
         parallel_scheme = parallel_scheme,
         root_node_risk_measure = risk_measure,
     )
-    return SDDPPolicyTaskArtifact(model.policy_graph, definition.files)
+    return SDDPPolicyTaskArtifact(model.policy_graph)
 end
