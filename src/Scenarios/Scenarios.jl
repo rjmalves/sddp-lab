@@ -3,6 +3,7 @@ module Scenarios
 using JuMP
 
 using Random
+using Dates
 using ..Core
 using ..Utils
 using ..StochasticProcess
@@ -17,6 +18,25 @@ struct InflowScenarios
 end
 
 abstract type LoadScenarios end
+
+struct Node
+    id::Integer
+    stage::Integer
+    start_datetime::DateTime
+    end_datetime::DateTime
+end
+
+struct Edge
+    source::Ref{Node}
+    target::Ref{Node}
+    probability::Real
+    discount_rate::Real
+end
+
+struct Graph
+    nodes::Vector{Node}
+    edges::Vector{Edge}
+end
 
 """
     __get_ids(s)
@@ -36,6 +56,7 @@ struct ScenariosData <: InputModule
     seed::Integer
     initial_season::Integer
     branchings::Integer
+    graph::Graph
     inflow::InflowScenarios
     load::LoadScenarios
 end
@@ -86,13 +107,25 @@ Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algori
 """
 function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
     inflow = scenarios.inflow.stochastic_process
-    
+
     # TODO - for when we have a proper load representation
     # add_load_uncertainty!(m, load)
 
     season = __node2season(node, size(inflow, 2), scenarios.initial_season)
     return add_inflow_uncertainty!(m, inflow, season)
 end
+
+"""
+    get_graph(scenarios::ScenariosData)
+
+Gets the graph topology for the given scenarios
+"""
+function get_graph(scenarios::ScenariosData)
+    return scenarios.graph
+end
+
+include("graph-validators.jl")
+include("graph.jl")
 
 include("inflow-validators.jl")
 include("inflow.jl")
@@ -103,6 +136,7 @@ include("load.jl")
 include("scenariosdata-validators.jl")
 include("scenariosdata.jl")
 
-export ScenariosData, add_uncertainties!, generate_saa, get_load, get_scenarios, set_seed!
+export ScenariosData,
+    add_uncertainties!, generate_saa, get_load, get_scenarios, get_graph, set_seed!
 
 end

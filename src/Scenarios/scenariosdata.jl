@@ -16,7 +16,12 @@ function ScenariosData(d::Dict{String,Any}, e::CompositeException)
 
     return if valid_consistency
         ScenariosData(
-            d["seed"], d["initial_season"], d["branchings"], d["inflow"], d["load"]
+            d["seed"],
+            d["initial_season"],
+            d["branchings"],
+            d["graph"],
+            d["inflow"],
+            d["load"],
         )
     else
         nothing

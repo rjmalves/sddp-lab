@@ -13,8 +13,18 @@ end
 
 # HELPERS -------------------------------------------------------------------------------------
 
-function __build_graph(files::Vector{InputModule})
-    return generate_scenario_graph(get_algorithm(files))
+function __build_graph(files::Vector{InputModule})::SDDP.Graph
+    g = get_graph(get_scenarios(files))
+    graph = SDDP.Graph(0)
+
+    for n in g.nodes
+        SDDP.add_node(graph, n.id)
+    end
+    for e in g.edges
+        SDDP.add_edge(graph, e.source.id => e.target.id, e.probability)
+    end
+
+    return graph
 end
 
 function __generate_subproblem_builder(files::Vector{InputModule})::Function
@@ -61,7 +71,7 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
     num_hydros = length(hydros_entities)
     num_thermals = length(thermals_entities)
 
-    m[LOAD_BALANCE] = @constraint(
+    m[LOAD_BALANCE] = JuMP.@constraint(
         m,
         [n = 1:num_buses],
         sum(

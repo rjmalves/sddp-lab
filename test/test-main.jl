@@ -6,7 +6,12 @@ using Suppressor
         e = CompositeException()
         using GLPK
         @suppress begin
-        SDDPlab.main(example_dir, GLPK.Optimizer; e = e)
+            study = SDDPlab.read_study(example_dir; e = e)
+            model = SDDPlab.build(study, GLPK.Optimizer)
+            policy = SDDPlab.train(study, model)
+            SDDPlab.save_policy(policy, ".")
+            simulation = SDDPlab.simulate(study, model)
+            SDDPlab.save_simulation(simulation)
         end
         @test length(e) == 0
     end

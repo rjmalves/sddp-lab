@@ -1,11 +1,16 @@
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
-UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "inflow", "load"]
+UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "graph", "inflow", "load"]
 UNCERTAINTIES_KEY_TYPES = [
-    Integer, Integer, Integer, T where {T<:InflowScenarios}, T where {T<:LoadScenarios}
+    Integer,
+    Integer,
+    Integer,
+    Graph,
+    T where {T<:InflowScenarios},
+    T where {T<:LoadScenarios},
 ]
 UNCERTAINTIES_KEY_TYPES_BEFORE_BUILD = [
-    Integer, Integer, Integer, Dict{String,Any}, Dict{String,Any}
+    Integer, Integer, Integer, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
 ]
 
 function __validate_scenarios_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -63,9 +68,10 @@ end
 function __build_scenarios_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
+    valid_graph = __build_graph!(d, e)
     valid_inflow = __build_inflow_scenarios!(d, e)
     valid_load = __build_load_scenarios!(d, e)
-    return valid_inflow && valid_load
+    return valid_graph && valid_inflow && valid_load
 end
 
 function __cast_scenarios_internals_from_files!(

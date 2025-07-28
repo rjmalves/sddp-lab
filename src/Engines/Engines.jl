@@ -1,14 +1,14 @@
 module Engines
 
 using ..Core
+using ..System
 
 using DataFrames
 using SDDP: SDDP
-using JuMP
+using JuMP: JuMP
+import MathOptInterface as MOI
 
 # SDDP TYPES
-
-struct SDDPEngine <: Engine end
 
 struct SDDPModel <: Model
     policy_graph::SDDP.PolicyGraph
@@ -63,14 +63,12 @@ struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
 end
 
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
-    definition::SDDPPolicyTaskDefinition
     policy::SDDP.PolicyGraph
     files::Vector{InputModule}
 end
 
 struct SDDPSimulationTaskDefinition <: SimulationTaskDefinition
     num_simulated_series::Integer
-    policy::SimulationTaskPolicy
     parallel_scheme::ParallelScheme
 end
 
@@ -80,8 +78,33 @@ struct SDDPSimulationTaskArtifact <: SimulationTaskArtifact
     files::Vector{InputModule}
 end
 
-include("sddp.jl")
+struct SDDPEngine <: Engine
+    policy::SDDPPolicyTaskDefinition
+    simulation::SDDPSimulationTaskDefinition
+end
 
-export SDDP
+# GENERAL METHODS ------------------------------------------------------------------------
+
+"""
+get_policy_definition(e::Engine)::PolicyTaskDefinition
+
+Return the policy definition for a specific engine
+"""
+function get_policy_definition(e::Engine)::PolicyTaskDefinition end
+
+"""
+get_simulation_definition(e::Engine)::SimulationTaskDefinition
+
+Return the simulation definition for a specific engine
+"""
+function get_simulation_definition(e::Engine)::SimulationTaskDefinition end
+
+# INTERNALS ------------------------------------------------------------------------
+
+include("sddp.jl")
+include("input.jl")
+include("input-validators.jl")
+
+export SDDPEngine
 
 end

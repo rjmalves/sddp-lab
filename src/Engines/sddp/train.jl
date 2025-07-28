@@ -15,5 +15,5 @@ function train(
         parallel_scheme = parallel_scheme,
         root_node_risk_measure = risk_measure,
     )
-    return SDDPPolicyTaskArtifact(definition, model.policy_graph, definition.files)
+    return SDDPPolicyTaskArtifact(model.policy_graph, definition.files)
 end

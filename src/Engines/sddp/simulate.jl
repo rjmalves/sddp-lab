@@ -1,23 +1,8 @@
 function simulate(
     model::SDDPModel, definition::SDDPSimulationTaskDefinition
 )::SDDPSimulationTaskArtifact
-    if definition.policy.load
-        reader = get_reader(definition.policy.format)
-        extension = get_extension(definition.policy.format)
-        curdir = pwd()
-        cd(definition.policy.path)
-        PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
-        @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
-        df = reader(PROCESSED_CUTS_PATH, e)
-        cd(curdir)
-        success_loading_policy = df !== nothing
-        # TODO - remove existing cuts from model
-        success_loading_policy || __load_external_cuts!(model.policy_graph, df)
-    end
-
     sims = __simulate_model(model, definition)
-    return SimulationArtifact(t, sims, files)
-
+    return SDDPSimulationTaskArtifact(definition, sims, files)
 end
 
 # HELPERS -------------------------------------------------------------------------------------

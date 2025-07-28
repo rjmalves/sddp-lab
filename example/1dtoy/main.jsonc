@@ -47,37 +47,13 @@
                 "parallel_scheme": {
                     "kind": "Serial",
                     "params": {}
-                },
-                "results": {
-                    "path": "out/policy",
-                    "save": true,
-                    "format": {
-                        "kind": "ParquetFormat",
-                        "params": {}
-                    }
                 }
             },
             "simulation": {
                 "num_simulated_series": 100,
-                "policy": {
-                    "load": false,
-                    "path": "out/policy",
-                    "format": {
-                        "kind": "ParquetFormat",
-                        "params": {}
-                    }
-                },
                 "parallel_scheme": {
                     "kind": "Serial",
                     "params": {}
-                },
-                "results": {
-                    "path": "out/simulation",
-                    "save": true,
-                    "format": {
-                        "kind": "ParquetFormat",
-                        "params": {}
-                    }
                 }
             }
         }

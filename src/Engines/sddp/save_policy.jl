@@ -1,10 +1,15 @@
-function save_policy(artifact::SDDPPolicyTaskArtifact)
+function save_policy(
+    artifact::SDDPPolicyTaskArtifact, path::String, format::TaskResultsFormat
+)
     cuts = __get_model_cuts(artifact.policy)
     convergence = __get_model_convergence(artifact.policy)
-    writer = get_writer(artifact.definition.results.format)
-    extension = get_extension(artifact.definition.results.format)
+    writer = get_writer(format)
+    extension = get_extension(format)
+    curdir = pwd()
+    cd(path)
     __write_model_cuts(cuts, writer, extension)
-    return __write_model_convergence(convergence, writer, extension)
+    __write_model_convergence(convergence, writer, extension)
+    return cd(curdir)
 end
 
 # HELPERS -------------------------------------------------------------------------------------

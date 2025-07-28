@@ -121,6 +121,76 @@ function __validate_cvar_keys_types!(d::Dict{String,Any}, e::CompositeException)
     return valid_types
 end
 
+function __validate_sddp_policy_task_defintion_main_key_type!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["policy"], e)
+    valid_types = valid_keys && __validate_key_types!(d, ["policy"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_sddp_policy_task_definition_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["convergence", "risk_measure", "parallel_scheme"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(
+            d,
+            ["convergence", "risk_measure", "parallel_scheme"],
+            [Dict{String,Any}, Dict{String,Any}, Dict{String,Any}],
+            e,
+        )
+    return valid_types
+end
+
+function __validate_sddp_policy_task_definition_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["convergence", "risk_measure", "parallel_scheme"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(
+            d,
+            ["convergence", "risk_measure", "parallel_scheme"],
+            [Convergence, T where {T<:RiskMeasure}, T where {T<:ParallelScheme}],
+            e,
+        )
+    return valid_types
+end
+
+function __validate_sddp_simulation_task_defintion_main_key_type!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["simulation"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(d, ["simulation"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_sddp_simulation_task_definition_keys_types_before_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["num_simulated_series", "parallel_scheme"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(
+            d, ["num_simulated_series", "parallel_scheme"], [Integer, Dict{String,Any}], e
+        )
+    return valid_types
+end
+
+function __validate_sddp_simulation_task_definition_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["num_simulated_series", "parallel_scheme"], e)
+    valid_types =
+        valid_keys && __validate_key_types!(
+            d,
+            ["num_simulated_series", "parallel_scheme"],
+            [Integer, T where {T<:ParallelScheme}],
+            e,
+        )
+    return valid_types
+end
+
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_iteration_limit_num_iterations!(
@@ -282,6 +352,18 @@ function __validate_cvar_content!(d::Dict{String,Any}, e::CompositeException)::B
     return valid_alpha && valid_lambda
 end
 
+function __validate_policy_definition_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_simulation_definition_content!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
 
 function __validate_iteration_limit_consistency!(
@@ -333,6 +415,18 @@ function __validate_avar_consistency!(d::Dict{String,Any}, e::CompositeException
 end
 
 function __validate_cvar_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+    return true
+end
+
+function __validate_policy_definition_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    return true
+end
+
+function __validate_simulation_definition_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
     return true
 end
 
@@ -397,4 +491,20 @@ function __build_cvar_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true
+end
+
+function __build_policy_definition_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_stopping_criteria = __build_convergence!(d, e)
+    valid_risk_measure = __build_risk_measure!(d, e)
+    valid_parallel_schema = __build_parallel_scheme!(d, e)
+    return valid_stopping_criteria && valid_risk_measure && valid_parallel_schema
+end
+
+function __build_simulation_definition_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_parallel_schema = __build_parallel_scheme!(d, e)
+    return valid_parallel_schema
 end
