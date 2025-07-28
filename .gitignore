@@ -33,3 +33,6 @@ out*/
 
 # VSCode
 .vscode/**
+
+# Test artifacts
+tests/*.parquet
