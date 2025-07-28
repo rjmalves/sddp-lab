@@ -1,18 +1,18 @@
-import SDDPlab: Tasks
+import SDDPlab: Engines
 
 SERIAL_DICT = convert(Dict{String,Any}, Dict("kind" => "Serial", "params" => Dict()))
 ASYNCHRONOUS_DICT = convert(
     Dict{String,Any}, Dict("kind" => "Asynchronous", "params" => Dict())
 )
 
-@testset "tasks-parallelscheme" begin
+@testset "engines-sddp-parallelscheme" begin
     @testset "serial-valid" begin
         d, e = __renew(SERIAL_DICT)
-        @test typeof(Tasks.Serial(d, e)) === Tasks.Serial
+        @test typeof(Engines.Serial(d, e)) === Engines.Serial
     end
 
     @testset "asynchronous-valid" begin
         d, e = __renew(ASYNCHRONOUS_DICT)
-        @test typeof(Tasks.Asynchronous(d, e)) === Tasks.Asynchronous
+        @test typeof(Engines.Asynchronous(d, e)) === Engines.Asynchronous
     end
 end

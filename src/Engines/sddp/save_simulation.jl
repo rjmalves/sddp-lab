@@ -1,10 +1,14 @@
-
-function save_simulation(artifact::SDDPSimulationTaskArtifact)
-    writer = get_writer(artifact.definition.results.format)
-    extension = get_extension(artifact.definition.results.format)
-    return __write_simulation_results(
+function save_simulation(
+    artifact::SDDPSimulationTaskArtifact, path::String, format::TaskResultsFormat
+)
+    writer = get_writer(format)
+    extension = get_extension(format)
+    curdir = pwd()
+    cd(path)
+    __write_simulation_results(
         artifact.simulations, get_system(artifact.files), writer, extension
     )
+    return cd(curdir)
 end
 
 # HELPERS -------------------------------------------------------------------------------------

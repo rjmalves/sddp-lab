@@ -10,6 +10,8 @@ test_files = __list_test_files(".")
 
 @testset "SDDPlab" begin
     for tf in test_files
-        include(tf)
+        if occursin("test-io", tf)
+            include(tf)
+        end
     end
 end

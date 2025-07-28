@@ -2,6 +2,7 @@ module Engines
 
 using ..Core
 using ..System
+using ..Utils
 
 using DataFrames
 using SDDP: SDDP

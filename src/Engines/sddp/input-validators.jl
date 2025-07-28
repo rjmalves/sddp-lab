@@ -121,7 +121,7 @@ function __validate_cvar_keys_types!(d::Dict{String,Any}, e::CompositeException)
     return valid_types
 end
 
-function __validate_sddp_policy_task_defintion_main_key_type!(
+function __validate_sddp_policy_task_definition_main_key_type!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_keys = __validate_keys!(d, ["policy"], e)
@@ -157,7 +157,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
     return valid_types
 end
 
-function __validate_sddp_simulation_task_defintion_main_key_type!(
+function __validate_sddp_simulation_task_definition_main_key_type!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_keys = __validate_keys!(d, ["simulation"], e)
@@ -352,13 +352,13 @@ function __validate_cvar_content!(d::Dict{String,Any}, e::CompositeException)::B
     return valid_alpha && valid_lambda
 end
 
-function __validate_policy_definition_content!(
+function __validate_sddp_policy_task_definition_content!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true
 end
 
-function __validate_simulation_definition_content!(
+function __validate_sddp_simulation_task_definition_content!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true
@@ -418,13 +418,13 @@ function __validate_cvar_consistency!(d::Dict{String,Any}, e::CompositeException
     return true
 end
 
-function __validate_policy_definition_consistency!(
+function __validate_sddp_policy_task_definition_consistency!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true
 end
 
-function __validate_simulation_definition_consistency!(
+function __validate_sddp_simulation_task_definition_consistency!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     return true
@@ -493,7 +493,7 @@ function __build_cvar_internals_from_dicts!(
     return true
 end
 
-function __build_policy_definition_internals_from_dicts!(
+function __build_sddp_policy_task_definition_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_stopping_criteria = __build_convergence!(d, e)
@@ -502,7 +502,7 @@ function __build_policy_definition_internals_from_dicts!(
     return valid_stopping_criteria && valid_risk_measure && valid_parallel_schema
 end
 
-function __build_simulation_definition_internals_from_dicts!(
+function __build_sddp_simulation_task_definition_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_parallel_schema = __build_parallel_scheme!(d, e)

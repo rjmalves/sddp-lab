@@ -209,16 +209,19 @@ end
 function SDDPPolicyTaskDefinition(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    valid_internals = __build_policy_definition_internals_from_dicts!(d, e)
+    valid_internals = __build_sddp_policy_task_definition_internals_from_dicts!(d, e)
 
     # Keys and types validation
-    valid_keys_types = valid_internals && __validate_policy_definition_keys_types!(d, e)
+    valid_keys_types =
+        valid_internals && __validate_sddp_policy_task_definition_keys_types!(d, e)
 
     # Content validation
-    valid_content = valid_keys_types && __validate_policy_definition_content!(d, e)
+    valid_content =
+        valid_keys_types && __validate_sddp_policy_task_definition_content!(d, e)
 
     # Consistency validation
-    valid_consistency = valid_content && __validate_policy_definition_consistency!(d, e)
+    valid_consistency =
+        valid_content && __validate_sddp_policy_task_definition_consistency!(d, e)
 
     return if valid_consistency
         SDDPPolicyTaskDefinition(d["convergence"], d["risk_measure"], d["parallel_scheme"])
@@ -232,16 +235,19 @@ end
 function SDDPSimulationTaskDefinition(d::Dict{String,Any}, e::CompositeException)
 
     # Build internal objects
-    valid_internals = __build_simulation_definition_internals_from_dicts!(d, e)
+    valid_internals = __build_sddp_simulation_task_definition_internals_from_dicts!(d, e)
 
     # Keys and types validation
-    valid_keys_types = valid_internals && __validate_simulation_definition_keys_types!(d, e)
+    valid_keys_types =
+        valid_internals && __validate_sddp_simulation_task_definition_keys_types!(d, e)
 
     # Content validation
-    valid_content = valid_keys_types && __validate_simulation_definition_content!(d, e)
+    valid_content =
+        valid_keys_types && __validate_sddp_simulation_task_definition_content!(d, e)
 
     # Consistency validation
-    valid_consistency = valid_content && __validate_simulation_definition_consistency!(d, e)
+    valid_consistency =
+        valid_content && __validate_sddp_simulation_task_definition_consistency!(d, e)
 
     return if valid_consistency
         SDDPSimulationTaskDefinition(d["num_simulated_series"], d["parallel_scheme"])

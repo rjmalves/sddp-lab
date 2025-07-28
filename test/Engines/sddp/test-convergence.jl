@@ -1,4 +1,4 @@
-import SDDPlab: Tasks
+import SDDPlab: Engines
 
 using Dates
 
@@ -11,29 +11,29 @@ DICT = Dict{String,Any}(
     ),
 )
 
-@testset "tasks-convergence" begin
+@testset "engines-sddp-convergence" begin
     @testset "convergence-valid" begin
         d, e = __renew(DICT)
-        @test typeof(Tasks.Convergence(d, e)) === Tasks.Convergence
+        @test typeof(Engines.Convergence(d, e)) === Engines.Convergence
     end
 
     @testset "convergence-invalid-min_iterations" begin
         d, e = __renew(DICT)
         d = __modif_key(d, "min_iterations", -10)
-        @test Tasks.Convergence(d, e) === nothing
+        @test Engines.Convergence(d, e) === nothing
     end
 
     @testset "convergence-invalid-max_iterations" begin
         d, e = __renew(DICT)
         d = __modif_key(d, "min_iterations", -10)
         d = __modif_key(d, "max_iterations", -5)
-        @test Tasks.Convergence(d, e) === nothing
+        @test Engines.Convergence(d, e) === nothing
     end
 
     @testset "convergence-invalid-iterations" begin
         d, e = __renew(DICT)
         d = __modif_key(d, "max_iterations", 1)
-        @test Tasks.Convergence(d, e) === nothing
+        @test Engines.Convergence(d, e) === nothing
     end
 
     @testset "convergence-invalid-stopping_criteria" begin
@@ -46,6 +46,6 @@ DICT = Dict{String,Any}(
                 "params" => Dict("threshold" => -0.05, "num_iterations" => 5),
             ),
         )
-        @test Tasks.Convergence(d, e) === nothing
+        @test Engines.Convergence(d, e) === nothing
     end
 end

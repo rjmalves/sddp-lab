@@ -11,6 +11,14 @@ include("Engines/Engines.jl")
 include("study.jl")
 include("study-validators.jl")
 
-export read_study, build, train, save_policy, load_policy, simulate, save_simulation
+export read_study,
+    build,
+    train,
+    save_policy,
+    load_policy,
+    simulate,
+    save_simulation,
+    CSVFormat,
+    ParquetFormat
 
 end

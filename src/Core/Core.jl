@@ -7,15 +7,14 @@ include("types.jl")
 include("tasks.jl")
 include("variables.jl")
 include("io.jl")
-include("io-validators.jl")
 
 function get_input_module(i::Vector{InputModule}, kind::Type)::InputModule
     index = findfirst(x -> isa(x, kind), i)
     return i[index]
 end
 
-export InputModule,
-    get_input_module,
+export
+    # Domain problem variables
     LOAD,
     DEFICIT,
     THERMAL_GENERATION,
@@ -40,6 +39,7 @@ export InputModule,
     DIRECT_EXCHANGE,
     REVERSE_EXCHANGE,
     NET_EXCHANGE,
+    # Core definitions
     Engine,
     Model,
     PolicyTaskDefinition,
@@ -50,13 +50,19 @@ export InputModule,
     AnyFormat,
     CSVFormat,
     ParquetFormat,
-    TaskResults,
+    get_reader,
+    get_writer,
+    get_extension,
+    InputModule,
+    get_input_module,
+    # Core tasks
     build,
     train,
     save_policy,
     load_policy,
     simulate,
     save_simulation,
+    # Global constants
     POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CUTS_OUTPUT_INTERCEPT_NAME,
     POLICY_CONVERGENCE_OUTPUT_FILENAME
