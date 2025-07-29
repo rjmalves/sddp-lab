@@ -3,9 +3,7 @@ module System
 using JSON
 using CSV
 using DataFrames
-using JuMP
 using Graphs
-using SDDP: SDDP
 
 using ..Lab
 using ..Utils
@@ -124,13 +122,6 @@ Return the parameters of the entities in the set as a DataFrame
 """
 function get_params_df(ses::SystemEntitySet)::DataFrame end
 
-"""
-add_system_elements!(m, ses)
-
-Add state variables, decision variables and constraints to a JuMP model `m`
-"""
-function add_system_elements!(m::JuMP.Model, ses::SystemEntitySet) end
-
 # UTILS ------------------------------------------------------------------------
 
 function __cast_system_entity_from_file!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -212,14 +203,19 @@ export SystemData,
     Buses,
     Thermal,
     Thermals,
-    add_system_elements!,
-    add_system_objective!,
+    Line,
+    Lines,
     get_system,
     get_buses,
     get_buses_entities,
+    get_hydros,
     get_hydros_entities,
+    get_thermals,
     get_thermals_entities,
+    get_lines,
     get_lines_entities,
-    get_ids
+    get_ids,
+    downstream,
+    upstream
 
 end

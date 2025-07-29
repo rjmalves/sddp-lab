@@ -49,30 +49,6 @@ function Lines(d::Dict{String,Any}, buses::Buses, e::CompositeException)
     return valid_consistency ? Lines(d["entities"]) : nothing
 end
 
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Lines)
-    num_lines = length(ses)
-
-    m[DIRECT_EXCHANGE] = @variable(
-        m, [n = 1:num_lines], base_name = String(DIRECT_EXCHANGE)
-    )
-    for n in 1:num_lines
-        set_lower_bound(m[DIRECT_EXCHANGE][n], 0)
-        set_upper_bound(m[DIRECT_EXCHANGE][n], ses.entities[n].capacity)
-    end
-    
-    m[REVERSE_EXCHANGE] = @variable(
-        m, [n = 1:num_lines], base_name = String(REVERSE_EXCHANGE)
-    )
-    for n in 1:num_lines
-        set_lower_bound(m[REVERSE_EXCHANGE][n], 0)
-        set_upper_bound(m[REVERSE_EXCHANGE][n], ses.entities[n].capacity)
-    end
-        
-    m[NET_EXCHANGE] = @expression(m, m[DIRECT_EXCHANGE] - m[REVERSE_EXCHANGE])
-end
-
 # GENERAL METHODS --------------------------------------------------------------------------
 
 function get_id(s::Line)::Integer

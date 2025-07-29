@@ -36,20 +36,6 @@ function Buses(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? Buses(d["entities"]) : nothing
 end
 
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Buses)
-    num_buses = length(ses)
-
-    # Adds variables registering internal names by symbols
-    m[LOAD] = @variable(m, [1:num_buses], base_name = String(LOAD))
-    m[DEFICIT] = @variable(m, [1:num_buses], base_name = String(DEFICIT))
-
-    set_lower_bound.(m[DEFICIT], 0)
-
-    return nothing
-end
-
 # GENERAL METHODS --------------------------------------------------------------------------
 
 function get_id(s::Bus)::Integer

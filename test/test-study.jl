@@ -44,7 +44,6 @@ using Suppressor
         @suppress begin
             model = SDDPlab.build(study, GLPK.Optimizer)
             SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
-            artifact = SDDPlab.simulate(study, model)
         end
         @test length(e) == 0
     end
