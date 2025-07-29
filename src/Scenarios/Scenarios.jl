@@ -89,33 +89,6 @@ function set_seed!(scenarios::ScenariosData)
 end
 
 """
-    generate_saa(scenarios::ScenariosData, num_stages::Integer)
-
-Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
-"""
-function generate_saa(scenarios::ScenariosData, num_stages::Integer)
-    inflow = scenarios.inflow.stochastic_process
-    initial_season = scenarios.initial_season
-    branchings = scenarios.branchings
-    return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
-end
-
-"""
-    add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
-
-Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
-"""
-function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
-    inflow = scenarios.inflow.stochastic_process
-
-    # TODO - for when we have a proper load representation
-    # add_load_uncertainty!(m, load)
-
-    season = __node2season(node, size(inflow, 2), scenarios.initial_season)
-    return add_inflow_uncertainty!(m, inflow, season)
-end
-
-"""
     get_graph(scenarios::ScenariosData)
 
 Gets the graph topology for the given scenarios

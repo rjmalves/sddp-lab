@@ -86,9 +86,9 @@ include("autoregressive.jl")
 
 export Naive,
     AutoRegressive,
+    get_ar_parameters,
+    get_ar_scale,
     AbstractStochasticProcess,
-    generate_saa,
-    add_inflow_uncertainty!,
     __cast_stochastic_process_internals_from_files!
 
 end

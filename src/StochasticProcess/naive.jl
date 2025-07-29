@@ -125,15 +125,6 @@ end
 #     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 # end
 
-function add_inflow_uncertainty!(m::JuMP.Model, s::Naive, ::Int)::JuMP.Model
-    n_hydro = length(s)
-
-    m[ω_INFLOW] = @variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
-
-    @constraint(m, inflow_model, m[INFLOW] .== m[ω_INFLOW])
-
-    return m
-end
 
 # HELPERS ----------------------------------------------------------------------------------
 

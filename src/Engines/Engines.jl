@@ -1,6 +1,7 @@
 module Engines
 
 using ..Lab
+using ..StochasticProcess
 using ..Scenarios
 using ..System
 using ..Utils

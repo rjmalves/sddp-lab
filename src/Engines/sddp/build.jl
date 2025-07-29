@@ -177,6 +177,104 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
     # )
 end
 
+# UNCERTAINTIES METHODS --------------------------------------------------------------------
+
+function add_inflow_uncertainty!(m::JuMP.Model, s::Naive, ::Int)::JuMP.Model
+    n_hydro = length(s)
+
+    m[ω_INFLOW] = JuMP.@variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
+
+    JuMP.@constraint(m, inflow_model, m[INFLOW] .== m[ω_INFLOW])
+
+    return m
+end
+
+function __get_lag_scales(s::AutoRegressive, season::Int)
+    lag_scales = []
+    N, P, M_Ls = size(s)
+    for n in 1:N
+        aux = []
+        for l in 1:M_Ls[n]
+            ls = __lagged_season(season, l, P)
+            push!(aux, get_ar_scale(s.signal_model[n], ls))
+        end
+        push!(lag_scales, aux)
+    end
+
+    return lag_scales
+end
+
+function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
+    season::Int)
+
+    n_hydro, period, max_lags = size(s)
+    stchp_size = sum(max_lags)
+    
+    scales = get_ar_scale(s, season)
+    inits = vcat([uar.initial_values for uar in s.signal_model]...)
+
+    index_t = ones(Int,length(s))
+    for i in 1:(length(s) - 1)
+        index_t[i+1] = sum(max_lags[1:i]) + 1
+    end
+    memory_states = [n for n in 1:stchp_size if !(n in index_t)]
+    
+    m[ω_INFLOW] = JuMP.@variable(m, [1:n_hydro], base_name = String(ω_INFLOW))
+    m[STCHP] = JuMP.@variable(m,
+        [n = 1:stchp_size],
+        base_name = String(STCHP),
+        SDDP.State,
+        initial_value = inits[n])
+
+    lagged_scales = get_lag_scales(s, season)
+    ar_coefs = get_ar_parameters(s, season, true)
+
+    # main AR state transition (model)
+    for (n, t) in enumerate(zip(ar_coefs, lagged_scales, index_t, max_lags))
+        ar_c, l_s, i, m_l = t
+        s_t = scales[n]
+        JuMP.@constraint(m,
+            (m[STCHP][i].out - s_t[1]) / s_t[2] == 
+                sum(ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2] for l in 1:m_l) +
+                m[ω_INFLOW][n],
+            base_name = "ar_main" * string(n))
+    end
+    JuMP.@constraint(m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out)
+
+    # memory mapping of lags
+    JuMP.@constraint(m, ar_memory[n in memory_states], m[STCHP][n].out == m[STCHP][n - 1].in)
+
+    return m
+end
+
+"""
+    generate_saa(scenarios::ScenariosData, num_stages::Integer)
+
+Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
+"""
+function generate_saa(scenarios::ScenariosData, num_stages::Integer)
+    inflow = scenarios.inflow.stochastic_process
+    initial_season = scenarios.initial_season
+    branchings = scenarios.branchings
+    return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
+end
+
+"""
+    add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
+
+Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
+"""
+function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
+    inflow = scenarios.inflow.stochastic_process
+
+    # TODO - for when we have a proper load representation
+    # add_load_uncertainty!(m, load)
+
+    season = __node2season(node, size(inflow, 2), scenarios.initial_season)
+    return add_inflow_uncertainty!(m, inflow, season)
+end
+
+
 # HELPERS -------------------------------------------------------------------------------------
 
 function __build_graph(files::Vector{InputModule})::SDDP.Graph
