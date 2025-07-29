@@ -35,4 +35,4 @@ out*/
 .vscode/**
 
 # Test artifacts
-tests/*.parquet
+test/*.parquet
