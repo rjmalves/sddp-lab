@@ -1,5 +1,28 @@
 # FILE READERS -------------------------------------------------------------------
 
+"""
+    __json_to_dict(json_obj)
+
+Recursively convert JSON.Object to regular Dict{String,Any}.
+This is needed because newer versions of JSON.jl return JSON.Object instead of Dict.
+"""
+function __json_to_dict(json_obj::JSON.Object)::Dict{String,Any}
+    result = Dict{String,Any}()
+    for (k, v) in pairs(json_obj)
+        result[k] = __json_to_dict(v)
+    end
+    return result
+end
+
+function __json_to_dict(arr::AbstractVector)::Vector{Any}
+    return [__json_to_dict(x) for x in arr]
+end
+
+function __json_to_dict(x::T)::T where T
+    # For primitive types (String, Number, Bool, Nothing), return as-is
+    return x
+end
+
 function read_jsonc(
     filename::String, e::CompositeException
 )::Union{Dict{String,Any},Nothing}
@@ -8,7 +31,9 @@ function read_jsonc(
         open(filename) do io
             lines = readlines(io)
             lines .= replace.(lines, r"(?<!\\)//.*" => "")
-            return JSON.parse(join(lines, "\n"))
+            json_obj = JSON.parse(join(lines, "\n"))
+            # Convert JSON.Object to Dict to maintain compatibility
+            return __json_to_dict(json_obj)
         end
     else
         return nothing
