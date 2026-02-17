@@ -11,9 +11,8 @@ using SDDP: SDDP
 using JuMP: JuMP
 using JSON
 using CSV
+using GLPK: GLPK
 import MathOptInterface as MOI
-
-# SDDP TYPES
 
 struct SDDPModel <: Model
     policy_graph::SDDP.PolicyGraph
@@ -34,10 +33,30 @@ struct LowerBoundStability <: StoppingCriteria
     num_iterations::Integer
 end
 
+struct Statistical <: StoppingCriteria
+    num_replications::Integer
+    iteration_period::Integer
+    z_score::Real
+end
+
+struct SimulationStopping <: StoppingCriteria
+    replications::Integer
+    period::Integer
+end
+
+struct FirstStageStopping <: StoppingCriteria
+    atol::Real
+    iterations::Integer
+end
+
+struct StoppingChain <: StoppingCriteria
+    rules::Vector{StoppingCriteria}
+end
+
 struct Convergence
     min_iterations::Integer
     max_iterations::Integer
-    stopping_criteria::StoppingCriteria
+    stopping_criteria::Vector{StoppingCriteria}
 end
 
 abstract type ParallelScheme end
@@ -61,10 +80,78 @@ struct CVaR <: RiskMeasure
     lambda::Real
 end
 
+struct Entropic <: RiskMeasure
+    theta::Real
+end
+
+struct WassersteinRM <: RiskMeasure
+    alpha::Real
+end
+
+struct ModifiedChiSquared <: RiskMeasure
+    radius::Real
+    minimum_std::Real
+end
+
+struct ConvexCombination <: RiskMeasure
+    measures::Vector{Tuple{Real,RiskMeasure}}
+end
+
+abstract type SamplingScheme end
+
+struct DefaultSampling <: SamplingScheme end
+
+struct InSampleMC <: SamplingScheme
+    max_depth::Integer
+    terminate_on_dummy_leaf::Bool
+end
+
+struct PSRSampling <: SamplingScheme
+    num_samples::Integer
+end
+
+abstract type DualityHandler end
+
+struct DefaultDuality <: DualityHandler end
+
+struct ContinuousConicDualityHandler <: DualityHandler end
+
+struct StrengthenedConicDualityHandler <: DualityHandler end
+
+struct LagrangianDualityHandler <: DualityHandler end
+
+struct BanditDualityHandler <: DualityHandler
+    handlers::Vector{DualityHandler}
+end
+
+abstract type ForwardPassStrategy end
+
+struct DefaultForwardPassStrategy <: ForwardPassStrategy end
+
+struct RevisitingForwardPassStrategy <: ForwardPassStrategy
+    period::Integer
+end
+
+struct RiskAdjustedForwardPassStrategy <: ForwardPassStrategy end
+
+struct RegularizedForwardPassStrategy <: ForwardPassStrategy
+    rho::Real
+end
+
+abstract type CutType end
+
+struct SingleCut <: CutType end
+
+struct MultiCut <: CutType end
+
 struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     convergence::Convergence
     risk_measure::RiskMeasure
     parallel_scheme::ParallelScheme
+    sampling_scheme::SamplingScheme
+    duality_handler::DualityHandler
+    forward_pass::ForwardPassStrategy
+    cut_type::CutType
 end
 
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
@@ -74,6 +161,7 @@ end
 struct SDDPSimulationTaskDefinition <: SimulationTaskDefinition
     num_simulated_series::Integer
     parallel_scheme::ParallelScheme
+    sampling_scheme::SamplingScheme
 end
 
 struct SDDPSimulationTaskArtifact <: SimulationTaskArtifact
@@ -86,23 +174,8 @@ struct SDDPEngine <: Engine
     simulation::SDDPSimulationTaskDefinition
 end
 
-# GENERAL METHODS ------------------------------------------------------------------------
-
-"""
-get_policy_definition(e::Engine)::PolicyTaskDefinition
-
-Return the policy definition for a specific engine
-"""
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
-
-"""
-get_simulation_definition(e::Engine)::SimulationTaskDefinition
-
-Return the simulation definition for a specific engine
-"""
 function get_simulation_definition(e::Engine)::SimulationTaskDefinition end
-
-# INTERNALS ------------------------------------------------------------------------
 
 include("sddp.jl")
 include("input.jl")

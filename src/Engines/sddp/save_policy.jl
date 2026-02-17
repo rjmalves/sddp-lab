@@ -12,12 +12,16 @@ function Lab.save_policy(
     return cd(curdir)
 end
 
-# HELPERS -------------------------------------------------------------------------------------
+function __get_node_cutdata(nodecuts::Any)::Vector{Any}
+    single = nodecuts["single_cuts"]
+    multi = nodecuts["multi_cuts"]
+    return isempty(single) ? multi : single
+end
 
 function __process_node_cut_for_intercept(nodecuts::Any)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
-    cutdata = nodecuts["single_cuts"]
+    cutdata = __get_node_cutdata(nodecuts)
     state_var_name = POLICY_CUTS_OUTPUT_INTERCEPT_NAME
     state_var_id = 0
     n_cuts = length(cutdata)
@@ -33,7 +37,7 @@ end
 function __process_node_cut_for_state_var(nodecuts::Any, state_var::String)::DataFrame
     df = DataFrame()
     node = nodecuts["node"]
-    cutdata = nodecuts["single_cuts"]
+    cutdata = __get_node_cutdata(nodecuts)
     state_var_name = String.(split(state_var, "[")[1])
     state_var_id = parse(Int64, split(split(state_var, "]")[1], "[")[2])
     n_cuts = length(cutdata)
@@ -59,8 +63,9 @@ end
 function __process_cuts_for_state_vars(cuts::Vector{Any})::DataFrame
     state_vars = Vector{String}([])
     for node in cuts
-        if length(node["single_cuts"]) > 0
-            state_vars = keys(node["single_cuts"][1]["coefficients"])
+        cutdata = __get_node_cutdata(node)
+        if length(cutdata) > 0
+            state_vars = keys(cutdata[1]["coefficients"])
             break
         end
     end
@@ -79,7 +84,6 @@ function __process_cuts_for_state_vars(cuts::Vector{Any})::DataFrame
 end
 
 function __get_model_cuts(model::SDDP.PolicyGraph)::DataFrame
-    # TODO - add support for multicuts
     @info "Collecting generated cuts"
     jsonpath = joinpath(tempdir(), "rawcuts.json")
     SDDP.write_cuts_to_file(model, jsonpath)
@@ -115,8 +119,7 @@ function __get_model_convergence(model::SDDP.PolicyGraph)::DataFrame
     logpath = joinpath(tempdir(), "log.csv")
     SDDP.write_log_to_csv(model, logpath)
     logdata = CSV.read(logpath, DataFrame)
-    df = __process_convergence(logdata)
-    return df
+    return __process_convergence(logdata)
 end
 
 function __write_model_convergence(

@@ -1,5 +1,3 @@
-# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
-
 function __validate_engine_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(d, ["engine"], e)
     valid_types = valid_keys && __validate_key_types!(d, ["engine"], [Dict{String,Any}], e)
@@ -19,8 +17,6 @@ function __validate_sddp_engine_keys_types!(
         )
     return valid_types
 end
-
-# HELPERS ----------------------------------------------------------------------------------
 
 function __build_sddp_engine_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException

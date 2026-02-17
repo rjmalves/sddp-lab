@@ -84,13 +84,13 @@ Epic 03 --> Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
 | ticket-007 | Refactor load representation to node-based graph            | epic-01 | completed | Detailed     | hpc-julia-developer |
 | ticket-008 | Migrate example cases to new input format                   | epic-01 | completed | Detailed     | hpc-julia-developer |
 | ticket-009 | Add comprehensive test coverage for engine abstraction      | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-010 | Add remaining risk measures                                 | epic-02 | pending   | Detailed     | sddp-specialist     |
-| ticket-011 | Add chained stopping rules                                  | epic-02 | pending   | Detailed     | sddp-specialist     |
-| ticket-012 | Add sampling schemes                                        | epic-02 | pending   | Detailed     | hpc-julia-developer |
-| ticket-013 | Add duality handlers                                        | epic-02 | pending   | Detailed     | sddp-specialist     |
-| ticket-014 | Add forward pass strategies                                 | epic-02 | pending   | Detailed     | sddp-specialist     |
-| ticket-015 | Add cut type selection                                      | epic-02 | pending   | Detailed     | sddp-specialist     |
-| ticket-016 | Wire algorithm options through train and simulate pipelines | epic-02 | pending   | Detailed     | hpc-julia-developer |
+| ticket-010 | Add remaining risk measures                                 | epic-02 | completed | Detailed     | sddp-specialist     |
+| ticket-011 | Add chained stopping rules                                  | epic-02 | completed | Detailed     | sddp-specialist     |
+| ticket-012 | Add sampling schemes                                        | epic-02 | completed | Detailed     | hpc-julia-developer |
+| ticket-013 | Add duality handlers                                        | epic-02 | completed | Detailed     | sddp-specialist     |
+| ticket-014 | Add forward pass strategies                                 | epic-02 | completed | Detailed     | sddp-specialist     |
+| ticket-015 | Add cut type selection                                      | epic-02 | completed | Detailed     | sddp-specialist     |
+| ticket-016 | Wire algorithm options through train and simulate pipelines | epic-02 | completed | Detailed     | hpc-julia-developer |
 | ticket-017 | Implement variable units registry and validation            | epic-03 | pending   | Outline      | hpc-julia-developer |
 | ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | pending   | Outline      | sddp-specialist     |
 | ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | pending   | Outline      | sddp-specialist     |

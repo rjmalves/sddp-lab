@@ -5,10 +5,6 @@ function Lab.simulate(
     return SDDPSimulationTaskArtifact(definition, sims)
 end
 
-# HELPERS -------------------------------------------------------------------------------------
-
-function __generate_sampler()::SDDP.AbstractSamplingScheme end
-
 function __simulate_model(
     model::SDDPModel, definition::SDDPSimulationTaskDefinition
 )::Vector{Vector{Dict{Symbol,Any}}}
@@ -17,12 +13,11 @@ function __simulate_model(
     catch
         @warn "Error while adding all cuts for simulation"
     end
-    sampler = SDDP.InSampleMonteCarlo(;
-        max_depth = length(model.policy_graph.nodes), terminate_on_dummy_leaf = false
-    )
+    graph_size = length(model.policy_graph.nodes)
+    sampler = generate_sampling_scheme(definition.sampling_scheme, graph_size)
     parallel_scheme = generate_parallel_scheme(definition.parallel_scheme)
     @info "Running simulation"
-    simulation_result = SDDP.simulate(
+    return SDDP.simulate(
         model.policy_graph,
         definition.num_simulated_series,
         [
@@ -47,5 +42,4 @@ function __simulate_model(
         parallel_scheme = parallel_scheme,
         skip_undefined_variables = true,
     )
-    return simulation_result
 end
