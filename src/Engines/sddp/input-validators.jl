@@ -1,3 +1,13 @@
+const DIAGNOSTICS_SCHEMA = [
+    FieldRule("run_numerical_report", Bool),
+    FieldRule("warn_threshold", Real; constraints = [positive()]),
+    FieldRule("halt_threshold", Real; constraints = [positive()]),
+]
+
+const SOLVER_CONFIG_SCHEMA = [
+    FieldRule("name", String; constraints = [non_empty()]),
+]
+
 const ITERATION_LIMIT_SCHEMA = [
     FieldRule("num_iterations", Integer; constraints = [positive()]),
 ]
@@ -74,6 +84,21 @@ const REVISITING_FORWARD_PASS_SCHEMA = [
 const REGULARIZED_FORWARD_PASS_SCHEMA = [
     FieldRule("rho", Real; constraints = [positive()]),
 ]
+
+function __validate_diagnostics_halt_ge_warn!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    halt = d["halt_threshold"]
+    warn = d["warn_threshold"]
+    valid = halt >= warn
+    valid || push!(
+        e,
+        AssertionError(
+            "DiagnosticsConfig - halt_threshold ($halt) must be >= warn_threshold ($warn)",
+        ),
+    )
+    return valid
+end
 
 function __validate_stopping_criteria_main_key_type!(
     d::Dict{String,Any}, e::CompositeException
@@ -236,6 +261,11 @@ function __validate_sddp_policy_task_definition_keys_types_before_build!(
             d, ["cut_type"], [Dict{String,Any}], e
         )
     end
+    if valid_types && haskey(d, "scaling")
+        valid_types = __validate_key_types!(
+            d, ["scaling"], [Dict{String,Any}], e
+        )
+    end
     return valid_types
 end
 
@@ -252,6 +282,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
             "duality_handler",
             "forward_pass",
             "cut_type",
+            "scaling",
         ],
         e,
     )
@@ -266,6 +297,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
                 "duality_handler",
                 "forward_pass",
                 "cut_type",
+                "scaling",
             ],
             [
                 Convergence,
@@ -275,6 +307,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
                 T where {T<:DualityHandler},
                 T where {T<:ForwardPassStrategy},
                 T where {T<:CutType},
+                T where {T<:ScalingMode},
             ],
             e,
         )
@@ -359,6 +392,16 @@ function __validate_cut_type_main_key_type!(
     valid_types =
         valid_keys &&
         __validate_key_types!(d, ["cut_type"], [Dict{String,Any}], e)
+    return valid_types
+end
+
+function __validate_scaling_main_key_type!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["scaling"], e)
+    valid_types =
+        valid_keys &&
+        __validate_key_types!(d, ["scaling"], [Dict{String,Any}], e)
     return valid_types
 end
 
@@ -462,12 +505,6 @@ function __validate_bandit_duality_handler_count!(
     return valid
 end
 
-function __build_convergence_internals_from_dicts!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return __build_stopping_criteria!(d, e)
-end
-
 function __build_sddp_policy_task_definition_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -478,13 +515,15 @@ function __build_sddp_policy_task_definition_internals_from_dicts!(
     valid_duality_handler = __build_duality_handler!(d, e)
     valid_forward_pass = __build_forward_pass!(d, e)
     valid_cut_type = __build_cut_type!(d, e)
+    valid_scaling = __build_scaling!(d, e)
     return valid_stopping_criteria &&
            valid_risk_measure &&
            valid_parallel_schema &&
            valid_sampling_scheme &&
            valid_duality_handler &&
            valid_forward_pass &&
-           valid_cut_type
+           valid_cut_type &&
+           valid_scaling
 end
 
 function __build_sddp_simulation_task_definition_internals_from_dicts!(

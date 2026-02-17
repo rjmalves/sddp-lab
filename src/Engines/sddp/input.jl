@@ -1,3 +1,91 @@
+function DiagnosticsConfig(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, DIAGNOSTICS_SCHEMA, e)
+    valid_cross = valid && __validate_diagnostics_halt_ge_warn!(d, e)
+
+    return if valid_cross
+        DiagnosticsConfig(
+            d["run_numerical_report"],
+            d["warn_threshold"],
+            d["halt_threshold"],
+        )
+    else
+        nothing
+    end
+end
+
+function __build_diagnostics!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "diagnostics")
+        d["diagnostics"] = DiagnosticsConfig(false, 1e6, 1e10)
+        return true
+    end
+
+    diag = d["diagnostics"]
+    if !(diag isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'diagnostics' must be a Dict{String,Any}, got $(typeof(diag))",
+            ),
+        )
+        return false
+    end
+
+    diag_d = convert(Dict{String,Any}, diag)
+    result = DiagnosticsConfig(diag_d, e)
+    if result === nothing
+        return false
+    end
+
+    d["diagnostics"] = result
+    return true
+end
+
+function SolverConfig(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, SOLVER_CONFIG_SCHEMA, e)
+    if !valid
+        return nothing
+    end
+    attrs = get(d, "attributes", Dict{String,Any}())
+    if !(attrs isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'attributes' must be a Dict{String,Any}, got $(typeof(attrs))",
+            ),
+        )
+        return nothing
+    end
+    attrs_d = convert(Dict{String,Any}, attrs)
+    return SolverConfig(d["name"], attrs_d)
+end
+
+function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "solver")
+        d["solver"] = SolverConfig("GLPK", Dict{String,Any}())
+        return true
+    end
+
+    solver = d["solver"]
+    if !(solver isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'solver' must be a Dict{String,Any}, got $(typeof(solver))",
+            ),
+        )
+        return false
+    end
+
+    solver_d = convert(Dict{String,Any}, solver)
+    result = SolverConfig(solver_d, e)
+    if result === nothing
+        return false
+    end
+
+    d["solver"] = result
+    return true
+end
+
 function IterationLimit(d::Dict{String,Any}, e::CompositeException)
     valid = validate_schema!(d, ITERATION_LIMIT_SCHEMA, e)
     return valid ? IterationLimit(d["num_iterations"]) : nothing
@@ -44,7 +132,7 @@ function StoppingChain(d::Dict{String,Any}, e::CompositeException)
 end
 
 function Convergence(d::Dict{String,Any}, e::CompositeException)
-    valid_internals = __build_convergence_internals_from_dicts!(d, e)
+    valid_internals = __build_stopping_criteria!(d, e)
     valid_schema = valid_internals && validate_schema!(d, CONVERGENCE_SCHEMA, e)
     valid_keys_types = valid_schema && __validate_convergence_keys_types!(d, e)
     valid_cross = valid_keys_types && __validate_convergence_min_max!(d, e)
@@ -189,6 +277,14 @@ function MultiCut(::Dict{String,Any}, ::CompositeException)
     return MultiCut()
 end
 
+function NoScaling(::Dict{String,Any}, ::CompositeException)
+    return NoScaling()
+end
+
+function AutoScaling(::Dict{String,Any}, ::CompositeException)
+    return AutoScaling()
+end
+
 function SDDPPolicyTaskDefinition(d::Dict{String,Any}, e::CompositeException)
     valid_internals = __build_sddp_policy_task_definition_internals_from_dicts!(d, e)
     valid_keys_types =
@@ -203,6 +299,7 @@ function SDDPPolicyTaskDefinition(d::Dict{String,Any}, e::CompositeException)
             d["duality_handler"],
             d["forward_pass"],
             d["cut_type"],
+            d["scaling"],
         )
     else
         nothing
@@ -577,6 +674,20 @@ function __build_cut_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     end
 
     return __kind_factory!(@__MODULE__, d, "cut_type", e)
+end
+
+function __build_scaling!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "scaling")
+        d["scaling"] = NoScaling()
+        return true
+    end
+
+    valid_key_types = __validate_scaling_main_key_type!(d, e)
+    if !valid_key_types
+        return false
+    end
+
+    return __kind_factory!(@__MODULE__, d, "scaling", e)
 end
 
 function __build_bandit_duality_internals!(

@@ -8,11 +8,97 @@ function Lab.save_simulation(
     extension = get_extension(format)
     curdir = pwd()
     cd(path)
-    __write_simulation_results(artifact.simulations, get_system(files), writer, extension)
+    simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
+    __write_simulation_results(simulations, get_system(files), writer, extension)
     return cd(curdir)
 end
 
-# HELPERS -------------------------------------------------------------------------------------
+function _is_identity_scaling(config::ScalingConfig)::Bool
+    return all(v == DEFAULT_SCALING_FACTOR for v in values(config.factors))
+end
+
+function _unscale_value(value::Real, factor::Float64)
+    return value * factor
+end
+
+function _unscale_value(value::AbstractVector, factor::Float64)
+    return value .* factor
+end
+
+function _unscale_value(value, factor::Float64)
+    return value
+end
+
+function _unscale_state_variable(value, factor::Float64)
+    if hasproperty(value, :in) && hasproperty(value, :out)
+        return (in = value.in * factor, out = value.out * factor)
+    end
+    return value
+end
+
+"""
+    _get_variable_unscale_factor(sym, config) -> Float64
+
+Unscaling factor for a variable. Duals scale inversely to their constraint.
+"""
+function _get_variable_unscale_factor(sym::Symbol, config::ScalingConfig)::Float64
+    s_cost = get_scaling_factor(config, COST_SCALE)
+    s_gen = get_scaling_factor(config, HYDRO_GENERATION)
+    s_stor = get_scaling_factor(config, STORED_VOLUME)
+    s_flow = get_scaling_factor(config, FLOW_SCALE)
+
+    if sym == STORED_VOLUME
+        return s_stor
+    elseif sym == HYDRO_GENERATION || sym == THERMAL_GENERATION || sym == DEFICIT
+        return s_gen
+    elseif sym == TURBINED_FLOW || sym == SPILLAGE || sym == OUTFLOW || sym == INFLOW
+        return s_flow
+    elseif sym == DIRECT_EXCHANGE || sym == REVERSE_EXCHANGE || sym == NET_EXCHANGE
+        return get_scaling_factor(config, DIRECT_EXCHANGE)
+    elseif sym == THERMAL_GENERATION_COST
+        return s_cost * s_gen
+    elseif sym == MARGINAL_COST
+        return s_cost
+    elseif sym == WATER_VALUE
+        return s_cost * s_gen / s_stor
+    elseif sym == STAGE_COST || sym == FUTURE_COST || sym == TOTAL_COST
+        return s_cost * s_gen
+    else
+        return DEFAULT_SCALING_FACTOR
+    end
+end
+
+function _unscale_simulations(
+    simulations::Vector{Vector{Dict{Symbol,Any}}},
+    config::ScalingConfig,
+)::Vector{Vector{Dict{Symbol,Any}}}
+    if _is_identity_scaling(config)
+        return simulations
+    end
+
+    unscaled = Vector{Vector{Dict{Symbol,Any}}}(undef, length(simulations))
+    for i in eachindex(simulations)
+        unscaled[i] = Vector{Dict{Symbol,Any}}(undef, length(simulations[i]))
+        for j in eachindex(simulations[i])
+            stage_dict = copy(simulations[i][j])
+            for (sym, value) in simulations[i][j]
+                factor = _get_variable_unscale_factor(sym, config)
+                if factor != DEFAULT_SCALING_FACTOR
+                    if sym == STORED_VOLUME && value isa AbstractVector
+                        stage_dict[sym] = [_unscale_state_variable(v, factor) for v in value]
+                    elseif value isa Real
+                        stage_dict[sym] = _unscale_value(value, factor)
+                    elseif value isa AbstractVector
+                        stage_dict[sym] = _unscale_value(value, factor)
+                    end
+                end
+            end
+            unscaled[i][j] = stage_dict
+        end
+    end
+
+    return unscaled
+end
 
 function __extract_variable(data::Any, in_state::Bool = false, out_state::Bool = false)::Any
     if in_state
@@ -93,11 +179,6 @@ function __write_simulation_results(
         SPILLAGE => get_hydros_entities(system),
         WATER_VALUE => get_hydros_entities(system),
         HYDRO_GENERATION => get_hydros_entities(system),
-    )
-
-    # TODO - refactor replace
-    map_variable_names_to_replace = Dict(
-        STAGE_COST => "STAGE_COST", FUTURE_COST => "FUTURE_COST"
     )
 
     for (key, variables) in map_variable_output

@@ -1,4 +1,3 @@
-
 function Lab.train(
     model::SDDPModel, definition::SDDPPolicyTaskDefinition
 )::SDDPPolicyTaskArtifact

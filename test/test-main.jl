@@ -82,11 +82,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -115,11 +116,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -146,11 +148,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.InSampleMC(12, false)
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -179,11 +182,12 @@ using Suppressor
                 Engines.StrengthenedConicDualityHandler(),
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -212,11 +216,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.RevisitingForwardPassStrategy(3),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -245,11 +250,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.RiskAdjustedForwardPassStrategy(),
                 Engines.SingleCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -278,11 +284,12 @@ using Suppressor
                 Engines.DefaultDuality(),
                 Engines.DefaultForwardPassStrategy(),
                 Engines.MultiCut(),
+                Engines.NoScaling(),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def)
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, GLPK.Optimizer)
@@ -291,6 +298,99 @@ using Suppressor
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
             model = SDDPlab.build(study, GLPK.Optimizer)
             SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
+            simulation = SDDPlab.simulate(study, model)
+            @test simulation !== nothing
+        end
+    end
+
+    @testset "1dtoy-pipeline-autoscaling" begin
+        using GLPK
+        using SDDP: SDDP
+        @suppress begin
+            e = CompositeException()
+            original = SDDPlab.read_study(example_dir; e = e)
+            @test length(e) == 0
+
+            num_iters = 50
+            convergence = Engines.Convergence(
+                1, num_iters, [Engines.IterationLimit(num_iters)]
+            )
+            sim_def = Engines.SDDPSimulationTaskDefinition(
+                100, Engines.Serial(), Engines.DefaultSampling()
+            )
+
+            # Run NoScaling pipeline
+            noscale_policy_def = Engines.SDDPPolicyTaskDefinition(
+                convergence,
+                Engines.Expectation(),
+                Engines.Serial(),
+                Engines.DefaultSampling(),
+                Engines.DefaultDuality(),
+                Engines.DefaultForwardPassStrategy(),
+                Engines.SingleCut(),
+                Engines.NoScaling(),
+            )
+            noscale_engine = Engines.SDDPEngine(noscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            noscale_study = SDDPlab.Study(original.inputs, noscale_engine)
+            noscale_model = SDDPlab.build(noscale_study, GLPK.Optimizer)
+            noscale_policy = SDDPlab.train(noscale_study, noscale_model)
+            @test noscale_policy !== nothing
+            noscale_bound = SDDP.calculate_bound(noscale_model.policy_graph)
+
+            # Run AutoScaling pipeline
+            autoscale_policy_def = Engines.SDDPPolicyTaskDefinition(
+                convergence,
+                Engines.Expectation(),
+                Engines.Serial(),
+                Engines.DefaultSampling(),
+                Engines.DefaultDuality(),
+                Engines.DefaultForwardPassStrategy(),
+                Engines.SingleCut(),
+                Engines.AutoScaling(),
+            )
+            autoscale_engine = Engines.SDDPEngine(autoscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            autoscale_study = SDDPlab.Study(original.inputs, autoscale_engine)
+            autoscale_model = SDDPlab.build(autoscale_study, GLPK.Optimizer)
+            autoscale_policy = SDDPlab.train(autoscale_study, autoscale_model)
+            @test autoscale_policy !== nothing
+
+            # The scaled model's bound is in scaled cost units.
+            # Unscale: multiply by s_cost * s_gen to recover original units.
+            s_cost = Engines.get_scaling_factor(
+                autoscale_model.scaling, Engines.COST_SCALE
+            )
+            s_gen = Engines.get_scaling_factor(
+                autoscale_model.scaling, :HYDRO_GENERATION
+            )
+            autoscale_bound_scaled = SDDP.calculate_bound(autoscale_model.policy_graph)
+            autoscale_bound = autoscale_bound_scaled * s_cost * s_gen
+
+            # Lower bounds should match within 1% relative tolerance
+            @test noscale_bound > 0.0
+            @test autoscale_bound > 0.0
+            rel_diff = abs(noscale_bound - autoscale_bound) / abs(noscale_bound)
+            @test rel_diff < 1e-2
+
+            # Verify full pipeline: simulate and save with AutoScaling
+            autoscale_simulation = SDDPlab.simulate(autoscale_study, autoscale_model)
+            @test autoscale_simulation !== nothing
+            SDDPlab.save_simulation(
+                autoscale_study, autoscale_simulation, ".", SDDPlab.ParquetFormat()
+            )
+        end
+    end
+
+    @testset "1dtoy-pipeline-solver-from-config" begin
+        @suppress begin
+            e = CompositeException()
+            study = SDDPlab.read_study(example_dir; e = e)
+            @test length(e) == 0
+            @test study.engine.solver.solver_name == "GLPK"
+
+            model = SDDPlab.build(study)
+            @test model !== nothing
+            policy = SDDPlab.train(study, model)
+            @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
             @test simulation !== nothing
         end

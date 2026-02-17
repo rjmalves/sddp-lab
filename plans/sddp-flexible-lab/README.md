@@ -21,17 +21,17 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 
 ## Epics
 
-| Epic | Name                          | Tickets | Status  | Primary Agent(s)            |
-| ---- | ----------------------------- | ------- | ------- | --------------------------- |
-| 01   | Stabilize Engine Abstraction  | 9       | Pending | hpc-julia-developer         |
-| 02   | Algorithm Flexibility         | 7       | Pending | sddp-specialist + hpc-julia |
-| 03   | Units & LP Conditioning       | 4       | Pending | hpc-julia + sddp-specialist |
-| 04   | Parallelization & Performance | 4       | Pending | hpc-julia-developer         |
-| 05   | Enhanced System Elements      | 4       | Pending | sddp-specialist             |
-| 06   | Advanced Stochastic Modeling  | 3       | Pending | sddp-specialist             |
-| 07   | Experiment Management         | 4       | Pending | hpc-julia-developer         |
-| 08   | Observability & Diagnostics   | 3       | Pending | sddp-specialist             |
-| 09   | Documentation & Examples      | 3       | Pending | both                        |
+| Epic | Name                          | Tickets | Status    | Primary Agent(s)            |
+| ---- | ----------------------------- | ------- | --------- | --------------------------- |
+| 01   | Stabilize Engine Abstraction  | 9       | Completed | hpc-julia-developer         |
+| 02   | Algorithm Flexibility         | 7       | Completed | sddp-specialist + hpc-julia |
+| 03   | Units & LP Conditioning       | 4       | Executing | hpc-julia + sddp-specialist |
+| 04   | Parallelization & Performance | 4       | Outline   | hpc-julia-developer         |
+| 05   | Enhanced System Elements      | 4       | Outline   | sddp-specialist             |
+| 06   | Advanced Stochastic Modeling  | 3       | Outline   | sddp-specialist             |
+| 07   | Experiment Management         | 4       | Outline   | hpc-julia-developer         |
+| 08   | Observability & Diagnostics   | 3       | Outline   | sddp-specialist             |
+| 09   | Documentation & Examples      | 3       | Outline   | both                        |
 
 ## Dependency Graph
 
@@ -41,34 +41,44 @@ Epic 01: Stabilize Engine Abstraction
        |
        +---> ticket-002 (graph validators) [COMPLETED]
        |          |
-       |          +---> ticket-003 (schema infrastructure)
+       |          +---> ticket-003 (schema infrastructure) [COMPLETED]
        |                     |
-       |                     +---> ticket-004 (System schema migration)
+       |                     +---> ticket-004 (System schema migration) [COMPLETED]
        |                     |          |
-       |                     |          +---> ticket-005 (Engine/Scenarios schema migration)
+       |                     |          +---> ticket-005 (Engine/Scenarios schema migration) [COMPLETED]
        |                     |                     |
-       |                     |                     +---> ticket-006 (cleanup dead code)
+       |                     |                     +---> ticket-006 (cleanup dead code) [COMPLETED]
        |                     |                                |
-       |                     +---> ticket-007 (load refactor) <--- ticket-006
+       |                     +---> ticket-007 (load refactor) <--- ticket-006 [COMPLETED]
        |                                |
-       |                                +---> ticket-008 (examples) <--- ticket-007
+       |                                +---> ticket-008 (examples) <--- ticket-007 [COMPLETED]
        |
-       +---> ticket-009 (tests) <--- ticket-002, ..., ticket-008
+       +---> ticket-009 (tests) <--- ticket-002, ..., ticket-008 [COMPLETED]
                   |
                   v
 Epic 02: Algorithm Flexibility
-  ticket-010 (risk measures)      [sddp-specialist]     \
-  ticket-011 (stopping rules)     [sddp-specialist]      \
-  ticket-012 (sampling schemes)   [hpc-julia-developer]   |-- ALL PARALLEL
-  ticket-013 (duality handlers)   [sddp-specialist]      /
-  ticket-014 (forward passes)     [sddp-specialist]     /
-  ticket-015 (cut types)          [sddp-specialist]    /
+  ticket-010 (risk measures)      [COMPLETED]  \
+  ticket-011 (stopping rules)     [COMPLETED]   \
+  ticket-012 (sampling schemes)   [COMPLETED]    |-- ALL PARALLEL
+  ticket-013 (duality handlers)   [COMPLETED]   /
+  ticket-014 (forward passes)     [COMPLETED]  /
+  ticket-015 (cut types)          [COMPLETED] /
        |
        v
-  ticket-016 (wire pipeline)      [hpc-julia-developer]
+  ticket-016 (wire pipeline)      [COMPLETED]
        |
        v
-Epic 03 --> Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
+Epic 03: Units & LP Conditioning
+  ticket-017 (units registry)     [hpc-julia-developer]
+       |
+       v
+  ticket-018 (LP scaling)         [sddp-specialist]     -- depends on 017
+
+  ticket-019 (diagnostics)        [sddp-specialist]     -- independent (depends on 016 only)
+  ticket-020 (solver config)      [hpc-julia-developer]  -- independent (depends on 016 only)
+       |
+       v
+Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
 ```
 
 ## Progress Tracking
@@ -91,10 +101,10 @@ Epic 03 --> Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
 | ticket-014 | Add forward pass strategies                                 | epic-02 | completed | Detailed     | sddp-specialist     |
 | ticket-015 | Add cut type selection                                      | epic-02 | completed | Detailed     | sddp-specialist     |
 | ticket-016 | Wire algorithm options through train and simulate pipelines | epic-02 | completed | Detailed     | hpc-julia-developer |
-| ticket-017 | Implement variable units registry and validation            | epic-03 | pending   | Outline      | hpc-julia-developer |
-| ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | pending   | Outline      | sddp-specialist     |
-| ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | pending   | Outline      | sddp-specialist     |
-| ticket-020 | Add solver configuration options                            | epic-03 | pending   | Outline      | hpc-julia-developer |
+| ticket-017 | Implement variable units registry and validation            | epic-03 | completed | Refined      | hpc-julia-developer |
+| ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | completed | Refined      | sddp-specialist     |
+| ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | completed | Refined      | sddp-specialist     |
+| ticket-020 | Add solver configuration options                            | epic-03 | completed | Refined      | hpc-julia-developer |
 | ticket-021 | Enable threaded parallel training and simulation            | epic-04 | pending   | Outline      | hpc-julia-developer |
 | ticket-022 | Implement thread-safe SAA generation                        | epic-04 | pending   | Outline      | hpc-julia-developer |
 | ticket-023 | Profile and optimize model building hot paths               | epic-04 | pending   | Outline      | hpc-julia-developer |

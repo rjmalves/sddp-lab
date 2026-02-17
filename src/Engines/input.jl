@@ -3,7 +3,7 @@ function SDDPEngine(d::Dict{String,Any}, e::CompositeException)
     valid_keys_types = valid_internals && __validate_sddp_engine_keys_types!(d, e)
 
     return if valid_keys_types
-        SDDPEngine(d["policy"], d["simulation"])
+        SDDPEngine(d["policy"], d["simulation"], d["diagnostics"], d["solver"])
     else
         nothing
     end

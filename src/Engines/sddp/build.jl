@@ -1,15 +1,48 @@
-function Lab.build(::SDDPEngine, files::Vector{InputModule}, optimizer)::SDDPModel
+function Lab.build(engine::SDDPEngine, files::Vector{InputModule}, optimizer)::SDDPModel
     @info "Compiling model"
-    graph = __build_graph(files)
-    sp_builder = __generate_subproblem_builder(files)
+
+    scaling_mode = engine.policy.scaling
+    scaling_config, build_files = _apply_engine_scaling(scaling_mode, files)
+
+    graph = __build_graph(build_files)
+    sp_builder = __generate_subproblem_builder(build_files, scaling_config)
     model = SDDP.PolicyGraph(
         sp_builder, graph; sense = :Min, lower_bound = 0.0, optimizer = optimizer
     )
 
-    return SDDPModel(model)
+    return SDDPModel(model, scaling_config)
 end
 
-# SYSTEM ELEMENT METHODS ----------------------------------------------------------------------
+function Lab.build(engine::SDDPEngine, files::Vector{InputModule})::SDDPModel
+    optimizer = create_optimizer(engine.solver)
+    return Lab.build(engine, files, optimizer)
+end
+
+function _apply_engine_scaling(
+    ::NoScaling, files::Vector{InputModule}
+)::Tuple{ScalingConfig,Vector{InputModule}}
+    return (no_scaling_config(), files)
+end
+
+function _apply_engine_scaling(
+    ::AutoScaling, files::Vector{InputModule}
+)::Tuple{ScalingConfig,Vector{InputModule}}
+    system = get_system(files)
+    config = compute_scaling_factors(system)
+    scaled_system = apply_scaling(system, config)
+
+    scaled_files = InputModule[]
+    for f in files
+        if f isa SystemData
+            push!(scaled_files, scaled_system)
+        else
+            push!(scaled_files, f)
+        end
+    end
+
+    @info "AutoScaling applied" factors = config.factors
+    return (config, scaled_files)
+end
 
 function add_system_elements!(m::JuMP.Model, ses::Buses)
     num_buses = length(ses)
@@ -73,11 +106,7 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     )
 
     for n in 1:num_hydros
-        # no bounds are set on the 'in' field because this variable is always internally fixed
-        # to the previous' stage 'out' with JuMP.fix; this throws an error when the variable being
-        # fixed is bounded
-        # Indeed, even when a state variable is created the canonical way
-        # (using JuMP.@variable(..., SDDP.State)), only the 'out' half receives the bound information
+        # Bounds apply only to .out; the .in half is internally fixed by SDDP.jl
         JuMP.set_lower_bound(m[STORED_VOLUME][n].out, ses.entities[n].min_storage)
         JuMP.set_upper_bound(m[STORED_VOLUME][n].out, ses.entities[n].max_storage)
     end
@@ -164,8 +193,6 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
     )
 end
 
-# UNCERTAINTIES METHODS --------------------------------------------------------------------
-
 function add_inflow_uncertainty!(m::JuMP.Model, s::Naive, ::Int)::JuMP.Model
     n_hydro = length(s)
 
@@ -216,7 +243,6 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     lagged_scales = __get_lag_scales(s, season)
     ar_coefs = get_ar_parameters(s, season, true)
 
-    # main AR state transition (model)
     for (n, t) in enumerate(zip(ar_coefs, lagged_scales, index_t, max_lags))
         ar_c, l_s, i, m_l = t
         s_t = scales[n]
@@ -228,7 +254,6 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     end
     JuMP.@constraint(m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out)
 
-    # memory mapping of lags
     JuMP.@constraint(m, ar_memory[n in memory_states], m[STCHP][n].out == m[STCHP][n - 1].in)
 
     return m
@@ -248,9 +273,6 @@ function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
     return add_inflow_uncertainty!(m, inflow, season)
 end
 
-
-# HELPERS -------------------------------------------------------------------------------------
-
 function __build_graph(files::Vector{InputModule})::SDDP.Graph
     g = get_graph(get_scenarios(files))
     root_node_id = get_root_node_id(g)
@@ -268,7 +290,9 @@ function __build_graph(files::Vector{InputModule})::SDDP.Graph
     return graph
 end
 
-function __generate_subproblem_builder(files::Vector{InputModule})::Function
+function __generate_subproblem_builder(
+    files::Vector{InputModule}, scaling::ScalingConfig
+)::Function
     system = get_system(files)
     scenarios = get_scenarios(files)
     num_stages = get_number_of_stages(get_graph(scenarios))
@@ -277,11 +301,20 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
 
     SAA = generate_saa(scenarios, num_stages)
 
+    s_flow = get_scaling_factor(scaling, FLOW_SCALE)
+    if s_flow != DEFAULT_SCALING_FACTOR
+        for node in eachindex(SAA)
+            SAA[node] = SAA[node] ./ s_flow
+        end
+    end
+
+    s_gen = get_scaling_factor(scaling, HYDRO_GENERATION)
+
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
         add_uncertainties!(m, scenarios, node)
 
-        __add_load_balance!(m, files, node)
+        __add_load_balance!(m, files, node, s_gen)
 
         Ω_node = vec(SAA[node])
         SDDP.parameterize(m, Ω_node) do ω
@@ -296,7 +329,10 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
     return fun_sp_build
 end
 
-function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::Integer)
+function __add_load_balance!(
+    m::JuMP.Model, files::Vector{InputModule}, node::Integer,
+    load_scale::Float64 = DEFAULT_SCALING_FACTOR
+)
     system = get_system(files)
     hydros_entities = get_hydros_entities(system)
     thermals_entities = get_thermals_entities(system)
@@ -328,7 +364,7 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
             m[REVERSE_EXCHANGE][j] - m[DIRECT_EXCHANGE][j] for
             j in 1:num_lines if lines_entities[j].source_bus_id == bus_ids[n]
         ) +
-        m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios)
+        m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios) / load_scale
     )
     return nothing
 end

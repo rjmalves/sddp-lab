@@ -55,6 +55,10 @@
                     "kind": "Serial",
                     "params": {}
                 }
+            },
+            "solver": {
+                "name": "GLPK",
+                "attributes": {}
             }
         }
     }

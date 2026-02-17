@@ -5,25 +5,15 @@ using .Utils
 
 import MathOptInterface as MOI
 
-# CLASS Study -----------------------------------------------------------------------
-
 struct Study
     inputs::InputsData
     engine::Engine
 end
 
 function Study(d::Dict{String,Any}, e::CompositeException)
-
-    # Build internal objects
     valid_internals = __build_study_internals_from_dicts!(d, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_study_keys_types!(d, e)
-
-    # Content validation
     valid_content = valid_keys_types && __validate_study_content!(d, e)
-
-    # Consistency validation
     valid_consistency = valid_content && __validate_study_consistency!(d, e)
 
     return if valid_consistency
@@ -36,14 +26,10 @@ end
 function Study(filename::String, e::CompositeException)
     d = read_jsonc(filename, e)
     valid_jsonc = d !== nothing
-
-    # Cast data from files into the dictionary
     valid = valid_jsonc && __cast_study_internals_from_files!(d, e)
 
     return valid ? Study(d, e) : nothing
 end
-
-# Main package functions -----------------------------------------------------------
 
 function __log_errors(e::CompositeException)
     has_errors = length(e) > 0
@@ -63,10 +49,21 @@ function read_study(path::String; e = CompositeException())::Study
     return study
 end
 
-# Wrapper for engine-specific functions --------------------------------------------
+function build(study::Study)::Model
+    return Lab.build(study.engine, study.inputs.files)
+end
 
 function build(study::Study, optimizer)::Model
+    Base.depwarn(
+        "build(study, optimizer) is deprecated. Use build(study) instead and configure " *
+        "the solver via the \"solver\" key in the engine JSONC config.",
+        :build,
+    )
     return Lab.build(study.engine, study.inputs.files, optimizer)
+end
+
+function diagnose(study::Study, model::Model)::Bool
+    return Lab.diagnose(model, study.engine)
 end
 
 function train(study::Study, model::Model)::PolicyTaskArtifact

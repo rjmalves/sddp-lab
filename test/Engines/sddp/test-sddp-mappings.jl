@@ -116,11 +116,12 @@ using SDDP: SDDP
         duality = Engines.DefaultDuality()
         forward_pass = Engines.DefaultForwardPassStrategy()
         cut_type = Engines.SingleCut()
+        scaling = Engines.NoScaling()
         policy = Engines.SDDPPolicyTaskDefinition(
-            convergence, risk, parallel, sampling, duality, forward_pass, cut_type
+            convergence, risk, parallel, sampling, duality, forward_pass, cut_type, scaling
         )
         simulation = Engines.SDDPSimulationTaskDefinition(100, parallel, sampling)
-        engine = Engines.SDDPEngine(policy, simulation)
+        engine = Engines.SDDPEngine(policy, simulation, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
 
         result = Engines.get_policy_definition(engine)
         @test typeof(result) === Engines.SDDPPolicyTaskDefinition
@@ -135,11 +136,12 @@ using SDDP: SDDP
         duality = Engines.DefaultDuality()
         forward_pass = Engines.DefaultForwardPassStrategy()
         cut_type = Engines.SingleCut()
+        scaling = Engines.NoScaling()
         policy = Engines.SDDPPolicyTaskDefinition(
-            convergence, risk, parallel, sampling, duality, forward_pass, cut_type
+            convergence, risk, parallel, sampling, duality, forward_pass, cut_type, scaling
         )
         simulation = Engines.SDDPSimulationTaskDefinition(100, parallel, sampling)
-        engine = Engines.SDDPEngine(policy, simulation)
+        engine = Engines.SDDPEngine(policy, simulation, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
 
         result = Engines.get_simulation_definition(engine)
         @test typeof(result) === Engines.SDDPSimulationTaskDefinition

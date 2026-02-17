@@ -14,8 +14,13 @@ using CSV
 using GLPK: GLPK
 import MathOptInterface as MOI
 
+struct ScalingConfig
+    factors::Dict{Symbol,Float64}
+end
+
 struct SDDPModel <: Model
     policy_graph::SDDP.PolicyGraph
+    scaling::ScalingConfig
 end
 
 abstract type StoppingCriteria end
@@ -144,6 +149,12 @@ struct SingleCut <: CutType end
 
 struct MultiCut <: CutType end
 
+abstract type ScalingMode end
+
+struct NoScaling <: ScalingMode end
+
+struct AutoScaling <: ScalingMode end
+
 struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     convergence::Convergence
     risk_measure::RiskMeasure
@@ -152,6 +163,7 @@ struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     duality_handler::DualityHandler
     forward_pass::ForwardPassStrategy
     cut_type::CutType
+    scaling::ScalingMode
 end
 
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
@@ -167,11 +179,25 @@ end
 struct SDDPSimulationTaskArtifact <: SimulationTaskArtifact
     definition::SDDPSimulationTaskDefinition
     simulations::Vector{Vector{Dict{Symbol,Any}}}
+    scaling::ScalingConfig
+end
+
+struct DiagnosticsConfig
+    run_numerical_report::Bool
+    warn_threshold::Float64
+    halt_threshold::Float64
+end
+
+struct SolverConfig
+    solver_name::String
+    attributes::Dict{String,Any}
 end
 
 struct SDDPEngine <: Engine
     policy::SDDPPolicyTaskDefinition
     simulation::SDDPSimulationTaskDefinition
+    diagnostics::DiagnosticsConfig
+    solver::SolverConfig
 end
 
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
@@ -182,6 +208,8 @@ include("input.jl")
 include("input-validators.jl")
 
 export SDDPEngine,
+    DiagnosticsConfig,
+    SolverConfig,
     __build_engine!,
     build,
     train,
@@ -190,6 +218,10 @@ export SDDPEngine,
     simulate,
     save_simulation,
     get_policy_definition,
-    get_simulation_definition
+    get_simulation_definition,
+    create_optimizer,
+    ScalingConfig,
+    NoScaling,
+    AutoScaling
 
 end

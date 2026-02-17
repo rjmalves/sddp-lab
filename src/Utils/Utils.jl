@@ -5,9 +5,14 @@ using JSON
 using Parquet: Parquet
 using DataFrames
 using Dates
+using JuMP: JuMP
+
+using ..Lab
 
 include("validation-utils.jl")
 include("schema.jl")
+include("units.jl")
+include("variable-units.jl")
 include("reading-utils.jl")
 include("stochasticprocess-utils.jl")
 
@@ -49,5 +54,21 @@ export __validate_keys!,
     less_than,
     non_empty,
     matches,
-    unique_in
+    unique_in,
+    # Units and variable units registry
+    PhysicalUnit,
+    MW,
+    MWh,
+    HM3,
+    M3_PER_S,
+    DOLLAR_PER_MWH,
+    DOLLAR,
+    HOURS,
+    DIMENSIONLESS,
+    UnitConversion,
+    UNIT_CONVERSIONS,
+    VariableUnitInfo,
+    VARIABLE_UNITS_REGISTRY,
+    get_variable_unit,
+    get_coefficient_magnitude_report
 end

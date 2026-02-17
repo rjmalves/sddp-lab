@@ -2,7 +2,7 @@ function Lab.simulate(
     model::SDDPModel, definition::SDDPSimulationTaskDefinition
 )::SDDPSimulationTaskArtifact
     sims = __simulate_model(model, definition)
-    return SDDPSimulationTaskArtifact(definition, sims)
+    return SDDPSimulationTaskArtifact(definition, sims, model.scaling)
 end
 
 function __simulate_model(

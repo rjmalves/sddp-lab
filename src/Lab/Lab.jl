@@ -60,6 +60,7 @@ export
     # Core tasks
     build,
     train,
+    diagnose,
     save_policy,
     load_policy,
     simulate,
