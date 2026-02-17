@@ -99,14 +99,6 @@ function __build_inputsdata_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_directory = __validate_directory!(d["path"], e)
-
-    valid_files = valid_directory && __build_files!(d, e)
-
-    return valid_files
+    return valid_directory && __build_files!(d, e)
 end
 
-function __cast_inputsdata_internals_from_files!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
-end

@@ -1,13 +1,45 @@
+# CLASS Node -----------------------------------------------------------------------
+
+function Node(d::Dict{String,Any}, e::CompositeException)
+    valid = __validate_node_content!(d, e)
+
+    return if valid
+        Node(d["id"], d["stage"], d["start_datetime"], d["end_datetime"])
+    else
+        nothing
+    end
+end
+
+# CLASS Edge -----------------------------------------------------------------------
+
+function Edge(d::Dict{String,Any}, nodes::Vector{Node}, e::CompositeException)
+    valid = __validate_edge_content!(d, nodes, e)
+
+    return if valid
+        source_id = d["source"]
+        target_id = d["target"]
+        source_node = nodes[findfirst(==(source_id), [node.id for node in nodes])]
+        target_node = nodes[findfirst(==(target_id), [node.id for node in nodes])]
+        Edge(Ref(source_node), Ref(target_node), d["probability"], d["discount_rate"])
+    else
+        nothing
+    end
+end
+
+# CLASS Graph -----------------------------------------------------------------------
 
 function Graph(d::Dict{String,Any}, e::CompositeException)
+    valid_internals = __build_graph_internals_from_dicts!(d, e)
+    valid_keys_types = valid_internals && __validate_graph_keys_types_after_build!(d, e)
+    valid_content = valid_keys_types && __validate_graph_content!(d, e)
+    valid_consistency =
+        valid_content && __validate_graph_consistency!(d["nodes"], d["edges"], e)
 
-    # __validate_nodes
-    # __validate_edges
-
-    nodes = [__build_node(node) for node in d["nodes"]]
-    edges = [__build_edge(edge, nodes) for edge in d["edges"]]
-
-    return Graph(nodes, edges)
+    return if valid_consistency
+        Graph(d["nodes"], d["edges"])
+    else
+        nothing
+    end
 end
 
 function Graph(filename::String, e::CompositeException)
@@ -17,29 +49,60 @@ function Graph(filename::String, e::CompositeException)
     return valid_jsonc ? Graph(d, e) : nothing
 end
 
-function __build_node(d::Dict{String,Any})::Node
-    id = Int(d["id"]) # this Int() call should be moved to __validate above
-    stage = Int(d["stage"]) # this Int() call should be moved to __validate above
-    start_datetime = DateTime(d["start_datetime"]) # this DateTime() call should be moved to __validate above
-    end_datetime = DateTime(d["end_datetime"]) # should also be in a validate
-
-    return Node(id, stage, start_datetime, end_datetime)
-end
-
-function __build_edge(d::Dict{String,Any}, nodes::Vector{Node})::Edge
-    source_id = Int(d["source"]) # should be validated
-    target_id = Int(d["target"]) # should be validated
-    source_node = nodes[findfirst(==(source_id), [node.id for node in nodes])]
-    target_node = nodes[findfirst(==(target_id), [node.id for node in nodes])]
-    probability = Real(d["probability"]) # should be validated
-    discount_rate = Real(d["discount_rate"]) # should be validated
-
-    return Edge(Ref(source_node), Ref(target_node), probability, discount_rate)
-end
-
-# GENERAL METHODS -----------------------------------------------------------------------
-
 # HELPERS -------------------------------------------------------------------------------------
+
+function __validate_graph_keys_types_after_build!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(d, ["nodes", "edges"], e)
+    if !valid_keys
+        return false
+    end
+    valid_nodes = isa(d["nodes"], Vector{Node})
+    valid_nodes ||
+        push!(e, ErrorException("Key 'nodes' ($(d["nodes"])) can't be converted to Vector{Node}"))
+    valid_edges = isa(d["edges"], Vector{Edge})
+    valid_edges ||
+        push!(e, ErrorException("Key 'edges' ($(d["edges"])) can't be converted to Vector{Edge}"))
+    return valid_nodes && valid_edges
+end
+
+function __build_graph_internals_from_dicts!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_graph_keys = __validate_graph_keys_types!(d, e)
+    if !valid_graph_keys
+        return false
+    end
+
+    nodes = Node[]
+    valid_nodes = true
+    for node_d in d["nodes"]
+        node = Node(node_d, e)
+        if node !== nothing
+            push!(nodes, node)
+        end
+        valid_nodes = valid_nodes && node !== nothing
+    end
+    d["nodes"] = nodes
+
+    if !valid_nodes
+        return false
+    end
+
+    edges = Edge[]
+    valid_edges = true
+    for edge_d in d["edges"]
+        edge = Edge(edge_d, nodes, e)
+        if edge !== nothing
+            push!(edges, edge)
+        end
+        valid_edges = valid_edges && edge !== nothing
+    end
+    d["edges"] = edges
+
+    return valid_nodes && valid_edges
+end
 
 function __build_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
     d["graph"] = Graph(d["graph"]["params"], e)

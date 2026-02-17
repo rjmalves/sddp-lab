@@ -14,7 +14,6 @@ end
 function add_system_elements!(m::JuMP.Model, ses::Buses)
     num_buses = length(ses)
 
-    # Adds variables registering internal names by symbols
     m[LOAD] = JuMP.@variable(m, [1:num_buses], base_name = String(LOAD))
     m[DEFICIT] = JuMP.@variable(m, [1:num_buses], base_name = String(DEFICIT))
 
@@ -163,18 +162,6 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
             ) +
             sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
     )
-    # @objective(
-    #     m,
-    #     sum(thermals[n].cost * m[THERMAL_GENERATION][n] for n in 1:num_thermals) +
-    #         sum(buses[n].deficit_cost * m[DEFICIT][n] for n in 1:num_buses) +
-    #         sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n] for n in 1:num_lines) +
-    #         sum(lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n] for n in 1:num_lines) +
-    #         sum(
-    #             hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
-    #             n in 1:num_hydros
-    #         ) +
-    #         sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
-    # )
 end
 
 # UNCERTAINTIES METHODS --------------------------------------------------------------------
@@ -226,7 +213,7 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
         SDDP.State,
         initial_value = inits[n])
 
-    lagged_scales = get_lag_scales(s, season)
+    lagged_scales = __get_lag_scales(s, season)
     ar_coefs = get_ar_parameters(s, season, true)
 
     # main AR state transition (model)
@@ -247,11 +234,6 @@ function add_inflow_uncertainty!(m::JuMP.Model, s::AutoRegressive,
     return m
 end
 
-"""
-    generate_saa(scenarios::ScenariosData, num_stages::Integer)
-
-Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
-"""
 function generate_saa(scenarios::ScenariosData, num_stages::Integer)
     inflow = scenarios.inflow.stochastic_process
     initial_season = scenarios.initial_season
@@ -259,16 +241,8 @@ function generate_saa(scenarios::ScenariosData, num_stages::Integer)
     return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
 end
 
-"""
-    add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData)
-
-Generates the SAA scenarios for the inflow, for parametrizing in the SDDP algorithm.
-"""
 function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
     inflow = scenarios.inflow.stochastic_process
-
-    # TODO - for when we have a proper load representation
-    # add_load_uncertainty!(m, load)
 
     season = __node2season(node, size(inflow, 2), scenarios.initial_season)
     return add_inflow_uncertainty!(m, inflow, season)
@@ -307,8 +281,6 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
         add_system_elements!(m, system)
         add_uncertainties!(m, scenarios, node)
 
-        # TODO - this will change once we have a proper load representation
-        # as an stochastic process
         __add_load_balance!(m, files, node)
 
         Ω_node = vec(SAA[node])
@@ -324,7 +296,6 @@ function __generate_subproblem_builder(files::Vector{InputModule})::Function
     return fun_sp_build
 end
 
-# TODO - this will change
 function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::Integer)
     system = get_system(files)
     hydros_entities = get_hydros_entities(system)
@@ -338,7 +309,7 @@ function __add_load_balance!(m::JuMP.Model, files::Vector{InputModule}, node::In
     num_hydros = length(hydros_entities)
     num_thermals = length(thermals_entities)
 
-    m[LOAD_BALANCE] = JuMP.JuMP.@constraint(
+    m[LOAD_BALANCE] = JuMP.@constraint(
         m,
         [n = 1:num_buses],
         sum(

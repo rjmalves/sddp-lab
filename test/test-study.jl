@@ -70,4 +70,8 @@ using Suppressor
         end
         @test length(e) == 0
     end
+
+    @testset "study-read-nonexistent-directory" begin
+        @test_throws Base.IOError SDDPlab.read_study("/nonexistent/path/to/study")
+    end
 end

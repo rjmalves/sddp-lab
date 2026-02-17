@@ -188,10 +188,3 @@ function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
     return d[k] = convert(t, aux)
 end
 
-function __valid_name_regex_match(name::String)
-    regex_match = match(r"^[\sa-zA-Z0-9_-]*$", name)
-    if regex_match !== nothing
-        return regex_match.match == name
-    end
-    return false
-end

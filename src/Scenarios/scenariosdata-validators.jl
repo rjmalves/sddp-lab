@@ -1,3 +1,11 @@
+# SCHEMAS ----------------------------------------------------------------------------------
+
+const SCENARIOS_DATA_SCHEMA = [
+    FieldRule("seed", Integer),
+    FieldRule("initial_season", Integer; constraints = [positive()]),
+    FieldRule("branchings", Integer; constraints = [positive()]),
+]
+
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "graph", "inflow", "load"]
@@ -31,36 +39,51 @@ function __validate_scenarios_keys_types_before_build!(
     return valid_types
 end
 
-# CONTENT VALIDATORS -----------------------------------------------------------------------
-
-function __validate_scenarios_initial_season!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    season = d["initial_season"]
-    valid = season > 0
-    valid ||
-        push!(e, AssertionError("Uncertainties initial_season ($season) must be positive"))
-    return valid
-end
-
-function __validate_scenarios_branchings!(d::Dict{String,Any}, e::CompositeException)::Bool
-    branchings = d["branchings"]
-    valid = branchings > 0
-    valid ||
-        push!(e, AssertionError("Uncertainties branchings ($branchings) must be positive"))
-    return valid
-end
-
-function __validate_scenarios_content!(d::Dict{String,Any}, e::CompositeException)::Bool
-    valid_initial_season = __validate_scenarios_initial_season!(d, e)
-    valid_branchings = valid_initial_season && __validate_scenarios_branchings!(d, e)
-    return valid_branchings
-end
-
 # CONSISTENCY VALIDATORS -----------------------------------------------------------------------
 
+function __validate_deterministic_load_node_references!(
+    load::DeterministicLoad, graph::Graph, e::CompositeException
+)::Bool
+    graph_node_ids = Set([n.id for n in graph.nodes])
+    root_node_id = get_root_node_id(graph)
+    non_root_node_ids = setdiff(graph_node_ids, Set([root_node_id]))
+
+    valid = true
+
+    for v in load.values
+        if !(v.node_id in graph_node_ids)
+            push!(
+                e,
+                AssertionError("Load node_id ($(v.node_id)) not found in graph"),
+            )
+            valid = false
+        end
+    end
+
+    load_bus_ids = Set([v.bus_id for v in load.values])
+    for node_id in non_root_node_ids
+        for bus_id in load_bus_ids
+            has_entry = any(
+                v -> v.bus_id == bus_id && v.node_id == node_id, load.values
+            )
+            if !has_entry
+                @warn "No load value for bus_id=$bus_id at graph node_id=$node_id, will default to 0.0"
+            end
+        end
+    end
+
+    return valid
+end
+
 function __validate_scenarios_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
+    valid = true
+    load = d["load"]
+    graph = d["graph"]
+    if load isa DeterministicLoad
+        valid = valid && __validate_deterministic_load_node_references!(load, graph, e)
+    end
+
+    return valid
 end
 
 # HELPER FUNCTIONS ------------------------------------------------------------------------

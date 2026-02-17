@@ -7,6 +7,7 @@ using DataFrames
 using Dates
 
 include("validation-utils.jl")
+include("schema.jl")
 include("reading-utils.jl")
 include("stochasticprocess-utils.jl")
 
@@ -19,9 +20,6 @@ export __validate_keys!,
     __validate_directory!,
     __parse_as_type!,
     __try_conversion!,
-    __try_conversion!,
-    __try_conversion!,
-    __valid_name_regex_match,
     read_jsonc,
     read_csv,
     read_parquet,
@@ -37,5 +35,18 @@ export __validate_keys!,
     __get_dataframe_columns_for_default_value_fill,
     __fill_default_values!,
     __node2season,
-    __lagged_season
+    __lagged_season,
+    FieldRule,
+    FieldConstraint,
+    validate_schema!,
+    validate_schema_keys_types!,
+    positive,
+    non_negative,
+    in_range,
+    in_range_exclusive,
+    greater_than,
+    less_than,
+    non_empty,
+    matches,
+    unique_in
 end

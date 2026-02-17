@@ -1,21 +1,14 @@
 # CLASS Hydro -----------------------------------------------------------------------
 
 function Hydro(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid = validate_schema!(
+        d, HYDRO_SCHEMA, e; entity_label = "Hydro $(get(d, "id", "?"))"
+    )
 
-    # Build internal objects
-    valid_internals = __build_hydro_internals_from_dicts!(d, e)
-
-    # Keys and types validation
-    valid_keys_types = valid_internals && __validate_hydro_keys_types!(d, e)
-
-    # Content validation
-    bus_ref = valid_keys_types ? __validate_hydro_content!(d, buses, e) : nothing
+    bus_ref = valid ? __validate_hydro_content!(d, buses, e) : nothing
     valid_content = bus_ref !== nothing
 
-    # Consistency validation
-    valid_consistency = valid_content && __validate_hydro_consistency!(d, e)
-
-    return if valid_consistency
+    return if valid_content
         Hydro(
             d["id"],
             d["downstream_id"],
@@ -38,17 +31,9 @@ end
 # CLASS Hydros -----------------------------------------------------------------------
 
 function Hydros(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    # Build internal objects
     valid_internals = __build_hydros_internals_from_dicts!(d, buses, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_hydros_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_hydros_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_hydros_consistency!(d, e)
+    valid_consistency = valid_keys_types && __validate_hydros_consistency!(d, e)
 
     return valid_consistency ? Hydros(d["entities"], d["topology"]) : nothing
 end

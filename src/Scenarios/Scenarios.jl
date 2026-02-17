@@ -38,18 +38,7 @@ struct Graph
     edges::Vector{Edge}
 end
 
-"""
-    __get_ids(s)
-
-Return the `id`s of elements represented in a load scenarios object
-"""
 function __get_ids(s::LoadScenarios) end
-
-"""
-    length(s::LoadScenarios)
-
-Return the number of dimensions (elements) in the load scenarios
-"""
 function length(s::LoadScenarios) end
 
 struct ScenariosData <: InputModule
@@ -61,58 +50,26 @@ struct ScenariosData <: InputModule
     load::LoadScenarios
 end
 
-# TODO - this will change once we have a proper load representation
-"""
-    __get_load(m, s)
+function __get_load(bus_id::Integer, node_id::Integer, load::LoadScenarios)::Real end
 
-Gets the load value for a given bus and stage
-"""
-function __get_load(bus_id::Integer, stage_index::Integer, load::LoadScenarios)::Real end
-
-# TODO - this will change once we have a proper load representation
-"""
-    get_load(m, s)
-
-Gets the load value for a given bus and stage
-"""
-function get_load(bus_id::Integer, stage_index::Integer, scenarios::ScenariosData)::Real
-    return __get_load(bus_id, stage_index, scenarios.load)
+function get_load(bus_id::Integer, node_id::Integer, scenarios::ScenariosData)::Real
+    return __get_load(bus_id, node_id, scenarios.load)
 end
 
-"""
-    set_seed!(scenarios::ScenariosData)
-
-Sets the seed to be used in RNG
-"""
 function set_seed!(scenarios::ScenariosData)
     return Random.seed!(scenarios.seed)
 end
 
-"""
-    get_graph(scenarios::ScenariosData)
-
-Gets the graph topology for the given scenarios
-"""
 function get_graph(scenarios::ScenariosData)
     return scenarios.graph
 end
 
-"""
-    get_number_of_stages(g::Graph)
-
-Gets the number of stages defined acconding to the graph topology
-"""
 function get_number_of_stages(g::Graph)::Integer
     node_stages = [n.stage for n in g.nodes]
     unique!(node_stages)
     return length(node_stages)
 end
 
-"""
-    get_root_node(g::Graph)
-
-Gets the root node acconding to the graph topology
-"""
 function get_root_node_id(g::Graph)::Integer
     node_ids = [n.id for n in g.nodes]
     nodes_with_targets = [e.target[].id for e in g.edges]

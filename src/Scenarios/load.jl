@@ -3,20 +3,13 @@
 
 struct DeterministicLoadValue
     bus_id::Integer
-    stage_index::Integer
+    node_id::Integer
     value::Real
 end
 
 function DeterministicLoadValue(d::Dict{String,Any}, e::CompositeException)
-    valid_keys_types = __validate_deterministic_load_value_keys_types!(d, e)
-    valid_content = valid_keys_types && __validate_deterministic_load_value_content!(d, e)
-    valid = valid_content
-
-    return if valid
-        DeterministicLoadValue(d["bus_id"], d["stage_index"], d["value"])
-    else
-        nothing
-    end
+    valid = validate_schema!(d, DETERMINISTIC_LOAD_VALUE_SCHEMA, e)
+    return valid ? DeterministicLoadValue(d["bus_id"], d["node_id"], d["value"]) : nothing
 end
 
 struct DeterministicLoad <: LoadScenarios
@@ -24,9 +17,7 @@ struct DeterministicLoad <: LoadScenarios
 end
 
 function DeterministicLoad(d::Dict{String,Any}, e::CompositeException)
-    valid_values = __build_deterministic_load_values!(d, e)
-    valid_internals = valid_values
-
+    valid_internals = __build_deterministic_load_values!(d, e)
     valid_keys_types = valid_internals && __validate_deterministic_load_keys_types!(d, e)
     valid_content = valid_keys_types && __validate_deterministic_load_content!(d, e)
     valid_consistency = valid_content && __validate_deterministic_load_consistency!(d, e)
@@ -34,12 +25,13 @@ function DeterministicLoad(d::Dict{String,Any}, e::CompositeException)
     return valid_consistency ? DeterministicLoad(d["values"]) : nothing
 end
 
-function __get_load(bus_id::Integer, stage_index::Integer, load::DeterministicLoad)::Real
+function __get_load(bus_id::Integer, node_id::Integer, load::DeterministicLoad)::Real
     for value in load.values
-        if value.bus_id == bus_id && value.stage_index == stage_index
+        if value.bus_id == bus_id && value.node_id == node_id
             return value.value
         end
     end
+    @warn "No load value found for bus_id=$bus_id at node_id=$node_id, defaulting to 0.0"
     return 0.0
 end
 

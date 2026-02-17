@@ -6,17 +6,6 @@ function __validate_engine_main_key_type!(d::Dict{String,Any}, e::CompositeExcep
     return valid_types
 end
 
-function __validate_sddp_engine_keys_types_before_build!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    valid_keys = __validate_keys!(d, ["policy", "simulation"], e)
-    valid_types =
-        valid_keys && __validate_key_types!(
-            d, ["policy", "simulation"], [Dict{String,Any}, Dict{String,Any}], e
-        )
-    return valid_types
-end
-
 function __validate_sddp_engine_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -29,20 +18,6 @@ function __validate_sddp_engine_keys_types!(
             e,
         )
     return valid_types
-end
-
-# CONTENT VALIDATORS -----------------------------------------------------------------------
-
-function __validate_sddp_engine_content!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
-end
-
-# CONSISTENCY VALIDATORS -------------------------------------------------------------------
-
-function __validate_sddp_engine_consistency!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
 end
 
 # HELPERS ----------------------------------------------------------------------------------
