@@ -1,6 +1,6 @@
 import SDDPlab: Engines
 import SDDPlab: System
-using GLPK
+using HiGHS
 using JuMP
 using Logging: with_logger, NullLogger
 
@@ -104,7 +104,7 @@ end
         study, e = _build_study("1dtoy")
         @test length(e) == 0
         model = with_logger(NullLogger()) do
-            SDDPlab.build(study, GLPK.Optimizer)
+            SDDPlab.build(study, HiGHS.Optimizer)
         end
         @test model !== nothing
 
@@ -119,7 +119,7 @@ end
         study, e = _build_study("4ree")
         @test length(e) == 0
         model = with_logger(NullLogger()) do
-            SDDPlab.build(study, GLPK.Optimizer)
+            SDDPlab.build(study, HiGHS.Optimizer)
         end
         @test model !== nothing
 

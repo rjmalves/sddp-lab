@@ -85,6 +85,10 @@ const REGULARIZED_FORWARD_PASS_SCHEMA = [
     FieldRule("rho", Real; constraints = [positive()]),
 ]
 
+const INFLOW_PENALTY_SCHEMA = [
+    FieldRule("penalty_cost", Real; constraints = [positive()]),
+]
+
 function __validate_diagnostics_halt_ge_warn!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool

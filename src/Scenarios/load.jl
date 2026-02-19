@@ -1,15 +1,22 @@
 
-# CLASS DeterministicLoad -----------------------------------------------------------------------
-
 struct DeterministicLoadValue
     bus_id::Integer
     node_id::Integer
     value::Real
+    block_name::String
 end
 
 function DeterministicLoadValue(d::Dict{String,Any}, e::CompositeException)
     valid = validate_schema!(d, DETERMINISTIC_LOAD_VALUE_SCHEMA, e)
-    return valid ? DeterministicLoadValue(d["bus_id"], d["node_id"], d["value"]) : nothing
+    if !valid
+        return nothing
+    end
+    block_name = get(d, "block", "")
+    return DeterministicLoadValue(d["bus_id"], d["node_id"], d["value"], String(block_name))
+end
+
+function DeterministicLoadValue(bus_id::Integer, node_id::Integer, value::Real)
+    return DeterministicLoadValue(bus_id, node_id, value, "")
 end
 
 struct DeterministicLoad <: LoadScenarios
@@ -35,7 +42,25 @@ function __get_load(bus_id::Integer, node_id::Integer, load::DeterministicLoad):
     return 0.0
 end
 
-# GENERAL METHODS --------------------------------------------------------------------------
+function __get_load(
+    bus_id::Integer, node_id::Integer, block_idx::Integer, load::DeterministicLoad
+)::Real
+    return __get_load(bus_id, node_id, load)
+end
+
+function __get_load_by_block_name(
+    bus_id::Integer, node_id::Integer, block_name::String, load::DeterministicLoad
+)::Real
+    for value in load.values
+        if value.bus_id == bus_id && value.node_id == node_id && value.block_name == block_name
+            return value.value
+        end
+    end
+    if block_name != ""
+        @warn "No load value found for bus_id=$bus_id, node_id=$node_id, block='$block_name', defaulting to 0.0"
+    end
+    return 0.0
+end
 
 function __get_ids(s::DeterministicLoad)
     return collect(Set(map(x -> x.bus_id, values(s.values))))
@@ -44,8 +69,6 @@ end
 function length(s::DeterministicLoad)
     return length(__get_ids(s))
 end
-
-# HELPERS -------------------------------------------------------------------------------------
 
 function __build_deterministic_load_values!(
     d::Dict{String,Any}, e::CompositeException

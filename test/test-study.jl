@@ -9,29 +9,29 @@ using Suppressor
     end
     @testset "study-sddp-build" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            SDDPlab.build(study, GLPK.Optimizer)
+            SDDPlab.build(study, HiGHS.Optimizer)
         end
         @test length(e) == 0
     end
     @testset "study-sddp-train" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             artifact = SDDPlab.train(study, model)
         end
         @test length(e) == 0
     end
     @testset "study-sddp-save-policy" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             artifact = SDDPlab.train(study, model)
             SDDPlab.save_policy(study, artifact, ".", SDDPlab.ParquetFormat())
         end
@@ -39,20 +39,20 @@ using Suppressor
     end
     @testset "study-sddp-load-policy" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
         end
         @test length(e) == 0
     end
     @testset "study-sddp-simulate" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             SDDPlab.train(study, model)
             artifact = SDDPlab.simulate(study, model)
         end
@@ -60,10 +60,10 @@ using Suppressor
     end
     @testset "study-sddp-save-simulation" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             SDDPlab.train(study, model)
             artifact = SDDPlab.simulate(study, model)
             SDDPlab.save_simulation(study, artifact, ".", SDDPlab.ParquetFormat())

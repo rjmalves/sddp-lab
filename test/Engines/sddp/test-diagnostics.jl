@@ -1,7 +1,7 @@
 import SDDPlab: Engines
 using SDDP: SDDP
 using JuMP: JuMP
-using GLPK: GLPK
+using HiGHS: HiGHS
 
 @testset "engines-sddp-diagnostics" begin
     # -----------------------------------------------------------------------
@@ -199,7 +199,7 @@ using GLPK: GLPK
         config = Engines.DiagnosticsConfig(false, 1e6, 1e10)
         # When diagnostics is disabled, the model is never inspected
         model = SDDP.LinearPolicyGraph(;
-            stages = 2, lower_bound = 0.0, optimizer = GLPK.Optimizer
+            stages = 2, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.@variable(sp, 0 <= x <= 10, SDDP.State, initial_value = 5)
             SDDP.@stageobjective(sp, x.out)
@@ -210,7 +210,7 @@ using GLPK: GLPK
     @testset "run-diagnostics-enabled-basic-model" begin
         config = Engines.DiagnosticsConfig(true, 1e6, 1e10)
         model = SDDP.LinearPolicyGraph(;
-            stages = 2, lower_bound = 0.0, optimizer = GLPK.Optimizer
+            stages = 2, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.@variable(sp, 0 <= x <= 100, SDDP.State, initial_value = 50)
             JuMP.@variable(sp, 0 <= u <= 50)
@@ -225,7 +225,7 @@ using GLPK: GLPK
         # Build a model with extreme coefficient ranges to trigger halt
         config = Engines.DiagnosticsConfig(true, 1e2, 1e4)
         model = SDDP.LinearPolicyGraph(;
-            stages = 2, lower_bound = 0.0, optimizer = GLPK.Optimizer
+            stages = 2, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.@variable(sp, 0 <= x <= 1e8, SDDP.State, initial_value = 1e4)
             JuMP.@variable(sp, 0 <= u <= 1e-2)
@@ -241,7 +241,7 @@ using GLPK: GLPK
         # Build a model with moderate coefficient ranges: triggers warn but not halt
         config = Engines.DiagnosticsConfig(true, 1e2, 1e20)
         model = SDDP.LinearPolicyGraph(;
-            stages = 2, lower_bound = 0.0, optimizer = GLPK.Optimizer
+            stages = 2, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.@variable(sp, 0 <= x <= 1e6, SDDP.State, initial_value = 1e3)
             JuMP.@variable(sp, 0 <= u <= 50)

@@ -38,6 +38,8 @@ end
 function __get_ids(s::LoadScenarios) end
 function length(s::LoadScenarios) end
 
+include("blocks.jl")
+
 struct ScenariosData <: InputModule
     seed::Integer
     initial_season::Integer
@@ -45,12 +47,35 @@ struct ScenariosData <: InputModule
     graph::Graph
     inflow::InflowScenarios
     load::LoadScenarios
+    block_config::BlockConfig
 end
 
 function __get_load(bus_id::Integer, node_id::Integer, load::LoadScenarios)::Real end
 
+function __get_load(
+    bus_id::Integer, node_id::Integer, block_idx::Integer, load::LoadScenarios
+)::Real
+    return __get_load(bus_id, node_id, load)
+end
+
 function get_load(bus_id::Integer, node_id::Integer, scenarios::ScenariosData)::Real
     return __get_load(bus_id, node_id, scenarios.load)
+end
+
+function get_load(
+    bus_id::Integer, node_id::Integer, block_idx::Integer, scenarios::ScenariosData
+)::Real
+    bc = scenarios.block_config
+    if has_blocks(bc)
+        block_name = bc.blocks[block_idx].name
+        return __get_load_by_block_name(bus_id, node_id, block_name, scenarios.load)
+    else
+        return __get_load(bus_id, node_id, scenarios.load)
+    end
+end
+
+function get_block_config(scenarios::ScenariosData)::BlockConfig
+    return scenarios.block_config
 end
 
 function set_seed!(scenarios::ScenariosData)
@@ -94,13 +119,21 @@ include("scenariosdata-validators.jl")
 include("scenariosdata.jl")
 
 export ScenariosData,
+    Block,
+    BlockConfig,
     add_uncertainties!,
     generate_saa,
     get_load,
+    get_block_config,
     get_scenarios,
     get_graph,
     get_number_of_stages,
     get_root_node_id,
-    set_seed!
+    set_seed!,
+    has_blocks,
+    num_blocks,
+    get_block_names,
+    get_block_durations,
+    get_block_weights
 
 end

@@ -1,5 +1,5 @@
 import SDDPlab: Engines
-using GLPK: GLPK
+using HiGHS: HiGHS
 import MathOptInterface as MOI
 
 @testset "engines-sddp-solver" begin
@@ -8,24 +8,24 @@ import MathOptInterface as MOI
     # -----------------------------------------------------------------------
     @testset "solver-config-valid-name-and-attributes" begin
         d = Dict{String,Any}(
-            "name" => "GLPK",
-            "attributes" => Dict{String,Any}("msg_lev" => 0),
+            "name" => "HiGHS",
+            "attributes" => Dict{String,Any}("output_flag" => false),
         )
         e = CompositeException()
         result = Engines.SolverConfig(d, e)
         @test result !== nothing
         @test length(e) == 0
-        @test result.solver_name == "GLPK"
-        @test result.attributes == Dict{String,Any}("msg_lev" => 0)
+        @test result.solver_name == "HiGHS"
+        @test result.attributes == Dict{String,Any}("output_flag" => false)
     end
 
     @testset "solver-config-valid-name-only-no-attributes" begin
-        d = Dict{String,Any}("name" => "GLPK")
+        d = Dict{String,Any}("name" => "HiGHS")
         e = CompositeException()
         result = Engines.SolverConfig(d, e)
         @test result !== nothing
         @test length(e) == 0
-        @test result.solver_name == "GLPK"
+        @test result.solver_name == "HiGHS"
         @test result.attributes == Dict{String,Any}()
     end
 
@@ -46,7 +46,7 @@ import MathOptInterface as MOI
     end
 
     @testset "solver-config-invalid-attributes-type-rejected" begin
-        d = Dict{String,Any}("name" => "GLPK", "attributes" => "not_a_dict")
+        d = Dict{String,Any}("name" => "HiGHS", "attributes" => "not_a_dict")
         e = CompositeException()
         result = Engines.SolverConfig(d, e)
         @test result === nothing
@@ -63,15 +63,15 @@ import MathOptInterface as MOI
         @test result == true
         @test length(e) == 0
         @test d["solver"] isa Engines.SolverConfig
-        @test d["solver"].solver_name == "GLPK"
+        @test d["solver"].solver_name == "HiGHS"
         @test d["solver"].attributes == Dict{String,Any}()
     end
 
     @testset "build-solver-valid-dict" begin
         d = Dict{String,Any}(
             "solver" => Dict{String,Any}(
-                "name" => "GLPK",
-                "attributes" => Dict{String,Any}("msg_lev" => 0),
+                "name" => "HiGHS",
+                "attributes" => Dict{String,Any}("output_flag" => false),
             ),
         )
         e = CompositeException()
@@ -79,8 +79,8 @@ import MathOptInterface as MOI
         @test result == true
         @test length(e) == 0
         @test d["solver"] isa Engines.SolverConfig
-        @test d["solver"].solver_name == "GLPK"
-        @test d["solver"].attributes == Dict{String,Any}("msg_lev" => 0)
+        @test d["solver"].solver_name == "HiGHS"
+        @test d["solver"].attributes == Dict{String,Any}("output_flag" => false)
     end
 
     @testset "build-solver-invalid-type" begin
@@ -94,22 +94,21 @@ import MathOptInterface as MOI
     # -----------------------------------------------------------------------
     # create_optimizer
     # -----------------------------------------------------------------------
-    @testset "create-optimizer-glpk-default" begin
-        config = Engines.SolverConfig("GLPK", Dict{String,Any}())
+    @testset "create-optimizer-highs-default" begin
+        config = Engines.SolverConfig("HiGHS", Dict{String,Any}())
         factory = Engines.create_optimizer(config)
         @test factory isa Function
         opt = factory()
-        @test opt isa GLPK.Optimizer
+        @test opt isa HiGHS.Optimizer
     end
 
-    @testset "create-optimizer-glpk-with-attributes" begin
-        config = Engines.SolverConfig("GLPK", Dict{String,Any}("msg_lev" => 0))
+    @testset "create-optimizer-highs-with-attributes" begin
+        config = Engines.SolverConfig("HiGHS", Dict{String,Any}("output_flag" => false))
         factory = Engines.create_optimizer(config)
         opt = factory()
-        @test opt isa GLPK.Optimizer
-        # Verify the attribute was set by reading it back
-        val = MOI.get(opt, MOI.RawOptimizerAttribute("msg_lev"))
-        @test val == 0
+        @test opt isa HiGHS.Optimizer
+        val = MOI.get(opt, MOI.RawOptimizerAttribute("output_flag"))
+        @test val == false
     end
 
     @testset "create-optimizer-unsupported-solver" begin
@@ -157,7 +156,7 @@ import MathOptInterface as MOI
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
         @test length(e) == 0
-        @test result.solver.solver_name == "GLPK"
+        @test result.solver.solver_name == "HiGHS"
         @test result.solver.attributes == Dict{String,Any}()
     end
 
@@ -185,8 +184,8 @@ import MathOptInterface as MOI
             ),
         )
         solver_dict = Dict{String,Any}(
-            "name" => "GLPK",
-            "attributes" => Dict{String,Any}("msg_lev" => 0),
+            "name" => "HiGHS",
+            "attributes" => Dict{String,Any}("output_flag" => false),
         )
         params = Dict{String,Any}(
             "policy" => policy_dict,
@@ -197,8 +196,8 @@ import MathOptInterface as MOI
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
         @test length(e) == 0
-        @test result.solver.solver_name == "GLPK"
-        @test result.solver.attributes == Dict{String,Any}("msg_lev" => 0)
+        @test result.solver.solver_name == "HiGHS"
+        @test result.solver.attributes == Dict{String,Any}("output_flag" => false)
     end
 
     # -----------------------------------------------------------------------
@@ -220,9 +219,9 @@ import MathOptInterface as MOI
             100, Engines.Serial(), Engines.DefaultSampling()
         )
         diag = Engines.DiagnosticsConfig(false, 1e6, 1e10)
-        solver = Engines.SolverConfig("GLPK", Dict{String,Any}("msg_lev" => 0))
-        engine = Engines.SDDPEngine(policy, simulation, diag, solver)
-        @test engine.solver.solver_name == "GLPK"
-        @test engine.solver.attributes == Dict{String,Any}("msg_lev" => 0)
+        solver = Engines.SolverConfig("HiGHS", Dict{String,Any}("output_flag" => false))
+        engine = Engines.SDDPEngine(policy, simulation, diag, solver, Engines.InflowNone())
+        @test engine.solver.solver_name == "HiGHS"
+        @test engine.solver.attributes == Dict{String,Any}("output_flag" => false)
     end
 end

@@ -26,7 +26,8 @@ function _fast_study(study; num_iters = 10, num_sims = 10)
         policy_def,
         sim_def,
         Engines.DiagnosticsConfig(false, 1e6, 1e10),
-        Engines.SolverConfig("GLPK", Dict{String,Any}()),
+        Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+        Engines.InflowNone(),
     )
     return SDDPlab.Study(study.inputs, engine)
 end
@@ -34,14 +35,14 @@ end
 @testset "main" begin
     @testset "main_success" begin
         e = CompositeException()
-        using GLPK
+        using HiGHS
         @suppress begin
             original = SDDPlab.read_study(example_dir; e = e)
             study = _fast_study(original)
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
             simulation = SDDPlab.simulate(study, model)
             SDDPlab.save_simulation(study, simulation, ".", SDDPlab.ParquetFormat())
@@ -50,14 +51,14 @@ end
     end
 
     @testset "1dsin-pipeline" begin
-        using GLPK
+        using HiGHS
         example_1dsin = joinpath(@__DIR__, "..", "example", "1dsin")
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_1dsin; e = e)
             @test length(e) == 0
             study = _fast_study(original)
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -66,14 +67,14 @@ end
     end
 
     @testset "1dsin_ar-pipeline" begin
-        using GLPK
+        using HiGHS
         example_1dsin_ar = joinpath(@__DIR__, "..", "example", "1dsin_ar")
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_1dsin_ar; e = e)
             @test length(e) == 0
             study = _fast_study(original)
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -82,14 +83,14 @@ end
     end
 
     @testset "4ree-pipeline" begin
-        using GLPK
+        using HiGHS
         example_4ree = joinpath(@__DIR__, "..", "example", "4ree")
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_4ree; e = e)
             @test length(e) == 0
             study = _fast_study(original)
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -98,7 +99,7 @@ end
     end
 
     @testset "1dtoy-pipeline-statistical-stopping" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -120,17 +121,17 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
         end
     end
 
     @testset "1dtoy-pipeline-multiple-stopping-criteria" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -154,17 +155,17 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
         end
     end
 
     @testset "1dtoy-pipeline-explicit-insamplemc-simulation" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -186,10 +187,10 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.InSampleMC(12, false)
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -198,7 +199,7 @@ end
     end
 
     @testset "1dtoy-pipeline-strengthened-conic-duality" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -220,10 +221,10 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -232,7 +233,7 @@ end
     end
 
     @testset "1dtoy-pipeline-revisiting-forward-pass" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -254,10 +255,10 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -266,7 +267,7 @@ end
     end
 
     @testset "1dtoy-pipeline-risk-adjusted-forward-pass" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -288,10 +289,10 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
@@ -300,7 +301,7 @@ end
     end
 
     @testset "1dtoy-pipeline-multi-cut" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -322,14 +323,14 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
-            model = SDDPlab.build(study, GLPK.Optimizer)
+            model = SDDPlab.build(study, HiGHS.Optimizer)
             SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
             simulation = SDDPlab.simulate(study, model)
             @test simulation !== nothing
@@ -337,7 +338,7 @@ end
     end
 
     @testset "1dtoy-pipeline-autoscaling" begin
-        using GLPK
+        using HiGHS
         using SDDP: SDDP
         @suppress begin
             e = CompositeException()
@@ -363,9 +364,9 @@ end
                 Engines.SingleCut(),
                 Engines.NoScaling(),
             )
-            noscale_engine = Engines.SDDPEngine(noscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            noscale_engine = Engines.SDDPEngine(noscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             noscale_study = SDDPlab.Study(original.inputs, noscale_engine)
-            noscale_model = SDDPlab.build(noscale_study, GLPK.Optimizer)
+            noscale_model = SDDPlab.build(noscale_study, HiGHS.Optimizer)
             noscale_policy = SDDPlab.train(noscale_study, noscale_model)
             @test noscale_policy !== nothing
             noscale_bound = SDDP.calculate_bound(noscale_model.policy_graph)
@@ -381,9 +382,9 @@ end
                 Engines.SingleCut(),
                 Engines.AutoScaling(),
             )
-            autoscale_engine = Engines.SDDPEngine(autoscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            autoscale_engine = Engines.SDDPEngine(autoscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             autoscale_study = SDDPlab.Study(original.inputs, autoscale_engine)
-            autoscale_model = SDDPlab.build(autoscale_study, GLPK.Optimizer)
+            autoscale_model = SDDPlab.build(autoscale_study, HiGHS.Optimizer)
             autoscale_policy = SDDPlab.train(autoscale_study, autoscale_model)
             @test autoscale_policy !== nothing
 
@@ -414,7 +415,7 @@ end
     end
 
     @testset "1dtoy-threaded-type-wiring" begin
-        using GLPK
+        using HiGHS
         @suppress begin
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
@@ -436,7 +437,7 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Threaded(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone())
             study = SDDPlab.Study(original.inputs, engine)
 
             @test study.engine.policy.parallel_scheme isa Engines.Threaded
@@ -449,7 +450,7 @@ end
             e = CompositeException()
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
-            @test original.engine.solver.solver_name == "GLPK"
+            @test original.engine.solver.solver_name == "HiGHS"
 
             study = _fast_study(original)
             model = SDDPlab.build(study)
@@ -462,7 +463,7 @@ end
     end
 
     @testset "1dtoy-asynchronous-type-wiring" begin
-        using GLPK
+        using HiGHS
         using Distributed
         @suppress begin
             e = CompositeException()
@@ -489,7 +490,8 @@ end
                 policy_def,
                 sim_def,
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
-                Engines.SolverConfig("GLPK", Dict{String,Any}()),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
             )
             study = SDDPlab.Study(original.inputs, engine)
 
@@ -499,7 +501,7 @@ end
     end
 
     @testset "1dtoy-pipeline-asynchronous" begin
-        using GLPK
+        using HiGHS
         using Distributed
         @suppress begin
             if Distributed.nprocs() == 1
@@ -530,10 +532,10 @@ end
                     policy_def,
                     sim_def,
                     Engines.DiagnosticsConfig(false, 1e6, 1e10),
-                    Engines.SolverConfig("GLPK", Dict{String,Any}()),
+                    Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 )
                 study = SDDPlab.Study(original.inputs, engine)
-                model = SDDPlab.build(study, GLPK.Optimizer)
+                model = SDDPlab.build(study, HiGHS.Optimizer)
                 policy = SDDPlab.train(study, model)
                 @test policy !== nothing
             end

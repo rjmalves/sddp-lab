@@ -3,7 +3,13 @@ function SDDPEngine(d::Dict{String,Any}, e::CompositeException)
     valid_keys_types = valid_internals && __validate_sddp_engine_keys_types!(d, e)
 
     return if valid_keys_types
-        SDDPEngine(d["policy"], d["simulation"], d["diagnostics"], d["solver"])
+        SDDPEngine(
+            d["policy"],
+            d["simulation"],
+            d["diagnostics"],
+            d["solver"],
+            d["inflow_non_negativity"],
+        )
     else
         nothing
     end
@@ -16,4 +22,48 @@ function __build_engine!(d::Dict{String,Any}, e::CompositeException)::Bool
     end
 
     return __kind_factory!(@__MODULE__, d, "engine", e)
+end
+
+function InflowNone(::Dict{String,Any}, ::CompositeException)
+    return InflowNone()
+end
+
+function InflowPenalty(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, INFLOW_PENALTY_SCHEMA, e)
+    return valid ? InflowPenalty(d["penalty_cost"]) : nothing
+end
+
+function InflowTruncation(::Dict{String,Any}, ::CompositeException)
+    return InflowTruncation()
+end
+
+function InflowTruncationWithPenalty(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, INFLOW_PENALTY_SCHEMA, e)
+    return valid ? InflowTruncationWithPenalty(d["penalty_cost"]) : nothing
+end
+
+function __build_inflow_non_negativity!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "modeling") || !haskey(d["modeling"], "inflow_non_negativity")
+        d["inflow_non_negativity"] = InflowNone()
+        return true
+    end
+
+    modeling = d["modeling"]
+    inn_d = modeling["inflow_non_negativity"]
+    if !(inn_d isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'inflow_non_negativity' must be a Dict{String,Any}, got $(typeof(inn_d))",
+            ),
+        )
+        return false
+    end
+
+    temp = Dict{String,Any}("inflow_non_negativity" => convert(Dict{String,Any}, inn_d))
+    result = __kind_factory!(@__MODULE__, temp, "inflow_non_negativity", e)
+    if result
+        d["inflow_non_negativity"] = temp["inflow_non_negativity"]
+    end
+    return result
 end

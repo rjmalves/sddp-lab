@@ -6,13 +6,13 @@ using ..Scenarios
 using ..System
 using ..Utils
 
+using Dates
 using DataFrames
 using Distributed
 using SDDP: SDDP
 using JuMP: JuMP
 using JSON
 using CSV
-using GLPK: GLPK
 import MathOptInterface as MOI
 
 struct ScalingConfig
@@ -196,11 +196,26 @@ struct SolverConfig
     attributes::Dict{String,Any}
 end
 
+abstract type InflowNonNegativity end
+
+struct InflowNone <: InflowNonNegativity end
+
+struct InflowPenalty <: InflowNonNegativity
+    penalty_cost::Float64
+end
+
+struct InflowTruncation <: InflowNonNegativity end
+
+struct InflowTruncationWithPenalty <: InflowNonNegativity
+    penalty_cost::Float64
+end
+
 struct SDDPEngine <: Engine
     policy::SDDPPolicyTaskDefinition
     simulation::SDDPSimulationTaskDefinition
     diagnostics::DiagnosticsConfig
     solver::SolverConfig
+    inflow_non_negativity::InflowNonNegativity
 end
 
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
@@ -213,6 +228,11 @@ include("input-validators.jl")
 export SDDPEngine,
     DiagnosticsConfig,
     SolverConfig,
+    InflowNonNegativity,
+    InflowNone,
+    InflowPenalty,
+    InflowTruncation,
+    InflowTruncationWithPenalty,
     __build_engine!,
     build,
     train,

@@ -61,7 +61,7 @@ end
 
 function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool
     if !haskey(d, "solver")
-        d["solver"] = SolverConfig("GLPK", Dict{String,Any}())
+        d["solver"] = SolverConfig("HiGHS", Dict{String,Any}())
         return true
     end
 
@@ -380,7 +380,7 @@ The user is responsible for setting up distributed workers before calling
 
 1. Start Julia with `julia -p N` or call `Distributed.addprocs(N)`.
 2. Load SDDPlab and the solver on all workers:
-   `@everywhere using SDDPlab, GLPK`
+   `@everywhere using SDDPlab, HiGHS`
 3. Ensure all workers have access to the input data files (shared filesystem
    or distributed storage).
 """
@@ -423,7 +423,28 @@ function generate_risk_measure(r::Entropic)::SDDP.AbstractRiskMeasure
 end
 
 function generate_risk_measure(r::WassersteinRM)::SDDP.AbstractRiskMeasure
-    return SDDP.Wasserstein(x -> sum(abs, x), GLPK.Optimizer; alpha = r.alpha)
+    optimizer = _find_available_optimizer()
+    return SDDP.Wasserstein(x -> sum(abs, x), optimizer; alpha = r.alpha)
+end
+
+"""
+    _find_available_optimizer() -> optimizer_constructor
+
+Discover an available LP solver for internal use (e.g., Wasserstein risk measure).
+Tries HiGHS first, then GLPK. Errors if neither is installed.
+"""
+function _find_available_optimizer()
+    for mod_name in (:HiGHS, :GLPK)
+        try
+            mod = Base.require(Main, mod_name)
+            return mod.Optimizer
+        catch
+        end
+    end
+    return error(
+        "WassersteinRM risk measure requires an LP solver but none could be found. " *
+        "Install one: `import Pkg; Pkg.add(\"HiGHS\")`",
+    )
 end
 
 function generate_risk_measure(r::ModifiedChiSquared)::SDDP.AbstractRiskMeasure

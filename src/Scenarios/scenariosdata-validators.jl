@@ -1,14 +1,10 @@
-# SCHEMAS ----------------------------------------------------------------------------------
-
 const SCENARIOS_DATA_SCHEMA = [
     FieldRule("seed", Integer),
     FieldRule("initial_season", Integer; constraints = [positive()]),
     FieldRule("branchings", Integer; constraints = [positive()]),
 ]
 
-# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
-
-UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "graph", "inflow", "load"]
+UNCERTAINTIES_KEYS = ["seed", "initial_season", "branchings", "graph", "inflow", "load", "block_config"]
 UNCERTAINTIES_KEY_TYPES = [
     Integer,
     Integer,
@@ -16,6 +12,7 @@ UNCERTAINTIES_KEY_TYPES = [
     Graph,
     T where {T<:InflowScenarios},
     T where {T<:LoadScenarios},
+    BlockConfig,
 ]
 UNCERTAINTIES_KEY_TYPES_BEFORE_BUILD = [
     Integer, Integer, Integer, Dict{String,Any}, Dict{String,Any}, Dict{String,Any}
@@ -32,14 +29,12 @@ end
 function __validate_scenarios_keys_types_before_build!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    keys = UNCERTAINTIES_KEYS
+    keys = ["seed", "initial_season", "branchings", "graph", "inflow", "load"]
     keys_types = UNCERTAINTIES_KEY_TYPES_BEFORE_BUILD
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
     return valid_types
 end
-
-# CONSISTENCY VALIDATORS -----------------------------------------------------------------------
 
 function __validate_deterministic_load_node_references!(
     load::DeterministicLoad, graph::Graph, e::CompositeException
@@ -86,7 +81,25 @@ function __validate_scenarios_consistency!(d::Dict{String,Any}, e::CompositeExce
     return valid
 end
 
-# HELPER FUNCTIONS ------------------------------------------------------------------------
+function __build_block_config!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if haskey(d, "blocks")
+        blocks_d = d["blocks"]
+        if !(blocks_d isa Dict)
+            push!(e, AssertionError("'blocks' must be a Dict, got $(typeof(blocks_d))"))
+            d["block_config"] = default_block_config()
+            return false
+        end
+        bc = BlockConfig(blocks_d, e)
+        if bc === nothing
+            d["block_config"] = default_block_config()
+            return false
+        end
+        d["block_config"] = bc
+    else
+        d["block_config"] = default_block_config()
+    end
+    return true
+end
 
 function __build_scenarios_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
@@ -94,7 +107,8 @@ function __build_scenarios_internals_from_dicts!(
     valid_graph = __build_graph!(d, e)
     valid_inflow = __build_inflow_scenarios!(d, e)
     valid_load = __build_load_scenarios!(d, e)
-    return valid_graph && valid_inflow && valid_load
+    valid_blocks = __build_block_config!(d, e)
+    return valid_graph && valid_inflow && valid_load && valid_blocks
 end
 
 function __cast_scenarios_internals_from_files!(
@@ -104,5 +118,6 @@ function __cast_scenarios_internals_from_files!(
     valid_graph = valid_key_types && __cast_graph_internals_from_files!(d, e)
     valid_inflow = valid_key_types && __cast_inflow_scenarios_internals_from_files!(d, e)
     valid_load = valid_key_types && __cast_load_scenarios_internals_from_files!(d, e)
-    return valid_graph && valid_inflow && valid_load
+    valid_blocks = __build_block_config!(d, e)
+    return valid_graph && valid_inflow && valid_load && valid_blocks
 end

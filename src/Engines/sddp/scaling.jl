@@ -43,7 +43,6 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
     factors[CONTRACT_DISPATCH] = _safe_scaling_factor(max_gen)
     factors[DEFICIT] = _safe_scaling_factor(max_gen)
 
-    # Unified storage/flow factor: hydro balance links v, outflow, and inflow
     max_stor = isempty(hydros) ? DEFAULT_SCALING_FACTOR :
                maximum(h.max_storage for h in hydros)
     flow_values = Float64[
@@ -95,6 +94,8 @@ function no_scaling_config()::ScalingConfig
         SPILLAGE => DEFAULT_SCALING_FACTOR,
         OUTFLOW => DEFAULT_SCALING_FACTOR,
         INFLOW => DEFAULT_SCALING_FACTOR,
+        INFLOW_SLACK => DEFAULT_SCALING_FACTOR,
+        NOISE_ADJUSTMENT_SLACK => DEFAULT_SCALING_FACTOR,
         PUMPED_FLOW => DEFAULT_SCALING_FACTOR,
         DIRECT_EXCHANGE => DEFAULT_SCALING_FACTOR,
         REVERSE_EXCHANGE => DEFAULT_SCALING_FACTOR,
@@ -130,7 +131,6 @@ function apply_scaling(system::SystemData, config::ScalingConfig)::SystemData
     ]
     new_buses = Buses(scaled_buses)
 
-    # exch_pen_scaled = exch_pen * s_exch / (s_cost * s_hgen)
     scaled_lines = Line[
         Line(
             l.id,
@@ -145,8 +145,6 @@ function apply_scaling(system::SystemData, config::ScalingConfig)::SystemData
     ]
     new_lines = Lines(scaled_lines)
 
-    # prod_scaled = prod * s_flow / s_hgen
-    # spill_pen_scaled = spill_pen * s_flow / (s_cost * s_hgen)
     scaled_hydros = Hydro[
         Hydro(
             h.id,

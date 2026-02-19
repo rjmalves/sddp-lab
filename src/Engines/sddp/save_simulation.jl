@@ -25,6 +25,10 @@ function _unscale_value(value::AbstractVector, factor::Float64)
     return value .* factor
 end
 
+function _unscale_value(value::AbstractMatrix, factor::Float64)
+    return value .* factor
+end
+
 function _unscale_value(value, factor::Float64)
     return value
 end
@@ -36,11 +40,6 @@ function _unscale_state_variable(value, factor::Float64)
     return value
 end
 
-"""
-    _get_variable_unscale_factor(sym, config) -> Float64
-
-Unscaling factor for a variable. Duals scale inversely to their constraint.
-"""
 function _get_variable_unscale_factor(sym::Symbol, config::ScalingConfig)::Float64
     s_cost = get_scaling_factor(config, COST_SCALE)
     s_gen = get_scaling_factor(config, HYDRO_GENERATION)
@@ -51,7 +50,7 @@ function _get_variable_unscale_factor(sym::Symbol, config::ScalingConfig)::Float
         return s_stor
     elseif sym == HYDRO_GENERATION || sym == THERMAL_GENERATION || sym == DEFICIT
         return s_gen
-    elseif sym == TURBINED_FLOW || sym == SPILLAGE || sym == OUTFLOW || sym == INFLOW
+    elseif sym == TURBINED_FLOW || sym == SPILLAGE || sym == OUTFLOW || sym == INFLOW || sym == INFLOW_SLACK
         return s_flow
     elseif sym == DIRECT_EXCHANGE || sym == REVERSE_EXCHANGE || sym == NET_EXCHANGE
         return get_scaling_factor(config, DIRECT_EXCHANGE)
@@ -116,6 +115,48 @@ function __extract_variable(data::Any, in_state::Bool = false, out_state::Bool =
     end
 end
 
+function __variable_exists_in_sim(
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol
+)::Bool
+    for sim in simulations
+        for stage_dict in sim
+            if haskey(stage_dict, variable)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function __is_2d_variable(simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol)::Bool
+    for sim in simulations
+        for stage_dict in sim
+            if haskey(stage_dict, variable)
+                return stage_dict[variable] isa AbstractMatrix
+            end
+        end
+    end
+    return false
+end
+
+function __get_num_blocks_from_sim(
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol
+)::Int
+    for sim in simulations
+        for stage_dict in sim
+            if haskey(stage_dict, variable)
+                val = stage_dict[variable]
+                if val isa AbstractMatrix
+                    return size(val, 2)
+                else
+                    return 1
+                end
+            end
+        end
+    end
+    return 1
+end
+
 function __increase_dataframe!(
     df::DataFrame,
     variable::Symbol,
@@ -126,20 +167,33 @@ function __increase_dataframe!(
     in_state::Bool = false,
     out_state::Bool = false,
 )
+    is_2d = __is_2d_variable(simulations, variable)
+    num_blk = is_2d ? __get_num_blocks_from_sim(simulations, variable) : 1
+
     for j in eachindex(indexes)
         index = indexes[j]
-        internal_df = DataFrame()
-        internal_df.stage = 1:length(simulations[1])
-        internal_df[!, "variable_name"] = fill(name, length(simulations[1]))
-        internal_df[!, index_name] = fill(index, length(simulations[1]))
-        for i in eachindex(simulations)
-            internal_df[!, string(i)] = [
-                __extract_variable(s[variable][j], in_state, out_state) for
-                s in simulations[i]
-            ]
-            internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits = 2)
+        for k in 1:num_blk
+            internal_df = DataFrame()
+            internal_df.stage = 1:length(simulations[1])
+            var_name = num_blk > 1 ? "$(name)_B$(k)" : name
+            internal_df[!, "variable_name"] = fill(var_name, length(simulations[1]))
+            internal_df[!, index_name] = fill(index, length(simulations[1]))
+            for i in eachindex(simulations)
+                if is_2d
+                    internal_df[!, string(i)] = [
+                        __extract_variable(s[variable][j, k], in_state, out_state) for
+                        s in simulations[i]
+                    ]
+                else
+                    internal_df[!, string(i)] = [
+                        __extract_variable(s[variable][j], in_state, out_state) for
+                        s in simulations[i]
+                    ]
+                end
+                internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits = 2)
+            end
+            append!(df, internal_df)
         end
-        append!(df, internal_df)
     end
 end
 
@@ -164,6 +218,8 @@ function __write_simulation_results(
         "operation_hydros" => [
             STORED_VOLUME,
             INFLOW,
+            INFLOW_SLACK,
+            NOISE_ADJUSTMENT_SLACK,
             TURBINED_FLOW,
             OUTFLOW,
             SPILLAGE,
@@ -188,6 +244,8 @@ function __write_simulation_results(
         HYDRO_GENERATION => get_hydros_entities(system),
         STORED_VOLUME => get_hydros_entities(system),
         INFLOW => get_hydros_entities(system),
+        INFLOW_SLACK => get_hydros_entities(system),
+        NOISE_ADJUSTMENT_SLACK => get_hydros_entities(system),
         TURBINED_FLOW => get_hydros_entities(system),
         OUTFLOW => get_hydros_entities(system),
         SPILLAGE => get_hydros_entities(system),
@@ -198,6 +256,9 @@ function __write_simulation_results(
     for (key, variables) in map_variable_output
         df = DataFrame()
         for variable in variables
+            if !__variable_exists_in_sim(simulations, variable)
+                continue
+            end
             if variable in keys(map_variable_entities)
                 entities_ids = map(u -> u.id, map_variable_entities[variable])
             else

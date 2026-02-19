@@ -57,7 +57,7 @@
                 }
             },
             "solver": {
-                "name": "GLPK",
+                "name": "HiGHS",
                 "attributes": {}
             }
         }
