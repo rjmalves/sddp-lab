@@ -435,9 +435,9 @@ function add_system_objective!(
             tau_k[k] * (
                 if num_nc > 0
                     sum(
-                    noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n, k] for
-                    n in 1:num_nc
-                )
+                        noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n, k] for
+                        n in 1:num_nc
+                    )
                 else
                     0.0
                 end
@@ -445,9 +445,9 @@ function add_system_objective!(
             tau_k[k] * (
                 if num_contracts > 0
                     sum(
-                    contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n, k] for
-                    n in 1:num_contracts
-                )
+                        contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n, k] for
+                        n in 1:num_contracts
+                    )
                 else
                     0.0
                 end
