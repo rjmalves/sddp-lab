@@ -178,7 +178,7 @@ end
         e = CompositeException()
         scenarios = Scenarios.ScenariosData(d, e)
         @test scenarios !== nothing
-        process = scenarios.inflow.stochastic_process
+        process = Scenarios.get_stochastic_process(scenarios.inflow)
         initial_season = scenarios.initial_season
         branchings = scenarios.branchings
         num_stages = 2  # dict defines 2 nodes = 2 stages

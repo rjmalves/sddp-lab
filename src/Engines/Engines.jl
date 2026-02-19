@@ -9,6 +9,7 @@ using ..Utils
 using Dates
 using DataFrames
 using Distributed
+using Statistics: Statistics
 using SDDP: SDDP
 using JuMP: JuMP
 using JSON
@@ -210,12 +211,26 @@ struct InflowTruncationWithPenalty <: InflowNonNegativity
     penalty_cost::Float64
 end
 
+struct OutOfSampleValidation
+    num_simulations::Integer
+    seed::Integer
+    branchings::Integer
+    parallel_scheme::ParallelScheme
+end
+
+struct SDDPValidationTaskArtifact
+    simulations::Vector{Vector{Dict{Symbol,Any}}}
+    scaling::ScalingConfig
+    statistics::Dict{String,Float64}
+end
+
 struct SDDPEngine <: Engine
     policy::SDDPPolicyTaskDefinition
     simulation::SDDPSimulationTaskDefinition
     diagnostics::DiagnosticsConfig
     solver::SolverConfig
     inflow_non_negativity::InflowNonNegativity
+    validation::Union{OutOfSampleValidation,Nothing}
 end
 
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
@@ -233,6 +248,8 @@ export SDDPEngine,
     InflowPenalty,
     InflowTruncation,
     InflowTruncationWithPenalty,
+    OutOfSampleValidation,
+    SDDPValidationTaskArtifact,
     __build_engine!,
     build,
     train,
@@ -240,8 +257,11 @@ export SDDPEngine,
     load_policy,
     simulate,
     save_simulation,
+    validate,
+    save_validation,
     get_policy_definition,
     get_simulation_definition,
+    get_validation_definition,
     create_optimizer,
     ScalingConfig,
     NoScaling,

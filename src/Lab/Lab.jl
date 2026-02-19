@@ -73,6 +73,8 @@ export
     load_policy,
     simulate,
     save_simulation,
+    validate,
+    save_validation,
     # Global constants
     POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CUTS_OUTPUT_INTERCEPT_NAME,

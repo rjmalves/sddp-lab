@@ -13,9 +13,12 @@ function save_simulation(
     files::Vector{InputModule},
 ) end
 
-"""
-    diagnose(model, engine) -> Bool
+function validate(model::Model, validation, files::Vector{InputModule}) end
+function save_validation(
+    artifact,
+    path::String,
+    format::TaskResultsFormat,
+    files::Vector{InputModule},
+) end
 
-Run numerical diagnostics; returns `false` if training should not proceed.
-"""
 function diagnose(model::Model, engine::Engine)::Bool end

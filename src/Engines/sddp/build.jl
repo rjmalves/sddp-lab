@@ -559,30 +559,174 @@ function add_inflow_uncertainty!(
     return m
 end
 
+function add_inflow_uncertainty!(
+    m::JuMP.Model, s::VectorAutoRegressive, season::Int, method::InflowNonNegativity
+)
+    N = length(s)
+    max_lag = s.max_lag
+    num_seasons = s.num_seasons
+    stchp_size = N * max_lag
+
+    # Flat index layout: element n occupies slots index_t[n]..(index_t[n]+max_lag-1)
+    index_t = [(n - 1) * max_lag + 1 for n in 1:N]
+    memory_states = [k for k in 1:stchp_size if !(k in index_t)]
+
+    inits = Float64[]
+    for n in 1:N
+        append!(inits, s.initial_values[n])
+    end
+
+    scales = get_var_scales(s, season)
+
+    lag_scales = Vector{Vector{Vector{Float64}}}(undef, max_lag)
+    for l in 1:max_lag
+        ls = __lagged_season(season, l, num_seasons)
+        lag_scales[l] = get_var_scales(s, ls)
+    end
+
+    coef_matrices = Matrix{Float64}[get_var_coefficient_matrix(s, season, l) for l in 1:max_lag]
+
+    m[ω_INFLOW] = JuMP.@variable(m, [1:N], base_name = String(ω_INFLOW))
+    m[STCHP] = JuMP.@variable(
+        m,
+        [k = 1:stchp_size],
+        base_name = String(STCHP),
+        SDDP.State,
+        initial_value = inits[k],
+    )
+
+    if method isa InflowTruncationWithPenalty
+        m[NOISE_ADJUSTMENT_SLACK] = JuMP.@variable(
+            m, [1:N], base_name = String(NOISE_ADJUSTMENT_SLACK)
+        )
+        for n in 1:N
+            JuMP.set_lower_bound(m[NOISE_ADJUSTMENT_SLACK][n], 0)
+        end
+
+        sigma_values = Float64[scales[n][2] for n in 1:N]
+        m.ext[:noise_adjustment_sigma] = sigma_values
+
+        for n in 1:N
+            i_n = index_t[n]
+            s_n = scales[n]
+            JuMP.@constraint(
+                m,
+                (m[STCHP][i_n].out - s_n[1]) / s_n[2] ==
+                    sum(
+                        sum(
+                            coef_matrices[l][n, mm] *
+                            (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
+                            lag_scales[l][mm][2]
+                            for mm in 1:N
+                        )
+                        for l in 1:max_lag
+                    ) +
+                    m[ω_INFLOW][n] +
+                    m[NOISE_ADJUSTMENT_SLACK][n],
+                base_name = "var_main" * string(n),
+            )
+        end
+    else
+        for n in 1:N
+            i_n = index_t[n]
+            s_n = scales[n]
+            JuMP.@constraint(
+                m,
+                (m[STCHP][i_n].out - s_n[1]) / s_n[2] ==
+                    sum(
+                        sum(
+                            coef_matrices[l][n, mm] *
+                            (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
+                            lag_scales[l][mm][2]
+                            for mm in 1:N
+                        )
+                        for l in 1:max_lag
+                    ) +
+                    m[ω_INFLOW][n],
+                base_name = "var_main" * string(n),
+            )
+        end
+    end
+
+    if method isa InflowPenalty
+        m[INFLOW_SLACK] = JuMP.@variable(
+            m, [1:N], base_name = String(INFLOW_SLACK)
+        )
+        for n in 1:N
+            JuMP.set_lower_bound(m[INFLOW_SLACK][n], 0)
+            JuMP.set_lower_bound(m[INFLOW][n], 0)
+        end
+        JuMP.@constraint(
+            m,
+            inflow[n = 1:N],
+            m[INFLOW][n] + m[INFLOW_SLACK][n] == m[STCHP][index_t[n]].out,
+        )
+    elseif method isa InflowTruncationWithPenalty
+        for n in 1:N
+            JuMP.set_lower_bound(m[INFLOW][n], 0)
+        end
+        JuMP.@constraint(
+            m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out
+        )
+    else
+        JuMP.@constraint(
+            m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out
+        )
+    end
+
+    if !isempty(memory_states)
+        JuMP.@constraint(
+            m, var_memory[k in memory_states], m[STCHP][k].out == m[STCHP][k - 1].in
+        )
+    end
+
+    return m
+end
+
 function generate_saa(scenarios::ScenariosData, num_stages::Integer)
-    inflow = scenarios.inflow.stochastic_process
     initial_season = scenarios.initial_season
     branchings = scenarios.branchings
-    return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
+    result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
+    for (state, process) in scenarios.inflow.stochastic_process
+        result[state] = StochasticProcess.generate_saa(process, initial_season, num_stages, branchings)
+    end
+    return result
 end
 
 function generate_saa(scenarios::ScenariosData, num_stages::Integer, seed::Integer)
-    inflow = scenarios.inflow.stochastic_process
     initial_season = scenarios.initial_season
     branchings = scenarios.branchings
-    return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings, seed)
+    result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
+    for (state, process) in scenarios.inflow.stochastic_process
+        state_seed = seed + (state - 1) * 7919  # prime offset ensures per-state independence
+        result[state] = StochasticProcess.generate_saa(
+            process, initial_season, num_stages, branchings, state_seed
+        )
+    end
+    return result
+end
+
+function add_uncertainties!(
+    m::JuMP.Model, process::AbstractStochasticProcess, season::Int, method::InflowNonNegativity
+)
+    return add_inflow_uncertainty!(m, process, season, method)
 end
 
 function add_uncertainties!(
     m::JuMP.Model, scenarios::ScenariosData, node::Int, method::InflowNonNegativity
 )
-    inflow = scenarios.inflow.stochastic_process
-
-    season = __node2season(node, size(inflow, 2), scenarios.initial_season)
-    return add_inflow_uncertainty!(m, inflow, season, method)
+    process = get_stochastic_process(scenarios.inflow, 1)
+    season = __node2season(node, size(process, 2), scenarios.initial_season)
+    return add_inflow_uncertainty!(m, process, season, method)
 end
 
-function __build_graph(files::Vector{InputModule})::SDDP.Graph
+function __build_graph(files::Vector{InputModule})
+    scenarios = get_scenarios(files)
+    mc = get_markov_chain(scenarios)
+    return __build_graph(files, mc)
+end
+
+function __build_graph(files::Vector{InputModule}, ::NoMarkovChain)::SDDP.Graph
     g = get_graph(get_scenarios(files))
     root_node_id = get_root_node_id(g)
     graph = SDDP.Graph(root_node_id)
@@ -597,6 +741,10 @@ function __build_graph(files::Vector{InputModule})::SDDP.Graph
     end
 
     return graph
+end
+
+function __build_graph(files::Vector{InputModule}, mc::MarkovChainConfig)
+    return SDDP.MarkovianGraph(mc.transition_matrices)
 end
 
 function _build_bus_index_map(
@@ -615,6 +763,13 @@ function _build_bus_index_map(
     return map
 end
 
+# For legacy integer nodes, node id IS the stage. For Markov tuple nodes (stage, state).
+__extract_stage(node::Integer) = Int(node)
+__extract_stage(node::Tuple{Int,Int}) = node[1]
+
+__extract_markov_state(::Integer) = 1
+__extract_markov_state(node::Tuple{Int,Int}) = node[2]
+
 function __generate_subproblem_builder(
     files::Vector{InputModule}, scaling::ScalingConfig, method::InflowNonNegativity
 )::Function
@@ -623,24 +778,36 @@ function __generate_subproblem_builder(
     graph = get_graph(scenarios)
     num_stages = get_number_of_stages(graph)
     block_config = get_block_config(scenarios)
+    mc = get_markov_chain(scenarios)
+    uses_markov = has_markov_chain(mc)
 
+    stage_datetimes = Dict{Int,Tuple{DateTime,DateTime}}()
     node_datetimes = Dict{Int,Tuple{DateTime,DateTime}}()
+    stage_to_node_id = Dict{Int,Int}()
     for n in graph.nodes
         node_datetimes[n.id] = (n.start_datetime, n.end_datetime)
+        stage_datetimes[n.stage] = (n.start_datetime, n.end_datetime)
+        if !haskey(stage_to_node_id, n.stage)
+            stage_to_node_id[n.stage] = n.id
+        end
     end
 
     SAA = generate_saa(scenarios, num_stages, scenarios.seed)
 
     s_flow = get_scaling_factor(scaling, FLOW_SCALE)
     if s_flow != DEFAULT_SCALING_FACTOR
-        for node in eachindex(SAA)
-            SAA[node] = SAA[node] ./ s_flow
+        for (state, saa_stages) in SAA
+            for stage_idx in eachindex(saa_stages)
+                saa_stages[stage_idx] = saa_stages[stage_idx] ./ s_flow
+            end
         end
     end
 
     if method isa InflowTruncation || method isa InflowTruncationWithPenalty
-        for node in eachindex(SAA)
-            SAA[node] = [max.(0.0, omega) for omega in SAA[node]]
+        for (state, saa_stages) in SAA
+            for stage_idx in eachindex(saa_stages)
+                saa_stages[stage_idx] = [max.(0.0, omega) for omega in saa_stages[stage_idx]]
+            end
         end
     end
 
@@ -668,8 +835,20 @@ function __generate_subproblem_builder(
     block_mode = block_config.mode
     K = num_blocks(block_config)
 
-    function fun_sp_build(m::JuMP.Model, node::Integer)
-        start_dt, end_dt = node_datetimes[node]
+    initial_season = scenarios.initial_season
+
+    function fun_sp_build(m::JuMP.Model, node)
+        stage = __extract_stage(node)
+        markov_state = __extract_markov_state(node)
+
+        if uses_markov
+            start_dt, end_dt = stage_datetimes[stage]
+            load_node_id = stage_to_node_id[stage]
+        else
+            start_dt, end_dt = node_datetimes[Int(node)]
+            load_node_id = Int(node)
+        end
+
         tau = Float64(Dates.value(end_dt - start_dt)) / 3_600_000.0
         tau_k = get_block_durations(block_config, tau)
 
@@ -678,17 +857,20 @@ function __generate_subproblem_builder(
             m, get_hydros(system), pump_source_map, pump_dest_map,
             block_mode, tau_k, K
         )
-        add_uncertainties!(m, scenarios, node, method)
+
+        process = get_stochastic_process(scenarios.inflow, markov_state)
+        season = __node2season(stage, size(process, 2), initial_season)
+        add_inflow_uncertainty!(m, process, season, method)
 
         __add_load_balance!(
-            m, scenarios, node, s_gen, bus_ids, K,
+            m, scenarios, load_node_id, s_gen, bus_ids, K,
             hydro_bus_map, thermal_bus_map, noncontrollable_bus_map,
             line_target_map, line_source_map,
             contract_bus_map, contracts_entities,
             pumping_bus_map, pumping_entities
         )
 
-        Ω_node = vec(SAA[node])
+        Ω_node = vec(SAA[markov_state][stage])
         SDDP.parameterize(m, Ω_node) do ω
             return JuMP.fix.(m[ω_INFLOW], ω)
         end

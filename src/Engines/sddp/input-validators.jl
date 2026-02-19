@@ -89,6 +89,12 @@ const INFLOW_PENALTY_SCHEMA = [
     FieldRule("penalty_cost", Real; constraints = [positive()]),
 ]
 
+const VALIDATION_SCHEMA = [
+    FieldRule("num_simulations", Integer; constraints = [positive()]),
+    FieldRule("seed", Integer; constraints = [positive()]),
+    FieldRule("branchings", Integer; constraints = [positive()]),
+]
+
 function __validate_diagnostics_halt_ge_warn!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -536,4 +542,22 @@ function __build_sddp_simulation_task_definition_internals_from_dicts!(
     valid_parallel = __build_parallel_scheme!(d, e)
     valid_sampling = __build_sampling_scheme!(d, e)
     return valid_parallel && valid_sampling
+end
+
+function __validate_validation_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
+    valid_keys = __validate_keys!(
+        d,
+        ["num_simulations", "seed", "branchings", "parallel_scheme"],
+        e,
+    )
+    valid_types =
+        valid_keys && __validate_key_types!(
+            d,
+            ["num_simulations", "seed", "branchings", "parallel_scheme"],
+            [Integer, Integer, Integer, T where {T<:ParallelScheme}],
+            e,
+        )
+    return valid_types
 end

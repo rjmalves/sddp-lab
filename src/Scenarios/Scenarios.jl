@@ -11,7 +11,7 @@ using ..StochasticProcess
 import Base: length
 
 struct InflowScenarios
-    stochastic_process::AbstractStochasticProcess
+    stochastic_process::Dict{Int,AbstractStochasticProcess}
 end
 
 abstract type LoadScenarios end
@@ -40,6 +40,9 @@ function length(s::LoadScenarios) end
 
 include("blocks.jl")
 
+include("markov-validators.jl")
+include("markov.jl")
+
 struct ScenariosData <: InputModule
     seed::Integer
     initial_season::Integer
@@ -48,6 +51,7 @@ struct ScenariosData <: InputModule
     inflow::InflowScenarios
     load::LoadScenarios
     block_config::BlockConfig
+    markov_chain::AbstractMarkovChain
 end
 
 function __get_load(bus_id::Integer, node_id::Integer, load::LoadScenarios)::Real end
@@ -106,6 +110,21 @@ function get_root_node_id(g::Graph)::Integer
     return node_ids[1]
 end
 
+function get_markov_chain(scenarios::ScenariosData)
+    return scenarios.markov_chain
+end
+
+function get_stochastic_process(inflow::InflowScenarios)
+    if length(inflow.stochastic_process) != 1
+        error("Expected single stochastic process, got $(length(inflow.stochastic_process)) processes. Use get_stochastic_process(inflow, state) for Markov mode.")
+    end
+    return first(values(inflow.stochastic_process))
+end
+
+function get_stochastic_process(inflow::InflowScenarios, state::Int)
+    return inflow.stochastic_process[state]
+end
+
 include("graph-validators.jl")
 include("graph.jl")
 
@@ -121,6 +140,13 @@ include("scenariosdata.jl")
 export ScenariosData,
     Block,
     BlockConfig,
+    AbstractMarkovChain,
+    NoMarkovChain,
+    MarkovChainConfig,
+    has_markov_chain,
+    num_markov_states,
+    get_markov_chain,
+    get_stochastic_process,
     add_uncertainties!,
     generate_saa,
     get_load,

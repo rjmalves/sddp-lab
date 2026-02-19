@@ -12,35 +12,10 @@ import Base: length, size
 
 abstract type AbstractStochasticProcess end
 
-"""
-    __get_ids(s)
-
-Return the `id`s of elements represented in a stochastic process object
-"""
 function __get_ids(s::AbstractStochasticProcess)::Vector{Integer} end
-
-"""
-    length(s::AbstractStochasticProcess)
-
-Return the number of dimensions (elements) in a stochastic process
-"""
 function length(s::AbstractStochasticProcess)::Integer end
-
-"""
-    size(s::AbstractStochasticProcess)
-
-Return the size of the process, a tuple with (number_of_elements, number_of_seasons[,...])
-
-Depending on the type of model, it is possible that there are extra elements in the returned
-tuple, so refer to the corresponding documentation for more details
-"""
 function size(s::AbstractStochasticProcess)::Tuple{Integer,Vararg{Integer}} end
 
-"""
-    generate_saa([rng::AbstractRNG, ]s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer)
-
-Generate a Sample Average Approximation of the noise (uncertainty) terms in model `s`
-"""
 function __generate_saa(
     rng::AbstractRNG,
     s::AbstractStochasticProcess,
@@ -66,18 +41,7 @@ function generate_saa(
     return __generate_saa(rng, s, initial_season, N, B)
 end
 
-"""
-    add_inflow_uncertainty!(m, s)
-
-Add stochastic variables and inflow model recurrence constraints to a JuMP model `m`
-"""
 function add_inflow_uncertainty!(m::JuMP.Model, s::AbstractStochasticProcess)::nothing end
-
-"""
-    __validate(s::AbstractStochasticProcess)
-
-Return `true` if `s` is a valid instance of stochastic process; raise errors otherwise
-"""
 function __validate(s::AbstractStochasticProcess) end
 
 function __cast_stochastic_process_internals_from_files!(
@@ -95,10 +59,17 @@ include("naive.jl")
 include("autoregressive-validators.jl")
 include("autoregressive.jl")
 
+include("vectorautoregressive-validators.jl")
+include("vectorautoregressive.jl")
+
 export Naive,
     AutoRegressive,
+    VectorAutoRegressive,
     get_ar_parameters,
     get_ar_scale,
+    get_var_season_parameters,
+    get_var_coefficient_matrix,
+    get_var_scales,
     AbstractStochasticProcess,
     __cast_stochastic_process_internals_from_files!
 

@@ -85,3 +85,15 @@ function save_simulation(
 )
     return Lab.save_simulation(artifact, path, format, study.inputs.files)
 end
+
+function validate(study::Study, model::Model)
+    validation = get_validation_definition(study.engine)
+    isnothing(validation) && error("No validation configuration in engine")
+    return Lab.validate(model, validation, study.inputs.files)
+end
+
+function save_validation(
+    study::Study, artifact, path::String, format::TaskResultsFormat
+)
+    return Lab.save_validation(artifact, path, format, study.inputs.files)
+end

@@ -9,6 +9,7 @@ function SDDPEngine(d::Dict{String,Any}, e::CompositeException)
             d["diagnostics"],
             d["solver"],
             d["inflow_non_negativity"],
+            d["validation"],
         )
     else
         nothing
@@ -66,4 +67,48 @@ function __build_inflow_non_negativity!(d::Dict{String,Any}, e::CompositeExcepti
         d["inflow_non_negativity"] = temp["inflow_non_negativity"]
     end
     return result
+end
+
+function OutOfSampleValidation(d::Dict{String,Any}, e::CompositeException)
+    valid_internals = __build_parallel_scheme!(d, e)
+    valid_schema = valid_internals && validate_schema!(d, VALIDATION_SCHEMA, e)
+    valid_keys_types = valid_schema && __validate_validation_keys_types!(d, e)
+
+    return if valid_keys_types
+        OutOfSampleValidation(
+            d["num_simulations"],
+            d["seed"],
+            d["branchings"],
+            d["parallel_scheme"],
+        )
+    else
+        nothing
+    end
+end
+
+function __build_validation!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "validation")
+        d["validation"] = nothing
+        return true
+    end
+
+    val = d["validation"]
+    if !(val isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'validation' must be a Dict{String,Any}, got $(typeof(val))",
+            ),
+        )
+        return false
+    end
+
+    val_d = convert(Dict{String,Any}, val)
+    result = OutOfSampleValidation(val_d, e)
+    if result === nothing
+        return false
+    end
+
+    d["validation"] = result
+    return true
 end
