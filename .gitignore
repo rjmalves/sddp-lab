@@ -36,3 +36,7 @@ out*/
 
 # Test artifacts
 test/*.parquet
+*.cuts.json
+subproblem_*.mof.json
+subproblem_*.lp
+subproblem_*.mps
