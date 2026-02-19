@@ -10,9 +10,6 @@ using ..StochasticProcess
 
 import Base: length
 
-# TODO - change to be an abstract scenario entity when
-# the load is also an stochastic process
-
 struct InflowScenarios
     stochastic_process::AbstractStochasticProcess
 end
@@ -57,6 +54,11 @@ function get_load(bus_id::Integer, node_id::Integer, scenarios::ScenariosData)::
 end
 
 function set_seed!(scenarios::ScenariosData)
+    Base.depwarn(
+        "set_seed! mutates the global RNG and is not thread-safe. " *
+        "Pass seed to generate_saa instead.",
+        :set_seed!,
+    )
     return Random.seed!(scenarios.seed)
 end
 

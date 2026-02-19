@@ -154,6 +154,10 @@ function Asynchronous(::Dict{String,Any}, ::CompositeException)
     return Asynchronous()
 end
 
+function Threaded(::Dict{String,Any}, ::CompositeException)
+    return Threaded()
+end
+
 function Expectation(::Dict{String,Any}, ::CompositeException)
     return Expectation()
 end
@@ -364,8 +368,38 @@ function generate_parallel_scheme(::Serial)::SDDP.AbstractParallelScheme
     return SDDP.Serial()
 end
 
+"""
+    generate_parallel_scheme(::Asynchronous) -> SDDP.Asynchronous
+
+Generate the SDDP.jl `Asynchronous()` parallel scheme for distributed training.
+
+# Worker Setup Requirements
+
+The user is responsible for setting up distributed workers before calling
+`train` or `simulate` with the `Asynchronous` scheme:
+
+1. Start Julia with `julia -p N` or call `Distributed.addprocs(N)`.
+2. Load SDDPlab and the solver on all workers:
+   `@everywhere using SDDPlab, GLPK`
+3. Ensure all workers have access to the input data files (shared filesystem
+   or distributed storage).
+"""
 function generate_parallel_scheme(::Asynchronous)::SDDP.AbstractParallelScheme
+    if Distributed.nprocs() == 1
+        @warn(
+            "Asynchronous parallel scheme requested but no distributed workers " *
+            "are available. Use 'julia -p N' or 'Distributed.addprocs(N)' to " *
+            "add workers. Running on the master process only.",
+        )
+    end
     return SDDP.Asynchronous()
+end
+
+function generate_parallel_scheme(::Threaded)::SDDP.AbstractParallelScheme
+    if Threads.nthreads() == 1
+        @warn "Threaded parallel scheme requested but Julia was started with only 1 thread. Use 'julia --threads N' for parallelism."
+    end
+    return SDDP.Threaded()
 end
 
 function generate_risk_measure(::Expectation)::SDDP.AbstractRiskMeasure

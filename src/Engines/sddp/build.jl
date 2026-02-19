@@ -166,7 +166,7 @@ function add_system_elements!(m::JuMP.Model, s::SystemData)
     add_system_elements!(m, get_thermals(s))
     add_system_elements!(m, get_hydros(s))
     add_hydro_balance!(m, get_hydros(s))
-    return true
+    return nothing
 end
 
 function add_system_objective!(m::JuMP.Model, s::SystemData)
@@ -266,6 +266,13 @@ function generate_saa(scenarios::ScenariosData, num_stages::Integer)
     return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings)
 end
 
+function generate_saa(scenarios::ScenariosData, num_stages::Integer, seed::Integer)
+    inflow = scenarios.inflow.stochastic_process
+    initial_season = scenarios.initial_season
+    branchings = scenarios.branchings
+    return StochasticProcess.generate_saa(inflow, initial_season, num_stages, branchings, seed)
+end
+
 function add_uncertainties!(m::JuMP.Model, scenarios::ScenariosData, node::Int)
     inflow = scenarios.inflow.stochastic_process
 
@@ -290,6 +297,38 @@ function __build_graph(files::Vector{InputModule})::SDDP.Graph
     return graph
 end
 
+"""
+    _build_bus_index_map(entities, bus_ids, bus_field::Symbol) -> Dict{Int, Vector{Int}}
+
+Build a mapping from bus position index (1-based position in `bus_ids`) to the indices of
+`entities` whose `bus_field` matches that bus id. Precomputed once to avoid repeated
+O(num_entities) iteration per bus per subproblem node in `__add_load_balance!`.
+
+# Arguments
+- `entities`: Vector of system entities (e.g., `Vector{Hydro}`, `Vector{Thermal}`, etc.)
+- `bus_ids`: Vector of bus ids in bus-position order (from `get_ids(get_buses(system))`)
+- `bus_field`: Field name on the entity that holds the bus id (e.g., `:bus_id`, `:target_bus_id`)
+
+# Returns
+`Dict{Int, Vector{Int}}` mapping bus position `n` to `[j1, j2, ...]` where
+`getfield(entities[ji], bus_field) == bus_ids[n]`.
+"""
+function _build_bus_index_map(
+    entities::AbstractVector, bus_ids::Vector{<:Integer}, bus_field::Symbol
+)::Dict{Int,Vector{Int}}
+    map = Dict{Int,Vector{Int}}()
+    for (j, entity) in enumerate(entities)
+        bid = getfield(entity, bus_field)
+        for (n, bus_id) in enumerate(bus_ids)
+            if bid == bus_id
+                indices = get!(map, n, Int[])
+                push!(indices, j)
+            end
+        end
+    end
+    return map
+end
+
 function __generate_subproblem_builder(
     files::Vector{InputModule}, scaling::ScalingConfig
 )::Function
@@ -297,9 +336,7 @@ function __generate_subproblem_builder(
     scenarios = get_scenarios(files)
     num_stages = get_number_of_stages(get_graph(scenarios))
 
-    set_seed!(scenarios)
-
-    SAA = generate_saa(scenarios, num_stages)
+    SAA = generate_saa(scenarios, num_stages, scenarios.seed)
 
     s_flow = get_scaling_factor(scaling, FLOW_SCALE)
     if s_flow != DEFAULT_SCALING_FACTOR
@@ -310,11 +347,24 @@ function __generate_subproblem_builder(
 
     s_gen = get_scaling_factor(scaling, HYDRO_GENERATION)
 
+    hydros_entities = get_hydros_entities(system)
+    thermals_entities = get_thermals_entities(system)
+    lines_entities = get_lines_entities(system)
+    bus_ids = get_ids(get_buses(system))
+
+    hydro_bus_map = _build_bus_index_map(hydros_entities, bus_ids, :bus_id)
+    thermal_bus_map = _build_bus_index_map(thermals_entities, bus_ids, :bus_id)
+    line_target_map = _build_bus_index_map(lines_entities, bus_ids, :target_bus_id)
+    line_source_map = _build_bus_index_map(lines_entities, bus_ids, :source_bus_id)
+
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
         add_uncertainties!(m, scenarios, node)
 
-        __add_load_balance!(m, files, node, s_gen)
+        __add_load_balance!(
+            m, scenarios, node, s_gen, bus_ids,
+            hydro_bus_map, thermal_bus_map, line_target_map, line_source_map
+        )
 
         Ω_node = vec(SAA[node])
         SDDP.parameterize(m, Ω_node) do ω
@@ -330,39 +380,30 @@ function __generate_subproblem_builder(
 end
 
 function __add_load_balance!(
-    m::JuMP.Model, files::Vector{InputModule}, node::Integer,
-    load_scale::Float64 = DEFAULT_SCALING_FACTOR
+    m::JuMP.Model,
+    scenarios::ScenariosData,
+    node::Integer,
+    load_scale::Float64,
+    bus_ids::Vector{<:Integer},
+    hydro_bus_map::Dict{Int,Vector{Int}},
+    thermal_bus_map::Dict{Int,Vector{Int}},
+    line_target_map::Dict{Int,Vector{Int}},
+    line_source_map::Dict{Int,Vector{Int}},
 )
-    system = get_system(files)
-    hydros_entities = get_hydros_entities(system)
-    thermals_entities = get_thermals_entities(system)
-    lines_entities = get_lines_entities(system)
-    scenarios = get_scenarios(files)
-    bus_ids = get_ids(get_buses(system))
-
     num_buses = length(bus_ids)
-    num_lines = length(lines_entities)
-    num_hydros = length(hydros_entities)
-    num_thermals = length(thermals_entities)
 
     m[LOAD_BALANCE] = JuMP.@constraint(
         m,
         [n = 1:num_buses],
+        sum(m[HYDRO_GENERATION][j] for j in get(hydro_bus_map, n, Int[])) +
+        sum(m[THERMAL_GENERATION][j] for j in get(thermal_bus_map, n, Int[])) +
         sum(
-            m[HYDRO_GENERATION][j] for
-            j in 1:num_hydros if hydros_entities[j].bus_id == bus_ids[n]
+            m[DIRECT_EXCHANGE][j] - m[REVERSE_EXCHANGE][j]
+            for j in get(line_target_map, n, Int[])
         ) +
         sum(
-            m[THERMAL_GENERATION][j] for
-            j in 1:num_thermals if thermals_entities[j].bus_id == bus_ids[n]
-        ) +
-        sum(
-            m[DIRECT_EXCHANGE][j] - m[REVERSE_EXCHANGE][j] for
-            j in 1:num_lines if lines_entities[j].target_bus_id == bus_ids[n]
-        ) +
-        sum(
-            m[REVERSE_EXCHANGE][j] - m[DIRECT_EXCHANGE][j] for
-            j in 1:num_lines if lines_entities[j].source_bus_id == bus_ids[n]
+            m[REVERSE_EXCHANGE][j] - m[DIRECT_EXCHANGE][j]
+            for j in get(line_source_map, n, Int[])
         ) +
         m[DEFICIT][bus_ids[n]] == get_load(bus_ids[n], node, scenarios) / load_scale
     )

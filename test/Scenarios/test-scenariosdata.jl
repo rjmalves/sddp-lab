@@ -1,9 +1,11 @@
 import SDDPlab: Scenarios
 import SDDPlab: Utils
+import SDDPlab: StochasticProcess
 
 using Dates
 using DataFrames
 using JSON
+using Random
 
 function __make_scenariosdata_dict()
     graph_dict = Dict{String,Any}(
@@ -169,5 +171,70 @@ end
         u = Scenarios.ScenariosData(d, e)
         @test u === nothing
         @test length(e) > 0
+    end
+
+    @testset "thread-safe-saa-generation" begin
+        d = __make_scenariosdata_dict()
+        e = CompositeException()
+        scenarios = Scenarios.ScenariosData(d, e)
+        @test scenarios !== nothing
+        process = scenarios.inflow.stochastic_process
+        initial_season = scenarios.initial_season
+        branchings = scenarios.branchings
+        num_stages = 2  # dict defines 2 nodes = 2 stages
+
+        @testset "seed-passing-reproducibility" begin
+            saa1 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            saa2 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            @test saa1 == saa2
+        end
+
+        @testset "no-seed-overload-reproducible-with-fixed-global-seed" begin
+            # The no-seed overload uses the task-local (Xoshiro) RNG.  Seeding it
+            # identically before each call must yield the same SAA.  This differs
+            # from the MersenneTwister used by the seed-passing overload, so we
+            # only verify internal consistency here, not cross-overload equality.
+            Random.seed!(42)
+            saa1 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings
+            )
+            Random.seed!(42)
+            saa2 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings
+            )
+            @test saa1 == saa2
+        end
+
+        @testset "different-seeds-produce-different-saa" begin
+            saa1 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            saa2 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 123
+            )
+            @test saa1 != saa2
+        end
+
+        @testset "global-rng-not-mutated-by-seed-passing-overload" begin
+            Random.seed!(999)
+            rng_state_before = copy(Random.default_rng())
+            ref_value = rand(rng_state_before)
+
+            Random.seed!(999)
+            StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            observed_value = rand()
+
+            @test observed_value == ref_value
+        end
+
+        @testset "set-seed-emits-deprecation-warning" begin
+            @test_logs (:warn, r"set_seed! mutates the global RNG") Scenarios.set_seed!(scenarios)
+        end
     end
 end

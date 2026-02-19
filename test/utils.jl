@@ -5,7 +5,7 @@ function __list_test_files(test_dir)
 
     for (root, dirs, files) in walkdir(test_dir)
         for file in files
-            if file[1:5] == "test-"
+            if startswith(file, "test-")
                 push!(test_files, joinpath(root, file))
             end
         end

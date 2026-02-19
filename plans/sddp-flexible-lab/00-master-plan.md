@@ -276,6 +276,49 @@ JSONC config files
 - **Regression tests**: Existing example cases (1dtoy, 1dsin, 1dsin_ar) must produce identical results
 - **New example tests**: Each new feature gets a minimal example case
 
+### Test Execution Protocol
+
+**CRITICAL**: Agents MUST follow these rules when running tests. The full test suite takes ~4 minutes and includes SDDP training runs that can hang indefinitely. Running without filters or timeouts will block the session.
+
+#### 1. Always use TEST_FILTER to run only relevant tests
+
+The `test/runtests.jl` file supports a `TEST_FILTER` environment variable that filters test files by substring match. After implementing a ticket, run ONLY the test files relevant to your changes:
+
+```bash
+# Run only tests matching a pattern (fast, seconds)
+export TEST_FILTER="test-engines" && julia --project -e 'using Pkg; Pkg.test()'
+
+# Run tests for a specific new test file
+export TEST_FILTER="test-threaded" && julia --project -e 'using Pkg; Pkg.test()'
+
+# Run multiple related patterns (comma NOT supported — use broader substring)
+export TEST_FILTER="test-sddp" && julia --project -e 'using Pkg; Pkg.test()'
+```
+
+**NEVER** run the full test suite (`julia --project -e 'using Pkg; Pkg.test()'` without TEST_FILTER) unless explicitly asked by the user.
+
+#### 2. Always use a timeout
+
+All test commands MUST use the Bash tool's `timeout` parameter (in milliseconds). Recommended values:
+
+| Scope                 | Timeout (ms) | Notes                                    |
+| --------------------- | ------------ | ---------------------------------------- |
+| Filtered unit tests   | 120000       | 2 minutes — sufficient for any unit test |
+| Filtered integration  | 180000       | 3 minutes — includes SDDP train/simulate |
+| Full suite (if asked) | 360000       | 6 minutes — only when user requests it   |
+
+#### 3. Solver thread safety
+
+- **GLPK is NOT thread-safe** — tests using `SDDP.Threaded()` MUST use HiGHS as the solver
+- Standard (non-threaded) tests use GLPK
+- If a test SIGABRTs, the first thing to check is whether GLPK is being used with threading
+
+#### 4. Test file isolation
+
+- Adding tests to large existing test files (e.g., `test-engines.jl`) has caused unexplained SIGABRTs
+- Prefer creating **separate test files** for new feature areas (e.g., `test-threaded.jl`, `test-build-optimizations.jl`)
+- New test files are automatically discovered by `runtests.jl` via `__list_test_files`
+
 ## Phases & Milestones
 
 | Phase | Epic                          | Duration  | Milestone                                                           | Primary Agent(s)                                 |

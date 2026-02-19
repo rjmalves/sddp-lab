@@ -49,6 +49,11 @@ using SDDP: SDDP
         @test typeof(scheme) === SDDP.Serial
     end
 
+    @testset "generate-parallel-scheme-threaded" begin
+        scheme = Engines.generate_parallel_scheme(Engines.Threaded())
+        @test typeof(scheme) === SDDP.Threaded
+    end
+
     @testset "generate-risk-measure-expectation" begin
         measure = Engines.generate_risk_measure(Engines.Expectation())
         @test typeof(measure) === SDDP.Expectation

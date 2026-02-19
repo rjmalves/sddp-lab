@@ -86,6 +86,14 @@
 - `SDDP.Statistical` needs `disable_warning=true` to suppress convergence warnings in short test runs
 - `SDDP.SINGLE_CUT` and `SDDP.MULTI_CUT` are enum values, not types
 
+## Test Execution Protocol (CRITICAL)
+
+- **Always use TEST_FILTER**: `export TEST_FILTER="test-xyz" && julia --project -e 'using Pkg; Pkg.test()'` — never run the full suite without filtering
+- **Always set Bash timeout**: 120000ms for unit tests, 180000ms for integration tests — the full suite takes ~4 min and SDDP training can hang
+- **GLPK is NOT thread-safe**: use HiGHS for any test involving `SDDP.Threaded()`
+- **Use separate test files**: adding tests to large existing files (e.g. `test-engines.jl`) caused unexplained SIGABRTs; create new files instead
+- See `00-master-plan.md` → "Test Execution Protocol" for full details
+
 ## Key Observations for Future Epics
 
 - Adding new system elements (Epic 05): must update `compute_scaling_factors`, `apply_scaling`, `_get_variable_unscale_factor`, and `VARIABLE_UNITS_REGISTRY`

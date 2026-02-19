@@ -25,8 +25,8 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | ---- | ----------------------------- | ------- | --------- | --------------------------- |
 | 01   | Stabilize Engine Abstraction  | 9       | Completed | hpc-julia-developer         |
 | 02   | Algorithm Flexibility         | 7       | Completed | sddp-specialist + hpc-julia |
-| 03   | Units & LP Conditioning       | 4       | Executing | hpc-julia + sddp-specialist |
-| 04   | Parallelization & Performance | 4       | Outline   | hpc-julia-developer         |
+| 03   | Units & LP Conditioning       | 4       | Completed | hpc-julia + sddp-specialist |
+| 04   | Parallelization & Performance | 4       | Executing | hpc-julia-developer         |
 | 05   | Enhanced System Elements      | 4       | Outline   | sddp-specialist             |
 | 06   | Advanced Stochastic Modeling  | 3       | Outline   | sddp-specialist             |
 | 07   | Experiment Management         | 4       | Outline   | hpc-julia-developer         |
@@ -69,16 +69,26 @@ Epic 02: Algorithm Flexibility
        |
        v
 Epic 03: Units & LP Conditioning
-  ticket-017 (units registry)     [hpc-julia-developer]
+  ticket-017 (units registry)     [COMPLETED]
        |
        v
-  ticket-018 (LP scaling)         [sddp-specialist]     -- depends on 017
+  ticket-018 (LP scaling)         [COMPLETED]
 
-  ticket-019 (diagnostics)        [sddp-specialist]     -- independent (depends on 016 only)
-  ticket-020 (solver config)      [hpc-julia-developer]  -- independent (depends on 016 only)
+  ticket-019 (diagnostics)        [COMPLETED]
+  ticket-020 (solver config)      [COMPLETED]
        |
        v
-Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
+Epic 04: Parallelization & Performance
+  ticket-021 (threaded parallel)  --> ticket-022 (thread-safe SAA)
+                                           |
+                                           v
+                                  ticket-023 (profiling/optimization)
+                                           |
+                                           v
+                                  ticket-024 (distributed computing)
+       |
+       v
+Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
 ```
 
 ## Progress Tracking
@@ -105,10 +115,10 @@ Epic 04 --> Epic 05 --> Epic 06 --> Epic 07 --> Epic 08 --> Epic 09
 | ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | completed | Refined      | sddp-specialist     |
 | ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | completed | Refined      | sddp-specialist     |
 | ticket-020 | Add solver configuration options                            | epic-03 | completed | Refined      | hpc-julia-developer |
-| ticket-021 | Enable threaded parallel training and simulation            | epic-04 | pending   | Outline      | hpc-julia-developer |
-| ticket-022 | Implement thread-safe SAA generation                        | epic-04 | pending   | Outline      | hpc-julia-developer |
-| ticket-023 | Profile and optimize model building hot paths               | epic-04 | pending   | Outline      | hpc-julia-developer |
-| ticket-024 | Add distributed computing support                           | epic-04 | pending   | Outline      | hpc-julia-developer |
+| ticket-021 | Enable threaded parallel training and simulation            | epic-04 | completed | Refined      | hpc-julia-developer |
+| ticket-022 | Implement thread-safe SAA generation                        | epic-04 | completed | Refined      | hpc-julia-developer |
+| ticket-023 | Profile and optimize model building hot paths               | epic-04 | completed | Refined      | hpc-julia-developer |
+| ticket-024 | Add distributed computing support                           | epic-04 | completed | Refined      | hpc-julia-developer |
 | ticket-025 | Add renewable generation system element                     | epic-05 | pending   | Outline      | sddp-specialist     |
 | ticket-026 | Add battery energy storage system element                   | epic-05 | pending   | Outline      | sddp-specialist     |
 | ticket-027 | Add demand response system element                          | epic-05 | pending   | Outline      | sddp-specialist     |

@@ -55,6 +55,17 @@ function generate_saa(
     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
+function generate_saa(
+    s::AbstractStochasticProcess,
+    initial_season::Integer,
+    N::Integer,
+    B::Integer,
+    seed::Integer,
+)::Vector{Vector{Vector{Float64}}}
+    rng = Random.MersenneTwister(seed)
+    return __generate_saa(rng, s, initial_season, N, B)
+end
+
 """
     add_inflow_uncertainty!(m, s)
 

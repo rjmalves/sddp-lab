@@ -7,6 +7,7 @@ using ..System
 using ..Utils
 
 using DataFrames
+using Distributed
 using SDDP: SDDP
 using JuMP: JuMP
 using JSON
@@ -69,6 +70,8 @@ abstract type ParallelScheme end
 struct Serial <: ParallelScheme end
 
 struct Asynchronous <: ParallelScheme end
+
+struct Threaded <: ParallelScheme end
 
 abstract type RiskMeasure end
 
@@ -222,6 +225,7 @@ export SDDPEngine,
     create_optimizer,
     ScalingConfig,
     NoScaling,
-    AutoScaling
+    AutoScaling,
+    Threaded
 
 end

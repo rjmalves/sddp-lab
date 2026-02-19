@@ -380,6 +380,37 @@ using Suppressor
         end
     end
 
+    @testset "1dtoy-threaded-type-wiring" begin
+        using GLPK
+        @suppress begin
+            e = CompositeException()
+            original = SDDPlab.read_study(example_dir; e = e)
+            @test length(e) == 0
+
+            convergence = Engines.Convergence(
+                1, 10, [Engines.IterationLimit(10)]
+            )
+            policy_def = Engines.SDDPPolicyTaskDefinition(
+                convergence,
+                Engines.Expectation(),
+                Engines.Threaded(),
+                Engines.DefaultSampling(),
+                Engines.DefaultDuality(),
+                Engines.DefaultForwardPassStrategy(),
+                Engines.SingleCut(),
+                Engines.NoScaling(),
+            )
+            sim_def = Engines.SDDPSimulationTaskDefinition(
+                10, Engines.Threaded(), Engines.DefaultSampling()
+            )
+            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("GLPK", Dict{String,Any}()))
+            study = SDDPlab.Study(original.inputs, engine)
+
+            @test study.engine.policy.parallel_scheme isa Engines.Threaded
+            @test study.engine.simulation.parallel_scheme isa Engines.Threaded
+        end
+    end
+
     @testset "1dtoy-pipeline-solver-from-config" begin
         @suppress begin
             e = CompositeException()
@@ -393,6 +424,85 @@ using Suppressor
             @test policy !== nothing
             simulation = SDDPlab.simulate(study, model)
             @test simulation !== nothing
+        end
+    end
+
+    @testset "1dtoy-asynchronous-type-wiring" begin
+        using GLPK
+        using Distributed
+        @suppress begin
+            e = CompositeException()
+            original = SDDPlab.read_study(example_dir; e = e)
+            @test length(e) == 0
+
+            convergence = Engines.Convergence(
+                1, 10, [Engines.IterationLimit(10)]
+            )
+            policy_def = Engines.SDDPPolicyTaskDefinition(
+                convergence,
+                Engines.Expectation(),
+                Engines.Asynchronous(),
+                Engines.DefaultSampling(),
+                Engines.DefaultDuality(),
+                Engines.DefaultForwardPassStrategy(),
+                Engines.SingleCut(),
+                Engines.NoScaling(),
+            )
+            sim_def = Engines.SDDPSimulationTaskDefinition(
+                10, Engines.Serial(), Engines.DefaultSampling()
+            )
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("GLPK", Dict{String,Any}()),
+            )
+            study = SDDPlab.Study(original.inputs, engine)
+
+            @test study.engine.policy.parallel_scheme isa Engines.Asynchronous
+            @test study.engine.simulation.parallel_scheme isa Engines.Serial
+        end
+    end
+
+    @testset "1dtoy-pipeline-asynchronous" begin
+        using GLPK
+        using Distributed
+        @suppress begin
+            if Distributed.nprocs() == 1
+                @info "Skipping Asynchronous integration test: no distributed workers available"
+                @test_skip true
+            else
+                e = CompositeException()
+                original = SDDPlab.read_study(example_dir; e = e)
+                @test length(e) == 0
+
+                convergence = Engines.Convergence(
+                    1, 10, [Engines.IterationLimit(10)]
+                )
+                policy_def = Engines.SDDPPolicyTaskDefinition(
+                    convergence,
+                    Engines.Expectation(),
+                    Engines.Asynchronous(),
+                    Engines.DefaultSampling(),
+                    Engines.DefaultDuality(),
+                    Engines.DefaultForwardPassStrategy(),
+                    Engines.SingleCut(),
+                    Engines.NoScaling(),
+                )
+                sim_def = Engines.SDDPSimulationTaskDefinition(
+                    10, Engines.Serial(), Engines.DefaultSampling()
+                )
+                engine = Engines.SDDPEngine(
+                    policy_def,
+                    sim_def,
+                    Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                    Engines.SolverConfig("GLPK", Dict{String,Any}()),
+                )
+                study = SDDPlab.Study(original.inputs, engine)
+                model = SDDPlab.build(study, GLPK.Optimizer)
+                policy = SDDPlab.train(study, model)
+                @test policy !== nothing
+            end
         end
     end
 end
