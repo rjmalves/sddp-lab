@@ -44,7 +44,7 @@ end
             policy = SDDPlab.train(study, model)
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
             model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
+            SDDPlab.load_policy(study, model, ".", SDDPlab.ParquetFormat())
             simulation = SDDPlab.simulate(study, model)
             SDDPlab.save_simulation(study, simulation, ".", SDDPlab.ParquetFormat())
         end
@@ -383,7 +383,7 @@ end
             @test policy !== nothing
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
             model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
+            SDDPlab.load_policy(study, model, ".", SDDPlab.ParquetFormat())
             simulation = SDDPlab.simulate(study, model)
             @test simulation !== nothing
         end

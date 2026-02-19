@@ -13,20 +13,21 @@
             "policy": {
                 "convergence": {
                     "min_iterations": 5,
-                    "max_iterations": 80,
+                    "max_iterations": 30,
                     "stopping_criteria": {
                         "kind": "IterationLimit",
                         "params": {
-                            "num_iterations": 80
+                            "num_iterations": 30
                         }
                     }
                 },
                 "risk_measure": {
-                    "kind": "CVaR",
-                    "params": {
-                        "alpha": 0.2,
-                        "lambda": 0.9
-                    }
+                    "kind": "Expectation",
+                    "params": {}
+                },
+                "inflow_nonnegativity": {
+                    "kind": "InflowTruncation",
+                    "params": {}
                 },
                 "parallel_scheme": {
                     "kind": "Serial",

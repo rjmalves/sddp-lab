@@ -43,7 +43,7 @@ using Suppressor
         study = SDDPlab.read_study(example_dir; e = e)
         @suppress begin
             model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.load_policy(model, ".", SDDPlab.ParquetFormat())
+            SDDPlab.load_policy(study, model, ".", SDDPlab.ParquetFormat())
         end
         @test length(e) == 0
     end

@@ -2,13 +2,15 @@ function Lab.load_policy(model::SDDPModel, path::String, format::TaskResultsForm
     reader = get_reader(format)
     extension = get_extension(format)
     curdir = pwd()
-    cd(path)
-    PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
-    @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
-    df = reader(PROCESSED_CUTS_PATH)
-    cd(curdir)
+    df = try
+        cd(path)
+        PROCESSED_CUTS_PATH = POLICY_CUTS_OUTPUT_FILENAME * extension
+        @info "Reading cuts from $(PROCESSED_CUTS_PATH)"
+        reader(PROCESSED_CUTS_PATH)
+    finally
+        cd(curdir)
+    end
     success_loading_policy = df !== nothing
-    # TODO - remove existing cuts from model
     return success_loading_policy || __load_external_cuts!(model.policy_graph, df)
 end
 
