@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-SDDPlab.jl is a Julia package for experimenting with Stochastic Dual Dynamic Programming (SDDP) algorithm variations in the hydrothermal dispatch problem. The project has a partially-completed refactoring on the `abstract-engine` branch that introduces an Engine abstraction layer separating algorithm implementation from system modeling. This plan completes that refactoring and systematically extends the package to expose the full breadth of SDDP.jl capabilities -- risk measures, stopping rules, sampling schemes, duality handlers, forward passes, and cut types -- while adding units tracking, LP conditioning, parallelization, new system elements, advanced stochastic modeling, experiment management, and observability tooling.
+SDDPlab.jl is a Julia package for experimenting with Stochastic Dual Dynamic Programming (SDDP) algorithm variations in the hydrothermal dispatch problem. The project has a partially-completed refactoring on the `abstract-engine` branch that introduces an Engine abstraction layer separating algorithm implementation from system modeling. This plan completes that refactoring and systematically extends the package to expose the full breadth of SDDP.jl capabilities -- risk measures, stopping rules, sampling schemes, duality handlers, forward passes, and cut types -- while adding units tracking, LP conditioning, parallelization, new system elements, subproblem structure enhancements, advanced stochastic modeling, experiment management, and observability tooling.
 
 ## Agent Strategy
 
@@ -17,7 +17,7 @@ This plan leverages two specialist agents for implementation:
 
 1. **Algorithm design tickets** (risk measures, duality handlers, forward passes, cut types, stopping rules) go to `sddp-specialist` as primary -- they require deep understanding of the mathematical formulations and SDDP.jl's internal API for these concepts.
 2. **Infrastructure and engine tickets** (merging branches, graph validation, load refactoring, test coverage, wiring pipelines, validation infrastructure) go to `hpc-julia-developer` as primary -- they require Julia expertise in type systems, validation patterns, and JuMP model construction.
-3. **System modeling tickets** (renewables, batteries, demand response, fuel) require both agents: `sddp-specialist` understands the LP/MIP formulations and how they interact with cuts, while `hpc-julia-developer` ensures type-stable, performant implementations.
+3. **System modeling tickets** (non-controllable generation, energy contracts, pumping stations) require both agents: `sddp-specialist` understands the LP formulations and how they interact with cuts, while `hpc-julia-developer` ensures type-stable, performant implementations.
 4. **Parallelization tickets** go to `hpc-julia-developer` as primary with `sddp-specialist` reviewing thread-safety of SDDP-specific data structures.
 5. **Stochastic modeling tickets** go to `sddp-specialist` as primary (mathematical modeling) with `hpc-julia-developer` reviewing performance-critical sampling code.
 6. **Independent tickets within an epic can be parallelized** across agents when they have no dependency relationship. In Epic 02, tickets 010-015 are all independent -- the sddp-specialist can work on multiple simultaneously while the hpc-julia-developer handles infrastructure tickets.
@@ -30,11 +30,12 @@ This plan leverages two specialist agents for implementation:
 4. **Add a variable units system** -- explicit unit tracking in input data with automatic conversion and validation
 5. **Implement LP conditioning** -- coefficient scaling, numerical stability diagnostics, solver-specific configuration
 6. **Enable parallelization** -- threading and distributed computing via SDDP.jl's parallel schemes
-7. **Add new system elements** -- renewables, batteries, demand response, fuel constraints
-8. **Enhance stochastic modeling** -- multivariate processes, Markov chains, scenario validation
-9. **Support experiment management** -- multi-config comparison, sensitivity analysis, reproducibility
-10. **Add observability and diagnostics** -- training visualization, convergence analysis, debugging tools
-11. **Comprehensive documentation** -- API docs, tutorials, example cases
+7. **Add new system elements** -- non-controllable generation (renewables), energy contracts (import/export), pumping stations
+8. **Enhance subproblem structure** -- stage time duration with MW-to-MWh conversion, inner load blocks (parallel and chronological), inflow non-negativity methods
+9. **Advance stochastic modeling** -- multivariate processes, Markov chains, out-of-sample validation
+10. **Support experiment management** -- multi-config comparison, sensitivity analysis, reproducibility
+11. **Add observability and diagnostics** -- training visualization, convergence analysis, debugging tools
+12. **Comprehensive documentation** -- API docs, tutorials, example cases
 
 ## Non-Goals
 
@@ -50,7 +51,7 @@ This plan leverages two specialist agents for implementation:
 
 The current validation pipeline spans 1900+ lines across 15+ files with massive boilerplate. Every entity type requires 5-8 hand-written functions following the same `build_internals -> validate_keys_types -> validate_content -> validate_consistency` 4-step pattern. Many of these functions are trivial stubs (`return true`), and the overall structure entangles three concerns: file resolution (casting), object construction (building), and constraint checking (validation). The dict mutation pattern -- where `d::Dict{String,Any}` is progressively mutated from raw JSON values to typed Julia objects -- makes the data flow hard to reason about and requires dual-phase type checking (before-build and after-build).
 
-This boilerplate will compound as the project adds new entity types (renewables, batteries, demand response, fuel constraints) and new algorithm options (risk measures, stopping rules, sampling schemes, duality handlers, forward passes, cut types). Without simplification, every new entity will require 5-8 new validator functions, each following the same mechanical pattern.
+This boilerplate will compound as the project adds new entity types (non-controllable generation, energy contracts, pumping stations) and new algorithm options (risk measures, stopping rules, sampling schemes, duality handlers, forward passes, cut types). Without simplification, every new entity will require 5-8 new validator functions, each following the same mechanical pattern.
 
 ### Options Evaluated
 
@@ -164,7 +165,7 @@ Option E is selected because it:
 3. **Enables incremental migration** -- entities can be migrated one at a time without breaking anything
 4. **Is type-stable and performant** -- `FieldRule` is a concrete struct, schema vectors are const, the generic validation function is a tight loop
 5. **Keeps complex validation explicit** -- cross-entity references (Lines -> Buses), topology checks (Hydro DAG), and stochastic process validation remain as explicit functions that are clear and testable
-6. **Reduces the cost of adding new entities** -- Epic 05 (renewables, batteries, demand response, fuel) will benefit directly from the schema infrastructure
+6. **Reduces the cost of adding new entities** -- Epic 05 (non-controllable generation, energy contracts, pumping stations) will benefit directly from the schema infrastructure
 
 ### Architecture Impact
 
@@ -235,18 +236,18 @@ SDDPlab.jl
 
 ### Component/Module Breakdown
 
-| Module            | Responsibility                                                        | Epics      | Primary Agent       |
-| ----------------- | --------------------------------------------------------------------- | ---------- | ------------------- |
-| Lab               | Abstract types, interface contracts                                   | 1          | hpc-julia-developer |
-| Utils/schema      | Declarative field schemas and generic validation                      | 1          | hpc-julia-developer |
-| Engines/sddp      | Concrete SDDP engine (build/train/simulate)                           | 1, 2, 3, 4 | both                |
-| System            | Power system entities (Bus, Line, Hydro, Thermal, Renewable, Battery) | 1, 5       | both                |
-| Scenarios         | Graph topology, inflow/load scenarios                                 | 1, 6       | sddp-specialist     |
-| StochasticProcess | Stochastic models (Naive, AR, Markov, Multivariate)                   | 6          | sddp-specialist     |
-| Inputs            | JSONC/CSV config parsing                                              | 1, 2, 5, 6 | hpc-julia-developer |
-| Utils             | Validation, reading, units                                            | 1, 3       | hpc-julia-developer |
-| Experiments       | Multi-config comparison, sensitivity analysis                         | 7          | hpc-julia-developer |
-| Diagnostics       | Training visualization, convergence analysis                          | 8          | sddp-specialist     |
+| Module            | Responsibility                                                                     | Epics      | Primary Agent       |
+| ----------------- | ---------------------------------------------------------------------------------- | ---------- | ------------------- |
+| Lab               | Abstract types, interface contracts                                                | 1          | hpc-julia-developer |
+| Utils/schema      | Declarative field schemas and generic validation                                   | 1          | hpc-julia-developer |
+| Engines/sddp      | Concrete SDDP engine (build/train/simulate)                                        | 1, 2, 3, 4 | both                |
+| System            | Power system entities (Bus, Line, Hydro, Thermal, NonControllable, Contract, Pump) | 1, 5       | both                |
+| Scenarios         | Graph topology, inflow/load/availability scenarios                                 | 1, 5, 6    | sddp-specialist     |
+| StochasticProcess | Stochastic models (Naive, AR, Markov, Multivariate)                                | 7          | sddp-specialist     |
+| Inputs            | JSONC/CSV config parsing                                                           | 1, 2, 5, 6 | hpc-julia-developer |
+| Utils             | Validation, reading, units                                                         | 1, 3       | hpc-julia-developer |
+| Experiments       | Multi-config comparison, sensitivity analysis                                      | 8          | hpc-julia-developer |
+| Diagnostics       | Training visualization, convergence analysis                                       | 9          | sddp-specialist     |
 
 ### Data Flow
 
@@ -321,17 +322,18 @@ All test commands MUST use the Bash tool's `timeout` parameter (in milliseconds)
 
 ## Phases & Milestones
 
-| Phase | Epic                          | Duration  | Milestone                                                           | Primary Agent(s)                                 |
-| ----- | ----------------------------- | --------- | ------------------------------------------------------------------- | ------------------------------------------------ |
-| 1     | Stabilize Engine Abstraction  | 5-7 weeks | `abstract-engine` merged, validation simplified, all TODOs resolved | hpc-julia-developer                              |
-| 2     | Algorithm Flexibility         | 4-5 weeks | All SDDP.jl knobs exposed via JSONC config                          | sddp-specialist + hpc-julia-developer (parallel) |
-| 3     | Units & LP Conditioning       | 3-4 weeks | Unit tracking + automatic rescaling working                         | hpc-julia-developer + sddp-specialist            |
-| 4     | Parallelization & Performance | 3-4 weeks | Threading + distributed computing enabled                           | hpc-julia-developer                              |
-| 5     | Enhanced System Elements      | 4-5 weeks | Renewables, batteries, demand response modeled                      | sddp-specialist + hpc-julia-developer            |
-| 6     | Advanced Stochastic Modeling  | 3-4 weeks | Multivariate processes, Markov chains                               | sddp-specialist                                  |
-| 7     | Experiment Management         | 3-4 weeks | Multi-config comparison, sensitivity analysis                       | hpc-julia-developer                              |
-| 8     | Observability & Diagnostics   | 2-3 weeks | Training visualization, convergence analysis                        | sddp-specialist                                  |
-| 9     | Documentation & Examples      | 2-3 weeks | Comprehensive docs, tutorials, examples                             | both                                             |
+| Phase | Epic                              | Duration  | Milestone                                                           | Primary Agent(s)                                 |
+| ----- | --------------------------------- | --------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| 1     | Stabilize Engine Abstraction      | 5-7 weeks | `abstract-engine` merged, validation simplified, all TODOs resolved | hpc-julia-developer                              |
+| 2     | Algorithm Flexibility             | 4-5 weeks | All SDDP.jl knobs exposed via JSONC config                          | sddp-specialist + hpc-julia-developer (parallel) |
+| 3     | Units & LP Conditioning           | 3-4 weeks | Unit tracking + automatic rescaling working                         | hpc-julia-developer + sddp-specialist            |
+| 4     | Parallelization & Performance     | 3-4 weeks | Threading + distributed computing enabled                           | hpc-julia-developer                              |
+| 5     | Enhanced System Elements          | 3-4 weeks | Non-controllable gen, contracts, pumping stations modeled           | sddp-specialist + hpc-julia-developer            |
+| 6     | Subproblem Structure & Stochastic | 4-5 weeks | Time duration, load blocks, inflow non-negativity                   | sddp-specialist                                  |
+| 7     | Advanced Stochastic Modeling      | 3-4 weeks | Multivariate processes, Markov chains, out-of-sample validation     | sddp-specialist                                  |
+| 8     | Experiment Management             | 3-4 weeks | Multi-config comparison, sensitivity analysis                       | hpc-julia-developer                              |
+| 9     | Observability & Diagnostics       | 2-3 weeks | Training visualization, convergence analysis                        | sddp-specialist                                  |
+| 10    | Documentation & Examples          | 2-3 weeks | Comprehensive docs, tutorials, examples                             | both                                             |
 
 ### Parallelization Opportunities
 
@@ -341,7 +343,7 @@ Within Epic 02, tickets 010-015 are mutually independent (each adds a different 
 - **hpc-julia-developer** can work on ticket 012 (sampling schemes, more infrastructure-heavy)
 - Ticket 016 (wiring) waits for all 010-015 to complete, then either agent can handle it
 
-Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on independent epics concurrently once dependencies allow (e.g., Epic 05 system elements and Epic 06 stochastic modeling have shared dependencies but independent Epic 08 diagnostics can overlap with Epic 07 experiments).
+Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on independent epics concurrently once dependencies allow (e.g., ticket-030 inflow non-negativity is independent of ticket-029 load blocks within Epic 06, enabling parallel work).
 
 ## Risk Analysis
 
@@ -355,6 +357,8 @@ Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on 
 | Agent coordination overhead on shared files                       | Medium | Low        | Clear ticket boundaries with no overlapping file modifications     |
 | Schema migration introduces regressions in validation behavior    | Medium | Medium     | Migrate one entity at a time with full regression tests after each |
 | Schema infrastructure adds compilation overhead                   | Low    | Low        | FieldRule is a concrete struct; no generated functions or closures |
+| Block decomposition enlarges LP and slows training                | Medium | Medium     | Benchmark parallel vs chronological; provide single-block default  |
+| Time duration conversion breaks existing example cases            | Medium | Medium     | Backward-compatible default (implicit unit time when no blocks)    |
 
 ## Success Metrics
 

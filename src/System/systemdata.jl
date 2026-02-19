@@ -2,21 +2,16 @@
 # CLASS SystemData -----------------------------------------------------------------------
 
 function SystemData(d::Dict{String,Any}, e::CompositeException)
-
-    # Build internal objects
     valid_internals = __build_system_internals_from_dicts!(d, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_system_keys_types!(d, e)
-
-    # Content validation
     valid_content = valid_keys_types && __validate_system_content!(d, e)
-
-    # Consistency validation
     valid_consistency = valid_content && __validate_system_consistency!(d, e)
 
     return if valid_consistency
-        SystemData(d["buses"], d["lines"], d["hydros"], d["thermals"])
+        SystemData(
+            d["buses"], d["lines"], d["hydros"], d["thermals"],
+            d["noncontrollables"], d["energycontracts"], d["pumpingstations"],
+        )
     else
         nothing
     end
@@ -24,11 +19,7 @@ end
 
 function SystemData(filename::String, e::CompositeException)
     d = read_jsonc(filename, e)
-    valid_jsonc = d !== nothing
-
-    # Cast data from files into the dictionary
-    valid = valid_jsonc && __cast_system_internals_from_files!(d, e)
-
+    valid = d !== nothing && __cast_system_internals_from_files!(d, e)
     return valid ? SystemData(d, e) : nothing
 end
 
@@ -113,4 +104,58 @@ Return the line entities from files.
 """
 function get_lines_entities(s::SystemData)::Vector{Line}
     return s.lines.entities
+end
+
+"""
+get_noncontrollables(s::SystemData)::NonControllables
+
+Return the noncontrollables object from files.
+"""
+function get_noncontrollables(s::SystemData)::NonControllables
+    return s.noncontrollables
+end
+
+"""
+get_noncontrollables_entities(s::SystemData)::Vector{NonControllable}
+
+Return the noncontrollable entities from files.
+"""
+function get_noncontrollables_entities(s::SystemData)::Vector{NonControllable}
+    return s.noncontrollables.entities
+end
+
+"""
+get_energycontracts(s::SystemData)::EnergyContracts
+
+Return the energy contracts object from files.
+"""
+function get_energycontracts(s::SystemData)::EnergyContracts
+    return s.energycontracts
+end
+
+"""
+get_energycontracts_entities(s::SystemData)::Vector{EnergyContract}
+
+Return the energy contract entities from files.
+"""
+function get_energycontracts_entities(s::SystemData)::Vector{EnergyContract}
+    return s.energycontracts.entities
+end
+
+"""
+get_pumpingstations(s::SystemData)::PumpingStations
+
+Return the pumping stations object from files.
+"""
+function get_pumpingstations(s::SystemData)::PumpingStations
+    return s.pumpingstations
+end
+
+"""
+get_pumpingstations_entities(s::SystemData)::Vector{PumpingStation}
+
+Return the pumping station entities from files.
+"""
+function get_pumpingstations_entities(s::SystemData)::Vector{PumpingStation}
+    return s.pumpingstations.entities
 end

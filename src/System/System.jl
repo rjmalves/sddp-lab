@@ -59,6 +59,39 @@ struct Thermal <: SystemEntity
     bus::Ref{Bus}
 end
 
+struct NonControllable <: SystemEntity
+    id::Integer
+    name::String
+    bus_id::Integer
+    max_generation::Real
+    curtailment_cost::Real
+    # Reference to other system elements
+    bus::Ref{Bus}
+end
+
+struct EnergyContract <: SystemEntity
+    id::Integer
+    name::String
+    bus_id::Integer
+    contract_type::String   # "import" or "export"
+    price_per_mwh::Real
+    min_mw::Real
+    max_mw::Real
+    bus::Ref{Bus}
+end
+
+struct PumpingStation <: SystemEntity
+    id::Integer
+    name::String
+    bus_id::Integer
+    source_hydro_id::Integer
+    destination_hydro_id::Integer
+    consumption_mw_per_m3s::Real
+    min_m3s::Real
+    max_m3s::Real
+    bus::Ref{Bus}
+end
+
 abstract type SystemEntitySet end
 
 struct Buses <: SystemEntitySet
@@ -78,11 +111,26 @@ struct Thermals <: SystemEntitySet
     entities::Vector{Thermal}
 end
 
+struct NonControllables <: SystemEntitySet
+    entities::Vector{NonControllable}
+end
+
+struct EnergyContracts <: SystemEntitySet
+    entities::Vector{EnergyContract}
+end
+
+struct PumpingStations <: SystemEntitySet
+    entities::Vector{PumpingStation}
+end
+
 struct SystemData <: InputModule
     buses::Buses
     lines::Lines
     hydros::Hydros
     thermals::Thermals
+    noncontrollables::NonControllables
+    energycontracts::EnergyContracts
+    pumpingstations::PumpingStations
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
@@ -193,6 +241,15 @@ include("hydro.jl")
 include("thermal-validators.jl")
 include("thermal.jl")
 
+include("noncontrollable-validators.jl")
+include("noncontrollable.jl")
+
+include("energycontract-validators.jl")
+include("energycontract.jl")
+
+include("pumpingstation-validators.jl")
+include("pumpingstation.jl")
+
 include("systemdata-validators.jl")
 include("systemdata.jl")
 
@@ -203,6 +260,12 @@ export SystemData,
     Buses,
     Thermal,
     Thermals,
+    NonControllable,
+    NonControllables,
+    EnergyContract,
+    EnergyContracts,
+    PumpingStation,
+    PumpingStations,
     Line,
     Lines,
     get_system,
@@ -212,6 +275,12 @@ export SystemData,
     get_hydros_entities,
     get_thermals,
     get_thermals_entities,
+    get_noncontrollables,
+    get_noncontrollables_entities,
+    get_energycontracts,
+    get_energycontracts_entities,
+    get_pumpingstations,
+    get_pumpingstations_entities,
     get_lines,
     get_lines_entities,
     get_ids,

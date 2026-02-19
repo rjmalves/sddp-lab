@@ -2,12 +2,42 @@ using SDDPlab: SDDPlab
 import SDDPlab: Engines
 using Suppressor
 
+# Helper: create a fast-running study from a file-loaded study.
+# Replaces the engine with one that uses low iteration counts and few simulations,
+# so that tests exercise the full pipeline without taking minutes.
+function _fast_study(study; num_iters = 10, num_sims = 10)
+    convergence = Engines.Convergence(
+        1, num_iters, [Engines.IterationLimit(num_iters)]
+    )
+    policy_def = Engines.SDDPPolicyTaskDefinition(
+        convergence,
+        study.engine.policy.risk_measure,
+        Engines.Serial(),
+        Engines.DefaultSampling(),
+        Engines.DefaultDuality(),
+        Engines.DefaultForwardPassStrategy(),
+        Engines.SingleCut(),
+        Engines.NoScaling(),
+    )
+    sim_def = Engines.SDDPSimulationTaskDefinition(
+        num_sims, Engines.Serial(), Engines.DefaultSampling()
+    )
+    engine = Engines.SDDPEngine(
+        policy_def,
+        sim_def,
+        Engines.DiagnosticsConfig(false, 1e6, 1e10),
+        Engines.SolverConfig("GLPK", Dict{String,Any}()),
+    )
+    return SDDPlab.Study(study.inputs, engine)
+end
+
 @testset "main" begin
     @testset "main_success" begin
         e = CompositeException()
         using GLPK
         @suppress begin
-            study = SDDPlab.read_study(example_dir; e = e)
+            original = SDDPlab.read_study(example_dir; e = e)
+            study = _fast_study(original)
             model = SDDPlab.build(study, GLPK.Optimizer)
             policy = SDDPlab.train(study, model)
             SDDPlab.save_policy(study, policy, ".", SDDPlab.ParquetFormat())
@@ -24,8 +54,9 @@ using Suppressor
         example_1dsin = joinpath(@__DIR__, "..", "example", "1dsin")
         @suppress begin
             e = CompositeException()
-            study = SDDPlab.read_study(example_1dsin; e = e)
+            original = SDDPlab.read_study(example_1dsin; e = e)
             @test length(e) == 0
+            study = _fast_study(original)
             model = SDDPlab.build(study, GLPK.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
@@ -39,8 +70,9 @@ using Suppressor
         example_1dsin_ar = joinpath(@__DIR__, "..", "example", "1dsin_ar")
         @suppress begin
             e = CompositeException()
-            study = SDDPlab.read_study(example_1dsin_ar; e = e)
+            original = SDDPlab.read_study(example_1dsin_ar; e = e)
             @test length(e) == 0
+            study = _fast_study(original)
             model = SDDPlab.build(study, GLPK.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
@@ -54,8 +86,9 @@ using Suppressor
         example_4ree = joinpath(@__DIR__, "..", "example", "4ree")
         @suppress begin
             e = CompositeException()
-            study = SDDPlab.read_study(example_4ree; e = e)
+            original = SDDPlab.read_study(example_4ree; e = e)
             @test length(e) == 0
+            study = _fast_study(original)
             model = SDDPlab.build(study, GLPK.Optimizer)
             policy = SDDPlab.train(study, model)
             @test policy !== nothing
@@ -414,10 +447,11 @@ using Suppressor
     @testset "1dtoy-pipeline-solver-from-config" begin
         @suppress begin
             e = CompositeException()
-            study = SDDPlab.read_study(example_dir; e = e)
+            original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
-            @test study.engine.solver.solver_name == "GLPK"
+            @test original.engine.solver.solver_name == "GLPK"
 
+            study = _fast_study(original)
             model = SDDPlab.build(study)
             @test model !== nothing
             policy = SDDPlab.train(study, model)

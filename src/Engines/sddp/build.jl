@@ -31,14 +31,7 @@ function _apply_engine_scaling(
     config = compute_scaling_factors(system)
     scaled_system = apply_scaling(system, config)
 
-    scaled_files = InputModule[]
-    for f in files
-        if f isa SystemData
-            push!(scaled_files, scaled_system)
-        else
-            push!(scaled_files, f)
-        end
-    end
+    scaled_files = [f isa SystemData ? scaled_system : f for f in files]
 
     @info "AutoScaling applied" factors = config.factors
     return (config, scaled_files)
@@ -94,6 +87,41 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals)
     return nothing
 end
 
+function add_system_elements!(m::JuMP.Model, ses::NonControllables)
+    num_nc = length(ses)
+    if num_nc == 0
+        return nothing
+    end
+    m[NC_GENERATION] = JuMP.@variable(
+        m, [n = 1:num_nc], base_name = String(NC_GENERATION)
+    )
+    for n in 1:num_nc
+        JuMP.set_lower_bound(m[NC_GENERATION][n], 0)
+        JuMP.set_upper_bound(m[NC_GENERATION][n], ses.entities[n].max_generation)
+    end
+
+    m[NC_CURTAILMENT] = JuMP.@expression(
+        m, [n = 1:num_nc], ses.entities[n].max_generation - m[NC_GENERATION][n]
+    )
+
+    return nothing
+end
+
+function add_system_elements!(m::JuMP.Model, ses::EnergyContracts)
+    num_contracts = length(ses)
+    if num_contracts == 0
+        return nothing
+    end
+    m[CONTRACT_DISPATCH] = JuMP.@variable(
+        m, [n = 1:num_contracts], base_name = String(CONTRACT_DISPATCH)
+    )
+    for n in 1:num_contracts
+        JuMP.set_lower_bound(m[CONTRACT_DISPATCH][n], ses.entities[n].min_mw)
+        JuMP.set_upper_bound(m[CONTRACT_DISPATCH][n], ses.entities[n].max_mw)
+    end
+    return nothing
+end
+
 function add_system_elements!(m::JuMP.Model, ses::Hydros)
     num_hydros = length(ses)
 
@@ -143,7 +171,30 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros)
     )
 end
 
-function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
+function add_system_elements!(m::JuMP.Model, ses::PumpingStations)
+    num_stations = length(ses)
+    if num_stations == 0
+        return nothing
+    end
+    m[PUMPED_FLOW] = JuMP.@variable(
+        m, [n = 1:num_stations], base_name = String(PUMPED_FLOW)
+    )
+    for n in 1:num_stations
+        JuMP.set_lower_bound(m[PUMPED_FLOW][n], ses.entities[n].min_m3s)
+        JuMP.set_upper_bound(m[PUMPED_FLOW][n], ses.entities[n].max_m3s)
+    end
+    m[PUMP_POWER] = JuMP.@expression(
+        m, [n = 1:num_stations],
+        ses.entities[n].consumption_mw_per_m3s * m[PUMPED_FLOW][n]
+    )
+    return nothing
+end
+
+function add_hydro_balance!(
+    m::JuMP.Model, hydros::Hydros,
+    pump_source_map::Dict{Int,Vector{Int}},
+    pump_dest_map::Dict{Int,Vector{Int}},
+)
     num_hydros = length(hydros)
 
     m[HYDRO_BALANCE] = JuMP.@constraint(
@@ -155,7 +206,9 @@ function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
         sum(
             m[OUTFLOW][j] for j in 1:num_hydros if
             downstream(hydros.entities[j].id, hydros) == hydros.entities[n]
-        )
+        ) -
+        sum(m[PUMPED_FLOW][j] for j in get(pump_source_map, n, Int[])) +
+        sum(m[PUMPED_FLOW][j] for j in get(pump_dest_map, n, Int[]))
     )
     return nothing
 end
@@ -164,8 +217,10 @@ function add_system_elements!(m::JuMP.Model, s::SystemData)
     add_system_elements!(m, get_buses(s))
     add_system_elements!(m, get_lines(s))
     add_system_elements!(m, get_thermals(s))
+    add_system_elements!(m, get_noncontrollables(s))
+    add_system_elements!(m, get_energycontracts(s))
+    add_system_elements!(m, get_pumpingstations(s))
     add_system_elements!(m, get_hydros(s))
-    add_hydro_balance!(m, get_hydros(s))
     return nothing
 end
 
@@ -174,10 +229,14 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
     buses = get_buses_entities(s)
     lines = get_lines_entities(s)
     thermals = get_thermals_entities(s)
+    noncontrollables = get_noncontrollables_entities(s)
+    contracts = get_energycontracts_entities(s)
     num_buses = length(buses)
     num_lines = length(lines)
     num_hydros = length(hydros)
     num_thermals = length(thermals)
+    num_nc = length(noncontrollables)
+    num_contracts = length(contracts)
 
     SDDP.@stageobjective(
         m,
@@ -189,7 +248,9 @@ function add_system_objective!(m::JuMP.Model, s::SystemData)
                 hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n] for
                 n in 1:num_hydros
             ) +
-            sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros)
+            sum(hydros[n].spillage_penalty * m[SPILLAGE][n] for n in 1:num_hydros) +
+            (num_nc > 0 ? sum(noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n] for n in 1:num_nc) : 0.0) +
+            (num_contracts > 0 ? sum(contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n] for n in 1:num_contracts) : 0.0)
     )
 end
 
@@ -350,20 +411,33 @@ function __generate_subproblem_builder(
     hydros_entities = get_hydros_entities(system)
     thermals_entities = get_thermals_entities(system)
     lines_entities = get_lines_entities(system)
+    noncontrollable_entities = get_noncontrollables_entities(system)
+    contracts_entities = get_energycontracts_entities(system)
+    pumping_entities = get_pumpingstations_entities(system)
     bus_ids = get_ids(get_buses(system))
+    hydro_ids = get_ids(get_hydros(system))
 
     hydro_bus_map = _build_bus_index_map(hydros_entities, bus_ids, :bus_id)
     thermal_bus_map = _build_bus_index_map(thermals_entities, bus_ids, :bus_id)
+    noncontrollable_bus_map = _build_bus_index_map(noncontrollable_entities, bus_ids, :bus_id)
+    contract_bus_map = _build_bus_index_map(contracts_entities, bus_ids, :bus_id)
+    pumping_bus_map = _build_bus_index_map(pumping_entities, bus_ids, :bus_id)
+    pump_source_map = _build_bus_index_map(pumping_entities, hydro_ids, :source_hydro_id)
+    pump_dest_map = _build_bus_index_map(pumping_entities, hydro_ids, :destination_hydro_id)
     line_target_map = _build_bus_index_map(lines_entities, bus_ids, :target_bus_id)
     line_source_map = _build_bus_index_map(lines_entities, bus_ids, :source_bus_id)
 
     function fun_sp_build(m::JuMP.Model, node::Integer)
         add_system_elements!(m, system)
+        add_hydro_balance!(m, get_hydros(system), pump_source_map, pump_dest_map)
         add_uncertainties!(m, scenarios, node)
 
         __add_load_balance!(
             m, scenarios, node, s_gen, bus_ids,
-            hydro_bus_map, thermal_bus_map, line_target_map, line_source_map
+            hydro_bus_map, thermal_bus_map, noncontrollable_bus_map,
+            line_target_map, line_source_map,
+            contract_bus_map, contracts_entities,
+            pumping_bus_map, pumping_entities
         )
 
         Ω_node = vec(SAA[node])
@@ -387,8 +461,13 @@ function __add_load_balance!(
     bus_ids::Vector{<:Integer},
     hydro_bus_map::Dict{Int,Vector{Int}},
     thermal_bus_map::Dict{Int,Vector{Int}},
+    noncontrollable_bus_map::Dict{Int,Vector{Int}},
     line_target_map::Dict{Int,Vector{Int}},
     line_source_map::Dict{Int,Vector{Int}},
+    contract_bus_map::Dict{Int,Vector{Int}},
+    contracts_entities::Vector{EnergyContract},
+    pumping_bus_map::Dict{Int,Vector{Int}},
+    pumping_entities::Vector{PumpingStation},
 )
     num_buses = length(bus_ids)
 
@@ -397,6 +476,12 @@ function __add_load_balance!(
         [n = 1:num_buses],
         sum(m[HYDRO_GENERATION][j] for j in get(hydro_bus_map, n, Int[])) +
         sum(m[THERMAL_GENERATION][j] for j in get(thermal_bus_map, n, Int[])) +
+        sum(m[NC_GENERATION][j] for j in get(noncontrollable_bus_map, n, Int[])) +
+        sum(
+            contracts_entities[j].contract_type == "import" ? m[CONTRACT_DISPATCH][j] : -m[CONTRACT_DISPATCH][j]
+            for j in get(contract_bus_map, n, Int[])
+        ) -
+        sum(m[PUMP_POWER][j] for j in get(pumping_bus_map, n, Int[])) +
         sum(
             m[DIRECT_EXCHANGE][j] - m[REVERSE_EXCHANGE][j]
             for j in get(line_target_map, n, Int[])
