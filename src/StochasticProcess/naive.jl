@@ -12,6 +12,28 @@ function __build_unitarynaive_seasonal_model(d::Dict{String,Any})::Distributions
     return __instantiate_distribution(d["kind"], Tuple(real(d["parameters"])))
 end
 
+"""
+    Naive <: AbstractStochasticProcess
+
+Independent per-season distribution model for inflow generation. Each hydro
+reservoir has an independent univariate marginal distribution for each season,
+combined via a seasonal copula for cross-sectional dependence.
+
+# Fields
+- `models`: Per-hydro `UnitaryNaive` marginal distribution sets (one per
+  hydro).
+- `copulas`: Per-season copula objects for joint sampling.
+
+# Example
+```julia
+# Naive processes are constructed from the stochastic_process.jsonc config
+process = study.inputs.files |> get_scenarios |> (s -> get_stochastic_process(s.inflow))
+saa = generate_saa(process, 1, 60, 200, 42)
+```
+
+See also: [`generate_saa`](@ref), [`AutoRegressive`](@ref),
+[`AbstractStochasticProcess`](@ref)
+"""
 struct Naive <: AbstractStochasticProcess
     models::Vector{UnitaryNaive}
     copulas::Dict{Integer,Copula}

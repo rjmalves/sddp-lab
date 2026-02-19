@@ -1,0 +1,98 @@
+# Variable Symbols and Output Formats
+
+## Output Formats
+
+```@docs
+TaskResultsFormat
+CSVFormat
+ParquetFormat
+AnyFormat
+get_reader
+get_writer
+get_extension
+```
+
+## Variable Symbol Constants
+
+### Load and Demand
+
+```@docs
+LOAD
+DEFICIT
+```
+
+### Thermal Generation
+
+```@docs
+THERMAL_GENERATION
+THERMAL_GENERATION_COST
+```
+
+### Non-Controllable Generation
+
+```@docs
+NC_GENERATION
+NC_CURTAILMENT
+```
+
+### Energy Contracts
+
+```@docs
+CONTRACT_DISPATCH
+```
+
+### Pumping Stations
+
+```@docs
+PUMPED_FLOW
+PUMP_POWER
+```
+
+### Hydro Operation
+
+```@docs
+STORED_VOLUME
+HYDRO_GENERATION
+HYDRO_MIN_GENERATION_SLACK
+INFLOW
+TURBINED_FLOW
+OUTFLOW
+SPILLAGE
+BLOCK_STORAGE
+INFLOW_SLACK
+NOISE_ADJUSTMENT_SLACK
+ω_INFLOW
+STCHP
+```
+
+### Transmission
+
+```@docs
+DIRECT_EXCHANGE
+REVERSE_EXCHANGE
+NET_EXCHANGE
+```
+
+### Cost and Dual Variables
+
+```@docs
+HYDRO_BALANCE
+LOAD_BALANCE
+MARGINAL_COST
+WATER_VALUE
+TOTAL_COST
+STAGE_COST
+FUTURE_COST
+VERTEX_COVERAGE_DISTANCE
+```
+
+## Output Filename Constants
+
+```@docs
+POLICY_CUTS_OUTPUT_FILENAME
+POLICY_CUTS_OUTPUT_INTERCEPT_NAME
+POLICY_CONVERGENCE_OUTPUT_FILENAME
+POLICY_TRAINING_LOG_OUTPUT_FILENAME
+POLICY_CONVERGENCE_ANALYSIS_OUTPUT_FILENAME
+POLICY_CONVERGENCE_REPORT_OUTPUT_FILENAME
+```

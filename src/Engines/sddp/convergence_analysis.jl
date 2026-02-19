@@ -15,6 +15,26 @@ function _simple_linear_slope(x::AbstractVector, y::AbstractVector)::Float64
     return denominator == 0.0 ? NaN : numerator / denominator
 end
 
+"""
+    compute_gap_trajectory(training_log) -> DataFrame
+
+Compute the absolute and relative optimality gap at each logged training
+iteration.
+
+The gap is defined as `simulation_value - bound`. The relative gap is
+`gap_absolute / |bound|`. Returns `NaN` for iterations where the bound is zero.
+
+# Arguments
+- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+# Example
+```julia
+artifact = train(study, model)
+df = compute_gap_trajectory(artifact.training_log)
+```
+
+See also: [`compute_convergence_rate`](@ref), [`generate_convergence_report`](@ref)
+"""
 function compute_gap_trajectory(training_log::TrainingLog)::DataFrame
     n = length(training_log.iterations)
     df = DataFrame(
@@ -38,6 +58,35 @@ function compute_gap_trajectory(training_log::TrainingLog)::DataFrame
     return df
 end
 
+"""
+    compute_convergence_rate(training_log) -> Dict{String, Float64}
+
+Compute convergence rate metrics from a completed training run.
+
+Returns a dictionary with the following keys:
+- `"bound_improvement_rate"`: Mean per-iteration improvement in the lower bound
+  over the second half of training.
+- `"gap_reduction_rate"`: Slope of `log(relative_gap)` vs iteration (negative =
+  converging).
+- `"total_time_seconds"`: Total wall-clock training time.
+- `"time_per_iteration_mean"`: Mean seconds per iteration.
+- `"time_per_iteration_std"`: Standard deviation of per-iteration time.
+- `"iterations_total"`: Total number of iterations.
+- `"final_bound"`: Lower bound at the last iteration.
+- `"final_simulation_value"`: Simulated cost at the last iteration.
+- `"final_gap_relative"`: Relative gap at the last iteration.
+
+# Arguments
+- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+# Example
+```julia
+rates = compute_convergence_rate(artifact.training_log)
+println("Final gap: ", rates["final_gap_relative"])
+```
+
+See also: [`compute_gap_trajectory`](@ref), [`detect_bound_stationarity`](@ref)
+"""
 function compute_convergence_rate(training_log::TrainingLog)::Dict{String,Float64}
     n = length(training_log.iterations)
     result = Dict{String,Float64}()
@@ -105,6 +154,32 @@ function compute_convergence_rate(training_log::TrainingLog)::Dict{String,Float6
     return result
 end
 
+"""
+    detect_bound_stationarity(training_log; window, threshold) -> Dict{String, Any}
+
+Detect whether the SDDP lower bound has become stationary (stopped improving).
+
+Examines the last `window` iterations and checks whether the relative range
+of bound values falls below `threshold`. Returns a dictionary with:
+- `"is_stationary"`: `true` if the bound is stationary.
+- `"stationary_since_iteration"`: The earliest iteration where stationarity
+  holds (0 if not stationary).
+- `"bound_range_in_window"`: Absolute range of bound values in the window.
+- `"relative_bound_range"`: Relative range (`range / |final_bound|`).
+
+# Arguments
+- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+- `window`: Number of trailing iterations to examine (default: 20).
+- `threshold`: Relative range threshold for declaring stationarity (default: `1e-6`).
+
+# Example
+```julia
+info = detect_bound_stationarity(artifact.training_log; window=30, threshold=1e-5)
+info["is_stationary"] && println("Converged at iteration ", info["stationary_since_iteration"])
+```
+
+See also: [`compute_convergence_rate`](@ref), [`generate_convergence_report`](@ref)
+"""
 function detect_bound_stationarity(
     training_log::TrainingLog; window::Int=20, threshold::Float64=1e-6
 )::Dict{String,Any}
@@ -157,6 +232,30 @@ function detect_bound_stationarity(
     return result
 end
 
+"""
+    generate_convergence_report(training_log) -> Dict{String, Any}
+
+Generate a comprehensive convergence report from a completed SDDP training run.
+
+Combines all convergence analysis functions into a single report dict with keys:
+- `"status"`: Terminal status string (e.g., `"iteration_limit"`).
+- `"convergence_rate"`: Output of [`compute_convergence_rate`](@ref).
+- `"bound_stationarity"`: Output of [`detect_bound_stationarity`](@ref).
+- `"had_numerical_issues"`: `true` if any iteration flagged a numerical issue.
+- `"numerical_issue_iterations"`: List of iterations with numerical issues.
+
+# Arguments
+- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+# Example
+```julia
+report = generate_convergence_report(artifact.training_log)
+report["had_numerical_issues"] && @warn "Numerical issues detected"
+```
+
+See also: [`compute_convergence_rate`](@ref), [`detect_bound_stationarity`](@ref),
+[`compute_gap_trajectory`](@ref)
+"""
 function generate_convergence_report(training_log::TrainingLog)::Dict{String,Any}
     report = Dict{String,Any}()
 

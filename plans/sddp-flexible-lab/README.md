@@ -32,7 +32,7 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | 07   | Advanced Stochastic Modeling      | 3       | Completed | sddp-specialist             |
 | 08   | Experiment Management             | 4       | Completed | hpc-julia-developer         |
 | 09   | Observability & Diagnostics       | 3       | Completed | sddp-specialist             |
-| 10   | Documentation & Examples          | 3       | Outline   | both                        |
+| 10   | Documentation & Examples          | 3       | Executing | both                        |
 
 ## Dependency Graph
 
@@ -139,6 +139,9 @@ Epic 09: Observability & Diagnostics
        |
        v
 Epic 10 (Documentation & Examples)
+  ticket-041 (API reference docs)     \
+  ticket-042 (config format reference) |-- ALL PARALLEL
+  ticket-043 (tutorial examples)      /
 ```
 
 ## Progress Tracking
@@ -186,6 +189,6 @@ Epic 10 (Documentation & Examples)
 | ticket-038 | Add training progress monitoring and logging config         | epic-09 | completed | Refined      | sddp-specialist     |
 | ticket-039 | Add convergence analysis tools                              | epic-09 | completed | Refined      | sddp-specialist     |
 | ticket-040 | Add subproblem debugging utilities                          | epic-09 | completed | Refined      | sddp-specialist     |
-| ticket-041 | Write API reference documentation                           | epic-10 | pending   | Outline      | hpc-julia-developer |
-| ticket-042 | Write configuration format reference                        | epic-10 | pending   | Outline      | sddp-specialist     |
-| ticket-043 | Create tutorial examples for advanced features              | epic-10 | pending   | Outline      | sddp-specialist     |
+| ticket-041 | Write API reference documentation                           | epic-10 | completed | Refined      | hpc-julia-developer |
+| ticket-042 | Write configuration format reference                        | epic-10 | completed | Refined      | sddp-specialist     |
+| ticket-043 | Create tutorial examples for advanced features              | epic-10 | completed | Refined      | sddp-specialist     |

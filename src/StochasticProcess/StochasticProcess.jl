@@ -10,6 +10,17 @@ using ..Utils
 import Copulas: Copula
 import Base: length, size
 
+"""
+    AbstractStochasticProcess
+
+Abstract base type for inflow stochastic processes. Concrete subtypes:
+[`Naive`](@ref), [`AutoRegressive`](@ref), [`VectorAutoRegressive`](@ref).
+
+All subtypes must implement `__generate_saa` (internal) for SAA generation and
+`add_inflow_uncertainty!` for adding uncertainty to SDDP subproblems.
+
+See also: [`generate_saa`](@ref)
+"""
 abstract type AbstractStochasticProcess end
 
 function __get_ids(s::AbstractStochasticProcess)::Vector{Integer} end
@@ -24,12 +35,56 @@ function __generate_saa(
     B::Integer,
 )::Vector{Vector{Vector{Float64}}} end
 
+"""
+    generate_saa(s, initial_season, N, B) -> Vector{Vector{Vector{Float64}}}
+
+Generate a Sample Average Approximation (SAA) of size `N × B` from stochastic
+process `s`, starting at season `initial_season`.
+
+Uses Julia's default (global) RNG. For reproducible results, use the
+`generate_saa(s, initial_season, N, B, seed)` overload.
+
+# Arguments
+- `s`: An [`AbstractStochasticProcess`](@ref) instance.
+- `initial_season`: Season index (1-based) for the first stage.
+- `N`: Number of stages.
+- `B`: Number of scenario branchings per stage.
+
+# Returns
+A `Vector{Vector{Vector{Float64}}}` with shape `[N][B][num_hydros]`.
+
+See also: [`Naive`](@ref), [`AutoRegressive`](@ref), [`VectorAutoRegressive`](@ref)
+"""
 function generate_saa(
     s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
 )::Vector{Vector{Vector{Float64}}}
     return __generate_saa(Random.default_rng(), s, initial_season, N, B)
 end
 
+"""
+    generate_saa(s, initial_season, N, B, seed) -> Vector{Vector{Vector{Float64}}}
+
+Generate a reproducible SAA of size `N × B` using the given `seed`.
+
+Creates a fresh `MersenneTwister` RNG from `seed`, ensuring deterministic
+output independent of global RNG state.
+
+# Arguments
+- `s`: An [`AbstractStochasticProcess`](@ref) instance.
+- `initial_season`: Season index (1-based) for the first stage.
+- `N`: Number of stages.
+- `B`: Number of scenario branchings per stage.
+- `seed`: Integer random seed for the `MersenneTwister` RNG.
+
+# Example
+```julia
+saa = generate_saa(process, 1, 60, 10, 42)
+length(saa)      # 60 stages
+length(saa[1])   # 10 branchings
+```
+
+See also: [`AbstractStochasticProcess`](@ref)
+"""
 function generate_saa(
     s::AbstractStochasticProcess,
     initial_season::Integer,

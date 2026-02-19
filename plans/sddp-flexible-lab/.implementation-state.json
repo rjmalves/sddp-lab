@@ -1,6 +1,6 @@
 {
   "plan": "sddp-flexible-lab",
-  "last_updated": "2026-02-19T23:59:00Z",
+  "last_updated": "2026-02-19T22:30:00Z",
   "progressive": true,
   "tickets": {
     "ticket-001-merge-abstract-engine-branch.md": {
@@ -292,19 +292,25 @@
       "last_updated": "2026-02-19T16:00:00Z"
     },
     "ticket-041-write-api-reference-documentation.md": {
-      "status": "pending",
-      "detail_level": "outline",
-      "assigned_agent": "hpc-julia-developer"
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T22:30:00Z"
     },
     "ticket-042-write-configuration-format-reference.md": {
-      "status": "pending",
-      "detail_level": "outline",
-      "assigned_agent": "sddp-specialist"
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T19:00:00Z"
     },
     "ticket-043-create-tutorial-examples.md": {
-      "status": "pending",
-      "detail_level": "outline",
-      "assigned_agent": "sddp-specialist"
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T21:00:00Z"
     }
   },
   "epics": {
@@ -345,7 +351,7 @@
       "learning_extracted": true
     },
     "epic-10-documentation-examples": {
-      "phase": "outline",
+      "phase": "executing",
       "learning_extracted": false
     }
   }

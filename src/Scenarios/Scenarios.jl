@@ -10,12 +10,43 @@ using ..StochasticProcess
 
 import Base: length
 
+"""
+    InflowScenarios
+
+Container for inflow stochastic processes, keyed by Markov state index.
+In the non-Markov case (single process), the key is always `1`.
+
+# Fields
+- `stochastic_process`: Dict mapping Markov state index (Int) to an
+  [`AbstractStochasticProcess`](@ref) that generates inflow SAA samples.
+
+See also: [`ScenariosData`](@ref), [`get_stochastic_process`](@ref)
+"""
 struct InflowScenarios
     stochastic_process::Dict{Int,AbstractStochasticProcess}
 end
 
+"""
+    LoadScenarios
+
+Abstract base type for load scenario data containers. Concrete subtypes handle
+flat and block-structured load profiles.
+"""
 abstract type LoadScenarios end
 
+"""
+    Node
+
+A node in the SDDP scenario graph, representing one time stage (or sub-stage).
+
+# Fields
+- `id`: Unique integer node identifier.
+- `stage`: SDDP stage index (1-based).
+- `start_datetime`: Wall-clock start time of this stage.
+- `end_datetime`: Wall-clock end time of this stage.
+
+See also: [`Graph`](@ref), [`Edge`](@ref)
+"""
 struct Node
     id::Integer
     stage::Integer
@@ -23,6 +54,20 @@ struct Node
     end_datetime::DateTime
 end
 
+"""
+    Edge
+
+A directed edge in the SDDP scenario graph, connecting two [`Node`](@ref)
+instances with a transition probability and discount rate.
+
+# Fields
+- `source`: Reference to the source [`Node`](@ref).
+- `target`: Reference to the target [`Node`](@ref).
+- `probability`: Transition probability (must be in `[0, 1]`).
+- `discount_rate`: Per-stage discount factor applied to future costs.
+
+See also: [`Graph`](@ref), [`Node`](@ref)
+"""
 struct Edge
     source::Ref{Node}
     target::Ref{Node}
@@ -30,6 +75,19 @@ struct Edge
     discount_rate::Real
 end
 
+"""
+    Graph
+
+The SDDP scenario tree structure. Contains all nodes across all stages and the
+edges encoding transition probabilities.
+
+# Fields
+- `nodes`: All [`Node`](@ref) objects in the graph, in arbitrary order.
+- `edges`: All [`Edge`](@ref) objects defining the tree structure.
+
+See also: [`ScenariosData`](@ref), [`get_graph`](@ref),
+[`get_number_of_stages`](@ref), [`get_root_node_id`](@ref)
+"""
 struct Graph
     nodes::Vector{Node}
     edges::Vector{Edge}
@@ -43,6 +101,24 @@ include("blocks.jl")
 include("markov-validators.jl")
 include("markov.jl")
 
+"""
+    ScenariosData <: InputModule
+
+Root container for all scenario-related configuration. Produced by parsing the
+`scenarios.jsonc` file referenced in `main.jsonc`.
+
+# Fields
+- `seed`: Random seed used for SAA generation (reproducibility).
+- `initial_season`: Season index (1-based) corresponding to the first stage.
+- `branchings`: Number of scenario branchings per stage in the training tree.
+- `graph`: [`Graph`](@ref) defining the SDDP scenario tree topology.
+- `inflow`: [`InflowScenarios`](@ref) container with stochastic process(es).
+- `load`: `LoadScenarios` with deterministic or block load profiles.
+- `block_config`: [`BlockConfig`](@ref) for inner load blocks (if any).
+- `markov_chain`: [`AbstractMarkovChain`](@ref) for Markov state transitions.
+
+See also: [`get_scenarios`](@ref), [`get_graph`](@ref), [`get_block_config`](@ref)
+"""
 struct ScenariosData <: InputModule
     seed::Integer
     initial_season::Integer
@@ -62,10 +138,38 @@ function __get_load(
     return __get_load(bus_id, node_id, load)
 end
 
+"""
+    get_load(bus_id, node_id, scenarios) -> Real
+
+Return the deterministic load demand (MW) for bus `bus_id` at scenario node
+`node_id`.
+
+# Arguments
+- `bus_id`: Integer ID of the load bus.
+- `node_id`: Integer ID of the scenario graph node.
+- `scenarios`: A [`ScenariosData`](@ref) object.
+
+See also: [`ScenariosData`](@ref), [`get_block_config`](@ref)
+"""
 function get_load(bus_id::Integer, node_id::Integer, scenarios::ScenariosData)::Real
     return __get_load(bus_id, node_id, scenarios.load)
 end
 
+"""
+    get_load(bus_id, node_id, block_idx, scenarios) -> Real
+
+Return the load demand (MW) for bus `bus_id` at node `node_id` and block
+`block_idx`. When inner load blocks are active, returns the block-specific load;
+otherwise returns the stage-level load.
+
+# Arguments
+- `bus_id`: Integer ID of the load bus.
+- `node_id`: Integer ID of the scenario graph node.
+- `block_idx`: Integer index of the inner load block (1-based).
+- `scenarios`: A [`ScenariosData`](@ref) object.
+
+See also: [`has_blocks`](@ref), [`BlockConfig`](@ref)
+"""
 function get_load(
     bus_id::Integer, node_id::Integer, block_idx::Integer, scenarios::ScenariosData
 )::Real
@@ -78,10 +182,29 @@ function get_load(
     end
 end
 
+"""
+    get_block_config(scenarios) -> BlockConfig
+
+Return the [`BlockConfig`](@ref) from a [`ScenariosData`](@ref) object.
+
+# Arguments
+- `scenarios`: A [`ScenariosData`](@ref) object.
+
+See also: [`BlockConfig`](@ref), [`has_blocks`](@ref)
+"""
 function get_block_config(scenarios::ScenariosData)::BlockConfig
     return scenarios.block_config
 end
 
+"""
+    set_seed!(scenarios)
+
+Seed Julia's global RNG with the seed stored in `scenarios`.
+
+!!! warning
+    Deprecated. This function mutates the global RNG and is not thread-safe.
+    Pass the seed directly to [`generate_saa`](@ref) instead.
+"""
 function set_seed!(scenarios::ScenariosData)
     Base.depwarn(
         "set_seed! mutates the global RNG and is not thread-safe. " *
@@ -91,16 +214,47 @@ function set_seed!(scenarios::ScenariosData)
     return Random.seed!(scenarios.seed)
 end
 
+"""
+    get_graph(scenarios) -> Graph
+
+Return the scenario [`Graph`](@ref) from a [`ScenariosData`](@ref) object.
+
+# Arguments
+- `scenarios`: A [`ScenariosData`](@ref) object.
+
+See also: [`Graph`](@ref), [`get_number_of_stages`](@ref)
+"""
 function get_graph(scenarios::ScenariosData)
     return scenarios.graph
 end
 
+"""
+    get_number_of_stages(g) -> Integer
+
+Return the number of distinct stages in a scenario [`Graph`](@ref).
+
+# Arguments
+- `g`: A [`Graph`](@ref) object.
+
+See also: [`Graph`](@ref), [`get_root_node_id`](@ref)
+"""
 function get_number_of_stages(g::Graph)::Integer
     node_stages = [n.stage for n in g.nodes]
     unique!(node_stages)
     return length(node_stages)
 end
 
+"""
+    get_root_node_id(g) -> Integer
+
+Return the ID of the root node (stage 1, no incoming edges) in a scenario
+[`Graph`](@ref).
+
+# Arguments
+- `g`: A [`Graph`](@ref) object.
+
+See also: [`Graph`](@ref), [`Node`](@ref)
+"""
 function get_root_node_id(g::Graph)::Integer
     node_ids = [n.id for n in g.nodes]
     nodes_with_targets = [e.target[].id for e in g.edges]
@@ -110,10 +264,34 @@ function get_root_node_id(g::Graph)::Integer
     return node_ids[1]
 end
 
+"""
+    get_markov_chain(scenarios) -> AbstractMarkovChain
+
+Return the [`AbstractMarkovChain`](@ref) from a [`ScenariosData`](@ref) object.
+
+# Arguments
+- `scenarios`: A [`ScenariosData`](@ref) object.
+
+See also: [`AbstractMarkovChain`](@ref), [`has_markov_chain`](@ref)
+"""
 function get_markov_chain(scenarios::ScenariosData)
     return scenarios.markov_chain
 end
 
+"""
+    get_stochastic_process(inflow) -> AbstractStochasticProcess
+
+Return the single [`AbstractStochasticProcess`](@ref) from an
+[`InflowScenarios`](@ref) container (non-Markov mode).
+
+Throws an error if more than one process is present. Use
+`get_stochastic_process(inflow, state)` for Markov mode.
+
+# Arguments
+- `inflow`: An [`InflowScenarios`](@ref) container with exactly one process.
+
+See also: [`InflowScenarios`](@ref), [`AbstractStochasticProcess`](@ref)
+"""
 function get_stochastic_process(inflow::InflowScenarios)
     if length(inflow.stochastic_process) != 1
         error("Expected single stochastic process, got $(length(inflow.stochastic_process)) processes. Use get_stochastic_process(inflow, state) for Markov mode.")
@@ -121,6 +299,18 @@ function get_stochastic_process(inflow::InflowScenarios)
     return first(values(inflow.stochastic_process))
 end
 
+"""
+    get_stochastic_process(inflow, state) -> AbstractStochasticProcess
+
+Return the [`AbstractStochasticProcess`](@ref) for Markov state `state` from an
+[`InflowScenarios`](@ref) container.
+
+# Arguments
+- `inflow`: An [`InflowScenarios`](@ref) container.
+- `state`: Integer Markov state index.
+
+See also: [`InflowScenarios`](@ref), [`MarkovChainConfig`](@ref)
+"""
 function get_stochastic_process(inflow::InflowScenarios, state::Int)
     return inflow.stochastic_process[state]
 end
@@ -160,6 +350,10 @@ export ScenariosData,
     num_blocks,
     get_block_names,
     get_block_durations,
-    get_block_weights
+    get_block_weights,
+    Graph,
+    Node,
+    Edge,
+    InflowScenarios
 
 end

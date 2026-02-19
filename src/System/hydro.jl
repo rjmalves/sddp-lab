@@ -70,11 +70,35 @@ end
 
 # HELPER METHODS ---------------------------------------------------------------------------
 
+"""
+    upstream(id, hydros) -> Union{Nothing, SubArray}
+
+Return a view of the upstream [`Hydro`](@ref) plants for the plant with the
+given `id`, or `nothing` if the plant has no upstream neighbors.
+
+# Arguments
+- `id`: Integer ID of the hydro plant.
+- `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+See also: [`downstream`](@ref), [`Hydros`](@ref)
+"""
 function upstream(id::Integer, hydros::Hydros)
     upstream_ids = inneighbors(hydros.topology, id)
     return length(upstream_ids) == 0 ? nothing : @view hydros.entities[upstream_ids]
 end
 
+"""
+    downstream(id, hydros) -> Union{Nothing, SubArray}
+
+Return a view of the immediately downstream [`Hydro`](@ref) plant for the plant
+with the given `id`, or `nothing` if the plant has no downstream neighbor.
+
+# Arguments
+- `id`: Integer ID of the hydro plant.
+- `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+See also: [`upstream`](@ref), [`Hydros`](@ref)
+"""
 function downstream(id::Integer, hydros::Hydros)
     downstream_id = outneighbors(hydros.topology, id)
     return length(downstream_id) == 0 ? nothing : @view hydros.entities[downstream_id[1]]

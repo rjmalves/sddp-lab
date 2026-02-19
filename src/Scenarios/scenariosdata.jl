@@ -28,6 +28,16 @@ function ScenariosData(filename::String, e::CompositeException)
     return valid ? ScenariosData(d, e) : nothing
 end
 
+"""
+    get_scenarios(files) -> ScenariosData
+
+Extract the [`ScenariosData`](@ref) module from an `InputModule` vector.
+
+# Arguments
+- `files`: Vector of [`InputModule`](@ref) instances loaded from disk.
+
+See also: [`ScenariosData`](@ref), [`get_graph`](@ref)
+"""
 function get_scenarios(f::Vector{InputModule})::ScenariosData
     return get_input_module(f, ScenariosData)
 end

@@ -4,11 +4,44 @@
 #   :parallel       - single water balance per hydro with block-weight aggregation
 #   :chronological  - per-block water balances with intermediate storage variables
 
+"""
+    Block
+
+A single inner load block within a stage, defined by its name and duration.
+
+Blocks allow the model to capture within-stage variation in load and generation
+profiles. A stage can be divided into multiple blocks (e.g., peak, off-peak)
+to represent different operating conditions.
+
+# Fields
+- `name`: Identifier string for the block (e.g., `"peak"`, `"offpeak"`).
+- `duration_hours`: Duration of the block in hours.
+
+See also: [`BlockConfig`](@ref), [`has_blocks`](@ref)
+"""
 struct Block
     name::String
     duration_hours::Float64
 end
 
+"""
+    BlockConfig
+
+Configuration for inner load blocks within a stage.
+
+Specifies how a stage is divided into sub-periods. When no blocks are
+configured, the stage is treated as a single uniform period.
+
+# Fields
+- `mode`: Dispatch mode, either `:parallel` (single water balance shared
+  across blocks) or `:chronological` (sequential water balances with
+  intermediate storage).
+- `blocks`: Vector of [`Block`](@ref) objects defining the sub-periods.
+  Empty when no explicit blocks are configured.
+
+See also: [`Block`](@ref), [`has_blocks`](@ref), [`num_blocks`](@ref),
+[`get_block_names`](@ref), [`get_block_durations`](@ref)
+"""
 struct BlockConfig
     mode::Symbol
     blocks::Vector{Block}

@@ -67,6 +67,21 @@ end
 
 # MAIN AR TYPE -----------------------------------------------------------------------------
 
+"""
+    AutoRegressive <: AbstractStochasticProcess
+
+Univariate AR(p) model for each hydro reservoir with seasonal parameters and
+a residual [`Naive`](@ref) noise model. Suitable for single-site inflow
+modeling when inter-site correlations are captured through the noise copula.
+
+# Fields
+- `signal_model`: Vector of per-hydro `UnivariateAutoRegressive` AR process
+  definitions.
+- `noise_model`: [`Naive`](@ref) process for the residual noise term.
+
+See also: [`VectorAutoRegressive`](@ref), [`generate_saa`](@ref),
+[`get_ar_parameters`](@ref), [`get_ar_scale`](@ref)
+"""
 struct AutoRegressive <: AbstractStochasticProcess
     signal_model::Vector{UnivariateAutoRegressive}
     noise_model::Naive
@@ -132,6 +147,22 @@ function __get_lag(uar::UnivariateAutoRegressive)
     __get_lag(uar.model)
 end
 
+"""
+    get_ar_parameters(s, season, pad) -> Vector{Float64}
+
+Return the AR coefficient vector (phi values) for season `season` from an
+[`AutoRegressive`](@ref) process or its component types.
+
+When `pad = true`, the returned vector is padded with zeros to the maximum lag
+length across all seasons, ensuring consistent dimensions.
+
+# Arguments
+- `s`: An [`AutoRegressive`](@ref) process or internal AR parameter type.
+- `season`: Integer season index (1-based).
+- `pad`: When `true`, zero-pad to maximum lag length (default `false`).
+
+See also: [`get_ar_scale`](@ref), [`AutoRegressive`](@ref)
+"""
 function get_ar_parameters(arp::SimpleARparameters)
     arp.phis
 end
@@ -163,6 +194,18 @@ function get_ar_parameters(s::AutoRegressive, season::Int, pad::Bool = false)
     [get_ar_parameters(uar, season, pad) for uar in s.signal_model]
 end
 
+"""
+    get_ar_scale(s, season) -> Vector{Float64}
+
+Return the scaling parameters (mean and standard deviation) for season `season`
+from an [`AutoRegressive`](@ref) process or its component types.
+
+# Arguments
+- `s`: An [`AutoRegressive`](@ref) process or internal AR parameter type.
+- `season`: Integer season index (1-based).
+
+See also: [`get_ar_parameters`](@ref), [`AutoRegressive`](@ref)
+"""
 function get_ar_scale(arp::SimpleARparameters)
     arp.scale
 end
