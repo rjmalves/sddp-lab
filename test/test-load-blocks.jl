@@ -689,6 +689,7 @@ end
             old_scenarios.inflow,
             old_scenarios.load,
             block_config,
+            old_scenarios.markov_chain,
         )
 
         # Reconstruct inputs with the new scenarios
@@ -765,6 +766,7 @@ end
             old_scenarios.inflow,
             old_scenarios.load,
             block_config,
+            old_scenarios.markov_chain,
         )
 
         new_files = Lab.InputModule[

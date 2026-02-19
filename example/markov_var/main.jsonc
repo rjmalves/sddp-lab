@@ -42,7 +42,9 @@
             },
             "solver": {
                 "name": "HiGHS",
-                "attributes": {}
+                "attributes": {
+                    "presolve": "off"
+                }
             }
         }
     }
