@@ -1,0 +1,32 @@
+{
+    "seed": 42,
+    "initial_season": 1,
+    "branchings": 5,
+    "graph": {
+        "params": {
+            "file": "graph.jsonc"
+        }
+    },
+    "inflow": {
+        "stochastic_process": {
+            "kind": "Naive",
+            "params": {
+                "file": "inflow_scenarios.jsonc"
+            }
+        }
+    },
+    "load": {
+        "kind": "DeterministicLoad",
+        "params": {
+            "file": "load.csv"
+        }
+    },
+    "blocks": {
+        "mode": "parallel",
+        "definitions": [
+            { "name": "peak",     "duration_hours": 4.0 },
+            { "name": "shoulder", "duration_hours": 8.0 },
+            { "name": "offpeak",  "duration_hours": 12.0 }
+        ]
+    }
+}

@@ -967,9 +967,6 @@ end
 Return the [`PolicyTaskDefinition`](@ref) from an [`Engine`](@ref).
 For [`SDDPEngine`](@ref) this returns the [`SDDPPolicyTaskDefinition`](@ref).
 
-# Arguments
-- `e`: Any concrete [`Engine`](@ref).
-
 See also: [`get_simulation_definition`](@ref)
 """
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
@@ -979,9 +976,6 @@ function get_policy_definition(e::Engine)::PolicyTaskDefinition end
 
 Return the [`SimulationTaskDefinition`](@ref) from an [`Engine`](@ref).
 For [`SDDPEngine`](@ref) this returns the [`SDDPSimulationTaskDefinition`](@ref).
-
-# Arguments
-- `e`: Any concrete [`Engine`](@ref).
 
 See also: [`get_policy_definition`](@ref)
 """

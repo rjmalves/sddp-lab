@@ -1,10 +1,3 @@
-# ──────────────────────────────────────────────────────────────────────────────
-# Output filename constants
-#
-# These string constants define the base filenames (without extension) for all
-# policy and convergence output files written by SDDPlab.
-# ──────────────────────────────────────────────────────────────────────────────
-
 "Base filename (without extension) for the policy cuts output file."
 POLICY_CUTS_OUTPUT_FILENAME = "cuts"
 

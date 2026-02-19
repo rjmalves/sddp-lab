@@ -156,11 +156,6 @@ Return the AR coefficient vector (phi values) for season `season` from an
 When `pad = true`, the returned vector is padded with zeros to the maximum lag
 length across all seasons, ensuring consistent dimensions.
 
-# Arguments
-- `s`: An [`AutoRegressive`](@ref) process or internal AR parameter type.
-- `season`: Integer season index (1-based).
-- `pad`: When `true`, zero-pad to maximum lag length (default `false`).
-
 See also: [`get_ar_scale`](@ref), [`AutoRegressive`](@ref)
 """
 function get_ar_parameters(arp::SimpleARparameters)
@@ -199,10 +194,6 @@ end
 
 Return the scaling parameters (mean and standard deviation) for season `season`
 from an [`AutoRegressive`](@ref) process or its component types.
-
-# Arguments
-- `s`: An [`AutoRegressive`](@ref) process or internal AR parameter type.
-- `season`: Integer season index (1-based).
 
 See also: [`get_ar_parameters`](@ref), [`AutoRegressive`](@ref)
 """

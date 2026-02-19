@@ -47,13 +47,6 @@ struct BlockConfig
     blocks::Vector{Block}
 end
 
-"""
-    default_block_config() -> BlockConfig
-
-Return a default BlockConfig with a single unnamed block (duration set later at build time).
-The single block has duration_hours = 0.0 as a sentinel; the actual duration comes from
-the graph node's tau at build time.
-"""
 function default_block_config()::BlockConfig
     return BlockConfig(:parallel, Block[])
 end

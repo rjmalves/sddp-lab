@@ -1,0 +1,52 @@
+{
+    "marginal_models": [
+        {
+            "id": 1,
+            "distributions": [
+                { "season": 1,  "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 2,  "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 3,  "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 4,  "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 5,  "kind": "LogNormal", "parameters": [2.5, 0.3] },
+                { "season": 6,  "kind": "LogNormal", "parameters": [2.0, 0.3] },
+                { "season": 7,  "kind": "LogNormal", "parameters": [2.0, 0.3] },
+                { "season": 8,  "kind": "LogNormal", "parameters": [2.0, 0.3] },
+                { "season": 9,  "kind": "LogNormal", "parameters": [2.5, 0.4] },
+                { "season": 10, "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 11, "kind": "LogNormal", "parameters": [3.0, 0.4] },
+                { "season": 12, "kind": "LogNormal", "parameters": [3.0, 0.4] }
+            ]
+        },
+        {
+            "id": 2,
+            "distributions": [
+                { "season": 1,  "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 2,  "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 3,  "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 4,  "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 5,  "kind": "LogNormal", "parameters": [3.2, 0.4] },
+                { "season": 6,  "kind": "LogNormal", "parameters": [2.8, 0.3] },
+                { "season": 7,  "kind": "LogNormal", "parameters": [2.8, 0.3] },
+                { "season": 8,  "kind": "LogNormal", "parameters": [2.8, 0.3] },
+                { "season": 9,  "kind": "LogNormal", "parameters": [3.2, 0.4] },
+                { "season": 10, "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 11, "kind": "LogNormal", "parameters": [3.5, 0.5] },
+                { "season": 12, "kind": "LogNormal", "parameters": [3.5, 0.5] }
+            ]
+        }
+    ],
+    "copulas": [
+        { "season": 1,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 2,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 3,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 4,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 5,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 6,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 7,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 8,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 9,  "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 10, "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 11, "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] },
+        { "season": 12, "kind": "GaussianCopula", "parameters": [[1.0, 0.5], [0.5, 1.0]] }
+    ]
+}

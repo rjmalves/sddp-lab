@@ -1,12 +1,3 @@
-# ──────────────────────────────────────────────────────────────────────────────
-# Variable symbol constants
-#
-# These `Symbol` constants are the canonical keys used to look up decision
-# variables and derived quantities in simulation result dictionaries.
-# They are exported so that downstream code can reference them without
-# hard-coding string literals.
-# ──────────────────────────────────────────────────────────────────────────────
-
 "Symbol key for bus load demand (MW)."
 LOAD = Symbol("LOAD")
 

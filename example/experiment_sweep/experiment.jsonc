@@ -1,0 +1,64 @@
+{
+    "base_study": "../1dtoy",
+    "output_dir": "output_experiment",
+    "overwrite": true,
+    "configurations": {
+        "expectation": {
+            "policy": {
+                "risk_measure": {
+                    "kind": "Expectation",
+                    "params": {}
+                },
+                "convergence": {
+                    "max_iterations": 32,
+                    "stopping_criteria": {
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 32
+                        }
+                    }
+                }
+            }
+        },
+        "cvar_02": {
+            "policy": {
+                "risk_measure": {
+                    "kind": "CVaR",
+                    "params": {
+                        "alpha": 0.2,
+                        "lambda": 0.5
+                    }
+                },
+                "convergence": {
+                    "max_iterations": 32,
+                    "stopping_criteria": {
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 32
+                        }
+                    }
+                }
+            }
+        },
+        "cvar_05": {
+            "policy": {
+                "risk_measure": {
+                    "kind": "CVaR",
+                    "params": {
+                        "alpha": 0.5,
+                        "lambda": 0.5
+                    }
+                },
+                "convergence": {
+                    "max_iterations": 32,
+                    "stopping_criteria": {
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 32
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

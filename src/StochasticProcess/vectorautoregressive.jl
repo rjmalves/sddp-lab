@@ -117,10 +117,6 @@ end
 Return the `VARSeasonParameters` for season `season` from a
 [`VectorAutoRegressive`](@ref) process.
 
-# Arguments
-- `s`: A [`VectorAutoRegressive`](@ref) process.
-- `season`: Integer season index (1-based).
-
 See also: [`get_var_coefficient_matrix`](@ref), [`get_var_scales`](@ref)
 """
 function get_var_season_parameters(s::VectorAutoRegressive, season::Int)
@@ -133,11 +129,6 @@ end
 Return the `N × N` VAR coefficient matrix for season `season` at lag `lag`
 from a [`VectorAutoRegressive`](@ref) process.
 
-# Arguments
-- `s`: A [`VectorAutoRegressive`](@ref) process.
-- `season`: Integer season index (1-based).
-- `lag`: Integer lag index (1-based, up to `s.max_lag`).
-
 See also: [`get_var_season_parameters`](@ref), [`VectorAutoRegressive`](@ref)
 """
 function get_var_coefficient_matrix(s::VectorAutoRegressive, season::Int, lag::Int)
@@ -149,10 +140,6 @@ end
 
 Return the per-hydro scaling parameter vectors (mean and std) for season
 `season` from a [`VectorAutoRegressive`](@ref) process.
-
-# Arguments
-- `s`: A [`VectorAutoRegressive`](@ref) process.
-- `season`: Integer season index (1-based).
 
 See also: [`get_var_coefficient_matrix`](@ref), [`VectorAutoRegressive`](@ref)
 """

@@ -62,9 +62,6 @@ end
 
 Return `true` if `mc` represents an active Markov chain (i.e., is a
 [`MarkovChainConfig`](@ref)), `false` for [`NoMarkovChain`](@ref).
-
-# Arguments
-- `mc`: An [`AbstractMarkovChain`](@ref) instance.
 """
 has_markov_chain(::NoMarkovChain) = false
 has_markov_chain(::MarkovChainConfig) = true
@@ -73,9 +70,6 @@ has_markov_chain(::MarkovChainConfig) = true
     num_markov_states(mc) -> Int
 
 Return the number of Markov states. Returns `1` for [`NoMarkovChain`](@ref).
-
-# Arguments
-- `mc`: An [`AbstractMarkovChain`](@ref) instance.
 
 See also: [`MarkovChainConfig`](@ref)
 """

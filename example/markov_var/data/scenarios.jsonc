@@ -1,0 +1,47 @@
+{
+    "seed": 42,
+    "initial_season": 1,
+    "branchings": 5,
+    "graph": {
+        "params": {
+            "file": "graph.jsonc"
+        }
+    },
+    "inflow": {
+        "stochastic_process": {
+            "1": {
+                "kind": "Naive",
+                "params": {
+                    "file": "inflow_wet.jsonc"
+                }
+            },
+            "2": {
+                "kind": "Naive",
+                "params": {
+                    "file": "inflow_dry.jsonc"
+                }
+            }
+        }
+    },
+    "load": {
+        "kind": "DeterministicLoad",
+        "params": {
+            "file": "load.csv"
+        }
+    },
+    "markov_chain": {
+        "transition_matrices": [
+            [[0.5, 0.5]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]],
+            [[0.7, 0.3], [0.4, 0.6]]
+        ]
+    }
+}

@@ -362,9 +362,6 @@ end
     get_id(se) -> Integer
 
 Return the unique integer ID of a [`SystemEntity`](@ref).
-
-# Arguments
-- `se`: Any concrete [`SystemEntity`](@ref) (e.g., [`Bus`](@ref), [`Hydro`](@ref)).
 """
 function get_id(se::SystemEntity)::Integer end
 
@@ -372,9 +369,6 @@ function get_id(se::SystemEntity)::Integer end
     get_params(se) -> Dict{String,Any}
 
 Return a dictionary of entity-specific parameters for a [`SystemEntity`](@ref).
-
-# Arguments
-- `se`: Any concrete [`SystemEntity`](@ref).
 """
 function get_params(se::SystemEntity)::Dict{String,Any} end
 
@@ -383,9 +377,6 @@ function get_params(se::SystemEntity)::Dict{String,Any} end
 
 Return a vector of unique integer IDs for all entities in a
 [`SystemEntitySet`](@ref).
-
-# Arguments
-- `ses`: Any concrete [`SystemEntitySet`](@ref) (e.g., [`Buses`](@ref)).
 """
 function get_ids(ses::SystemEntitySet)::Vector{Integer} end
 
@@ -393,9 +384,6 @@ function get_ids(ses::SystemEntitySet)::Vector{Integer} end
     length(ses::SystemEntitySet) -> Integer
 
 Return the number of entities in a [`SystemEntitySet`](@ref).
-
-# Arguments
-- `ses`: Any concrete [`SystemEntitySet`](@ref).
 """
 function length(ses::SystemEntitySet)::Integer end
 
@@ -404,9 +392,6 @@ function length(ses::SystemEntitySet)::Integer end
 
 Return the parameters of all entities in a [`SystemEntitySet`](@ref) as a
 `DataFrame`, with one row per entity.
-
-# Arguments
-- `ses`: Any concrete [`SystemEntitySet`](@ref).
 """
 function get_params_df(ses::SystemEntitySet)::DataFrame end
 

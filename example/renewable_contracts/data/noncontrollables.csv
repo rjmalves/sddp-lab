@@ -1,0 +1,2 @@
+id ,name    ,bus_id ,max_generation ,curtailment_cost
+ 1 ,"WIND1" ,     2 ,          50.0 ,             5.0

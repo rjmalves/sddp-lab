@@ -32,7 +32,7 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | 07   | Advanced Stochastic Modeling      | 3       | Completed | sddp-specialist             |
 | 08   | Experiment Management             | 4       | Completed | hpc-julia-developer         |
 | 09   | Observability & Diagnostics       | 3       | Completed | sddp-specialist             |
-| 10   | Documentation & Examples          | 3       | Executing | both                        |
+| 10   | Documentation & Examples          | 3       | Completed | both                        |
 
 ## Dependency Graph
 

@@ -1,0 +1,49 @@
+{
+    "inputs": {
+        "path": "data",
+        "files": {
+            "scenarios": "scenarios.jsonc",
+            "system": "system.jsonc",
+            "constraints": "constraints.jsonc"
+        }
+    },
+    "engine": {
+        "kind": "SDDPEngine",
+        "params": {
+            "policy": {
+                "convergence": {
+                    "min_iterations": 5,
+                    "max_iterations": 50,
+                    "stopping_criteria": {
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 50
+                        }
+                    }
+                },
+                "risk_measure": {
+                    "kind": "CVaR",
+                    "params": {
+                        "alpha": 0.5,
+                        "lambda": 0.5
+                    }
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                }
+            },
+            "simulation": {
+                "num_simulated_series": 20,
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                }
+            },
+            "solver": {
+                "name": "HiGHS",
+                "attributes": {}
+            }
+        }
+    }
+}

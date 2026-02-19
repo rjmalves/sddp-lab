@@ -101,20 +101,10 @@ function __build_mvdist(s::Naive, season::Int)::Copulas.SklarDist
     return SklarDist(s.copulas[season], marginals)
 end
 
-"""
-    __instantiate_distribution(name::String, params::Tuple)
-
-Return an instance of a `Distributions.jl` distribution of type `name` with parameters `params`.
-"""
 function __instantiate_distribution(name::String, params::Tuple)::Distributions.UnivariateDistribution
     return getfield(Distributions, Symbol(name))(params...)
 end
 
-"""
-    __instantiate_copula(name::String, params::Tuple)
-
-Return an instance of a `Copulas.jl` copula of type `name` with parameters `params`.
-"""
 function __instantiate_copula(name::String, params::Tuple)::Copulas.Copula
     return getfield(Copulas, Symbol(name))(params...)
 end

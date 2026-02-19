@@ -8,9 +8,8 @@ include("Scenarios/Scenarios.jl")
 include("Inputs/Inputs.jl")
 include("Engines/Engines.jl")
 
-# Bring sub-module types into the SDDPlab namespace so Documenter.jl can resolve
-# @docs blocks and so users can access types as SDDPlab.TypeName after `using SDDPlab`.
-# We import types selectively to avoid method ambiguity for shared function names.
+# Import sub-module types into SDDPlab namespace for Documenter.jl @docs resolution
+# and user access as SDDPlab.TypeName. Selective imports avoid method ambiguity.
 using .Lab:
     Engine,
     Model,
@@ -214,7 +213,6 @@ include("study.jl")
 include("study-validators.jl")
 include("Experiments/Experiments.jl")
 
-# Core pipeline
 export read_study,
     build,
     train,
@@ -227,7 +225,6 @@ export read_study,
     save_validation,
     Study
 
-# Core abstract types (Lab module)
 export Engine,
     Model,
     PolicyTaskDefinition,
@@ -240,12 +237,10 @@ export Engine,
     ParquetFormat,
     InputModule
 
-# Lab IO
 export get_reader,
     get_writer,
     get_extension
 
-# Lab variable symbols
 export LOAD,
     DEFICIT,
     THERMAL_GENERATION,
@@ -279,7 +274,6 @@ export LOAD,
     REVERSE_EXCHANGE,
     NET_EXCHANGE
 
-# Lab filename constants
 export POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CUTS_OUTPUT_INTERCEPT_NAME,
     POLICY_CONVERGENCE_OUTPUT_FILENAME,
@@ -287,7 +281,6 @@ export POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CONVERGENCE_ANALYSIS_OUTPUT_FILENAME,
     POLICY_CONVERGENCE_REPORT_OUTPUT_FILENAME
 
-# System module
 export SystemData,
     Bus,
     Buses,
@@ -324,7 +317,6 @@ export SystemData,
     downstream,
     upstream
 
-# Scenarios module
 export ScenariosData,
     Block,
     BlockConfig,
@@ -352,7 +344,6 @@ export ScenariosData,
     Edge,
     InflowScenarios
 
-# StochasticProcess module
 export AbstractStochasticProcess,
     Naive,
     AutoRegressive,
@@ -363,7 +354,6 @@ export AbstractStochasticProcess,
     get_var_coefficient_matrix,
     get_var_scales
 
-# Engines module
 export SDDPEngine,
     SDDPPolicyTaskDefinition,
     SDDPSimulationTaskDefinition,
@@ -431,7 +421,6 @@ export SDDPEngine,
     detect_bound_stationarity,
     generate_convergence_report
 
-# Experiments module
 export run_experiment,
     read_experiment_config,
     ExperimentConfig,

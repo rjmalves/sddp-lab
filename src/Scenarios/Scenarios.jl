@@ -141,13 +141,7 @@ end
 """
     get_load(bus_id, node_id, scenarios) -> Real
 
-Return the deterministic load demand (MW) for bus `bus_id` at scenario node
-`node_id`.
-
-# Arguments
-- `bus_id`: Integer ID of the load bus.
-- `node_id`: Integer ID of the scenario graph node.
-- `scenarios`: A [`ScenariosData`](@ref) object.
+Return the deterministic load demand (MW) for bus `bus_id` at scenario node `node_id`.
 
 See also: [`ScenariosData`](@ref), [`get_block_config`](@ref)
 """
@@ -161,12 +155,6 @@ end
 Return the load demand (MW) for bus `bus_id` at node `node_id` and block
 `block_idx`. When inner load blocks are active, returns the block-specific load;
 otherwise returns the stage-level load.
-
-# Arguments
-- `bus_id`: Integer ID of the load bus.
-- `node_id`: Integer ID of the scenario graph node.
-- `block_idx`: Integer index of the inner load block (1-based).
-- `scenarios`: A [`ScenariosData`](@ref) object.
 
 See also: [`has_blocks`](@ref), [`BlockConfig`](@ref)
 """
@@ -186,9 +174,6 @@ end
     get_block_config(scenarios) -> BlockConfig
 
 Return the [`BlockConfig`](@ref) from a [`ScenariosData`](@ref) object.
-
-# Arguments
-- `scenarios`: A [`ScenariosData`](@ref) object.
 
 See also: [`BlockConfig`](@ref), [`has_blocks`](@ref)
 """
@@ -219,9 +204,6 @@ end
 
 Return the scenario [`Graph`](@ref) from a [`ScenariosData`](@ref) object.
 
-# Arguments
-- `scenarios`: A [`ScenariosData`](@ref) object.
-
 See also: [`Graph`](@ref), [`get_number_of_stages`](@ref)
 """
 function get_graph(scenarios::ScenariosData)
@@ -232,9 +214,6 @@ end
     get_number_of_stages(g) -> Integer
 
 Return the number of distinct stages in a scenario [`Graph`](@ref).
-
-# Arguments
-- `g`: A [`Graph`](@ref) object.
 
 See also: [`Graph`](@ref), [`get_root_node_id`](@ref)
 """
@@ -249,9 +228,6 @@ end
 
 Return the ID of the root node (stage 1, no incoming edges) in a scenario
 [`Graph`](@ref).
-
-# Arguments
-- `g`: A [`Graph`](@ref) object.
 
 See also: [`Graph`](@ref), [`Node`](@ref)
 """
@@ -269,9 +245,6 @@ end
 
 Return the [`AbstractMarkovChain`](@ref) from a [`ScenariosData`](@ref) object.
 
-# Arguments
-- `scenarios`: A [`ScenariosData`](@ref) object.
-
 See also: [`AbstractMarkovChain`](@ref), [`has_markov_chain`](@ref)
 """
 function get_markov_chain(scenarios::ScenariosData)
@@ -287,9 +260,6 @@ Return the single [`AbstractStochasticProcess`](@ref) from an
 Throws an error if more than one process is present. Use
 `get_stochastic_process(inflow, state)` for Markov mode.
 
-# Arguments
-- `inflow`: An [`InflowScenarios`](@ref) container with exactly one process.
-
 See also: [`InflowScenarios`](@ref), [`AbstractStochasticProcess`](@ref)
 """
 function get_stochastic_process(inflow::InflowScenarios)
@@ -304,10 +274,6 @@ end
 
 Return the [`AbstractStochasticProcess`](@ref) for Markov state `state` from an
 [`InflowScenarios`](@ref) container.
-
-# Arguments
-- `inflow`: An [`InflowScenarios`](@ref) container.
-- `state`: Integer Markov state index.
 
 See also: [`InflowScenarios`](@ref), [`MarkovChainConfig`](@ref)
 """
