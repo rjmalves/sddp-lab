@@ -47,8 +47,8 @@ function Lab.validate(
 
     try
         SDDP.add_all_cuts(model.policy_graph)
-    catch
-        @warn "Error while adding all cuts for validation"
+    catch ex
+        @warn "Failed to add all cuts for validation" exception = (ex, catch_backtrace())
     end
 
     sampler = SDDP.OutOfSampleMonteCarlo(
@@ -168,13 +168,14 @@ function Lab.save_validation(
     writer = get_writer(format)
     extension = get_extension(format)
     curdir = pwd()
-    cd(path)
-
-    simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
-    __write_validation_simulation_results(simulations, get_system(files), writer, extension)
-    __write_validation_statistics(artifact.statistics, writer, extension)
-
-    cd(curdir)
+    try
+        cd(path)
+        simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
+        __write_validation_simulation_results(simulations, get_system(files), writer, extension)
+        __write_validation_statistics(artifact.statistics, writer, extension)
+    finally
+        cd(curdir)
+    end
     return nothing
 end
 
@@ -231,7 +232,6 @@ function __write_validation_simulation_results(
         OUTFLOW => get_hydros_entities(system),
         SPILLAGE => get_hydros_entities(system),
         WATER_VALUE => get_hydros_entities(system),
-        HYDRO_GENERATION => get_hydros_entities(system),
     )
 
     for (key, variables) in map_variable_output

@@ -45,7 +45,7 @@ function get_params(s::EnergyContract)::Dict{String,Any}
         "id" => s.id,
         "name" => s.name,
         "bus_id" => s.bus_id,
-        "contract_type" => s.contract_type,
+        "type" => s.contract_type,
         "price_per_mwh" => s.price_per_mwh,
         "min_mw" => s.min_mw,
         "max_mw" => s.max_mw,

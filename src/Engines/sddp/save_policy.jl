@@ -6,13 +6,16 @@ function Lab.save_policy(
     writer = get_writer(format)
     extension = get_extension(format)
     curdir = pwd()
-    cd(path)
-    __write_model_cuts(cuts, writer, extension)
-    __write_model_convergence(convergence, writer, extension)
-    __write_training_log(artifact.training_log, writer, extension)
-    __write_convergence_analysis(artifact.training_log, writer, extension)
-    __write_convergence_report(artifact.training_log)
-    cd(curdir)
+    try
+        cd(path)
+        __write_model_cuts(cuts, writer, extension)
+        __write_model_convergence(convergence, writer, extension)
+        __write_training_log(artifact.training_log, writer, extension)
+        __write_convergence_analysis(artifact.training_log, writer, extension)
+        __write_convergence_report(artifact.training_log)
+    finally
+        cd(curdir)
+    end
     return nothing
 end
 

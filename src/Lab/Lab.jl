@@ -12,6 +12,7 @@ include("io.jl")
 
 function get_input_module(i::Vector{InputModule}, kind::Type)::InputModule
     index = findfirst(x -> isa(x, kind), i)
+    index === nothing && error("Required InputModule of type $kind not found in inputs")
     return i[index]
 end
 

@@ -7,10 +7,14 @@ function Lab.save_simulation(
     writer = get_writer(format)
     extension = get_extension(format)
     curdir = pwd()
-    cd(path)
-    simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
-    __write_simulation_results(simulations, get_system(files), writer, extension)
-    return cd(curdir)
+    try
+        cd(path)
+        simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
+        __write_simulation_results(simulations, get_system(files), writer, extension)
+    finally
+        cd(curdir)
+    end
+    return nothing
 end
 
 function _is_identity_scaling(config::ScalingConfig)::Bool
@@ -250,7 +254,6 @@ function __write_simulation_results(
         OUTFLOW => get_hydros_entities(system),
         SPILLAGE => get_hydros_entities(system),
         WATER_VALUE => get_hydros_entities(system),
-        HYDRO_GENERATION => get_hydros_entities(system),
     )
 
     for (key, variables) in map_variable_output
