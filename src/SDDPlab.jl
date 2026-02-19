@@ -10,6 +10,7 @@ include("Engines/Engines.jl")
 
 include("study.jl")
 include("study-validators.jl")
+include("Experiments/Experiments.jl")
 
 export read_study,
     build,
@@ -19,6 +20,25 @@ export read_study,
     simulate,
     save_simulation,
     CSVFormat,
-    ParquetFormat
+    ParquetFormat,
+    run_experiment,
+    read_experiment_config,
+    ExperimentConfig,
+    ExperimentResult,
+    run_sensitivity,
+    read_sensitivity_config,
+    SensitivityConfig,
+    SensitivityParameter,
+    SensitivityResult,
+    aggregate_experiment_results,
+    write_comparison,
+    compare_configs,
+    ComparisonResult,
+    ConfigSummary,
+    EnvironmentSnapshot,
+    capture_environment,
+    hash_config,
+    write_run_metadata,
+    verify_reproducibility
 
 end
