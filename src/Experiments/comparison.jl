@@ -8,16 +8,18 @@ using Statistics
 Holds per-configuration summary statistics from an experiment output directory.
 
 # Fields
-- `config_name`: Name of the configuration (same as subdirectory name).
-- `statistics`: Dict of summary metrics — same keys as `_compute_validation_statistics`
-  in `src/Engines/sddp/validate.jl`: `mean_cost`, `std_cost`, `ci_lower_95`,
-  `ci_upper_95`, `p05_cost`, `p50_cost`, `p95_cost`, `min_cost`, `max_cost`,
-  `num_simulations`.
-- `train_time_s`: Wall-clock seconds spent in training (NaN when unavailable).
-- `simulate_time_s`: Wall-clock seconds spent in simulation (NaN when unavailable).
-- `num_scenarios`: Number of simulated scenarios found in the output file.
+
+  - `config_name`: Name of the configuration (same as subdirectory name).
+  - `statistics`: Dict of summary metrics — same keys as `_compute_validation_statistics`
+    in `src/Engines/sddp/validate.jl`: `mean_cost`, `std_cost`, `ci_lower_95`,
+    `ci_upper_95`, `p05_cost`, `p50_cost`, `p95_cost`, `min_cost`, `max_cost`,
+    `num_simulations`.
+  - `train_time_s`: Wall-clock seconds spent in training (NaN when unavailable).
+  - `simulate_time_s`: Wall-clock seconds spent in simulation (NaN when unavailable).
+  - `num_scenarios`: Number of simulated scenarios found in the output file.
 
 # Example
+
 ```julia
 summary = ConfigSummary("iter3", stats_dict, 12.4, 3.1, 10)
 ```
@@ -37,11 +39,13 @@ Holds the aggregated comparison across all (or a subset of) configurations in
 an experiment output directory.
 
 # Fields
-- `summaries`: One `ConfigSummary` per successfully-loaded configuration.
-- `output_dir`: Absolute path to the experiment output directory that was scanned.
-  Config subdirectories are `joinpath(output_dir, config_name)`.
+
+  - `summaries`: One `ConfigSummary` per successfully-loaded configuration.
+  - `output_dir`: Absolute path to the experiment output directory that was scanned.
+    Config subdirectories are `joinpath(output_dir, config_name)`.
 
 # Example
+
 ```julia
 result = aggregate_experiment_results("/path/to/experiment_output")
 println(length(result.summaries), " configs loaded")
@@ -65,6 +69,7 @@ if that file is absent, timing values default to `NaN`.
 Configurations missing the expected output file are skipped with a `@warn`.
 
 # Example
+
 ```julia
 result = aggregate_experiment_results("/path/to/experiment_output")
 for s in result.summaries
@@ -108,13 +113,12 @@ Configs listed in `config_names` that are not found in `output_dir` are skipped
 with a `@warn`.
 
 # Example
+
 ```julia
 result = compare_configs("/path/to/experiment_output", ["iter3", "iter5"])
 ```
 """
-function compare_configs(
-    output_dir::String, config_names::Vector{String}
-)::ComparisonResult
+function compare_configs(output_dir::String, config_names::Vector{String})::ComparisonResult
     abs_dir = abspath(output_dir)
     timing = _read_experiment_timing(abs_dir)
 
@@ -150,27 +154,26 @@ end
 
 Write two comparison files into `path`:
 
-1. `comparison_summary.<ext>` — wide-format table with one row per configuration.
-   Columns: `config_name`, `mean_cost`, `std_cost`, `ci_lower_95`, `ci_upper_95`,
-   `p05_cost`, `p50_cost`, `p95_cost`, `min_cost`, `max_cost`, `num_scenarios`,
-   `train_time_s`, `simulate_time_s`.
+ 1. `comparison_summary.<ext>` — wide-format table with one row per configuration.
+    Columns: `config_name`, `mean_cost`, `std_cost`, `ci_lower_95`, `ci_upper_95`,
+    `p05_cost`, `p50_cost`, `p95_cost`, `min_cost`, `max_cost`, `num_scenarios`,
+    `train_time_s`, `simulate_time_s`.
 
-2. `comparison_costs.<ext>` — long-format table with all per-scenario costs.
-   Columns: `config_name`, `scenario`, `total_cost`.
+ 2. `comparison_costs.<ext>` — long-format table with all per-scenario costs.
+    Columns: `config_name`, `scenario`, `total_cost`.
 
 The per-scenario cost data is read back from `result.output_dir` (the directory
 that was originally scanned), so the config subdirectories must still exist.
 The file extension is determined by `format` (e.g., `.csv` for `CSVFormat()`).
 
 # Example
+
 ```julia
 result = aggregate_experiment_results("/path/to/output")
 write_comparison(result, "/path/to/output", CSVFormat())
 ```
 """
-function write_comparison(
-    result::ComparisonResult, path::String, format::TaskResultsFormat
-)
+function write_comparison(result::ComparisonResult, path::String, format::TaskResultsFormat)
     writer = get_writer(format)
     extension = get_extension(format)
 
@@ -178,7 +181,9 @@ function write_comparison(
     mkpath(abs_path)
 
     _write_comparison_summary(result.summaries, abs_path, writer, extension)
-    _write_comparison_costs(result.summaries, result.output_dir, abs_path, writer, extension)
+    _write_comparison_costs(
+        result.summaries, result.output_dir, abs_path, writer, extension
+    )
 
     return nothing
 end
@@ -254,9 +259,7 @@ function _to_float64_or_nan(x)::Float64
     end
 end
 
-function _compute_comparison_statistics(
-    total_costs::Vector{Float64},
-)::Dict{String,Float64}
+function _compute_comparison_statistics(total_costs::Vector{Float64})::Dict{String,Float64}
     n = length(total_costs)
     mu = Statistics.mean(total_costs)
     sigma = n > 1 ? Statistics.std(total_costs) : 0.0
@@ -307,10 +310,7 @@ function _comparison_t_quantile_95(df::Integer)::Float64
 end
 
 function _write_comparison_summary(
-    summaries::Vector{ConfigSummary},
-    path::String,
-    writer::Function,
-    extension::String,
+    summaries::Vector{ConfigSummary}, path::String, writer::Function, extension::String
 )
     rows = [
         (

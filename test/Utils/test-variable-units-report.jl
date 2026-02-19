@@ -8,9 +8,7 @@ using DataFrames
 
         # Create variables mimicking SDDPlab model structure
         # STORED_VOLUME is Symbol("STORAGE") in Lab
-        model[Lab.DEFICIT] = JuMP.@variable(
-            model, [1:2], base_name = String(Lab.DEFICIT)
-        )
+        model[Lab.DEFICIT] = JuMP.@variable(model, [1:2], base_name = String(Lab.DEFICIT))
         JuMP.set_lower_bound.(model[Lab.DEFICIT], 0.0)
         JuMP.set_upper_bound.(model[Lab.DEFICIT], 25_000.0)
 
@@ -46,9 +44,7 @@ using DataFrames
         @test deficit_row[1, :magnitude_ratio] == 25_000.0 / 50_000.0
 
         # Check THERMAL_GENERATION row
-        thermal_row = filter(
-            row -> row.variable == String(Lab.THERMAL_GENERATION), report
-        )
+        thermal_row = filter(row -> row.variable == String(Lab.THERMAL_GENERATION), report)
         @test nrow(thermal_row) == 1
         @test thermal_row[1, :unit] == "MW"
         @test thermal_row[1, :actual_lower_bound] == 0.0
@@ -60,9 +56,7 @@ using DataFrames
         model = JuMP.Model()
 
         # INFLOW with no upper bound
-        model[Lab.INFLOW] = JuMP.@variable(
-            model, [1:2], base_name = String(Lab.INFLOW)
-        )
+        model[Lab.INFLOW] = JuMP.@variable(model, [1:2], base_name = String(Lab.INFLOW))
         # Only set lower bound, leave upper bound unbounded
         JuMP.set_lower_bound.(model[Lab.INFLOW], 0.0)
 
@@ -80,9 +74,7 @@ using DataFrames
         model = JuMP.Model()
 
         # LOAD with no bounds at all
-        model[Lab.LOAD] = JuMP.@variable(
-            model, [1:1], base_name = String(Lab.LOAD)
-        )
+        model[Lab.LOAD] = JuMP.@variable(model, [1:1], base_name = String(Lab.LOAD))
 
         report = Utils.get_coefficient_magnitude_report(model)
 
@@ -108,9 +100,7 @@ using DataFrames
         model = JuMP.Model()
 
         # SPILLAGE: lower bounded only
-        model[Lab.SPILLAGE] = JuMP.@variable(
-            model, [1:1], base_name = String(Lab.SPILLAGE)
-        )
+        model[Lab.SPILLAGE] = JuMP.@variable(model, [1:1], base_name = String(Lab.SPILLAGE))
         JuMP.set_lower_bound(model[Lab.SPILLAGE][1], 0.0)
 
         # DIRECT_EXCHANGE: fully bounded
@@ -130,9 +120,7 @@ using DataFrames
         @test isnan(spillage_row[1, :actual_upper_bound])
         @test isnan(spillage_row[1, :magnitude_ratio])
 
-        exchange_row = filter(
-            row -> row.variable == String(Lab.DIRECT_EXCHANGE), report
-        )
+        exchange_row = filter(row -> row.variable == String(Lab.DIRECT_EXCHANGE), report)
         @test nrow(exchange_row) == 1
         @test exchange_row[1, :actual_lower_bound] == 0.0
         @test exchange_row[1, :actual_upper_bound] == 3_000.0
@@ -155,9 +143,7 @@ using DataFrames
 
         report = Utils.get_coefficient_magnitude_report(model)
 
-        thermal_row = filter(
-            row -> row.variable == String(Lab.THERMAL_GENERATION), report
-        )
+        thermal_row = filter(row -> row.variable == String(Lab.THERMAL_GENERATION), report)
         @test nrow(thermal_row) == 1
         # Aggregate: min of lower bounds = 0.0, max of upper bounds = 8000.0
         @test thermal_row[1, :actual_lower_bound] == 0.0

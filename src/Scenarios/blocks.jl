@@ -14,8 +14,9 @@ profiles. A stage can be divided into multiple blocks (e.g., peak, off-peak)
 to represent different operating conditions.
 
 # Fields
-- `name`: Identifier string for the block (e.g., `"peak"`, `"offpeak"`).
-- `duration_hours`: Duration of the block in hours.
+
+  - `name`: Identifier string for the block (e.g., `"peak"`, `"offpeak"`).
+  - `duration_hours`: Duration of the block in hours.
 
 See also: [`BlockConfig`](@ref), [`has_blocks`](@ref)
 """
@@ -33,11 +34,12 @@ Specifies how a stage is divided into sub-periods. When no blocks are
 configured, the stage is treated as a single uniform period.
 
 # Fields
-- `mode`: Dispatch mode, either `:parallel` (single water balance shared
-  across blocks) or `:chronological` (sequential water balances with
-  intermediate storage).
-- `blocks`: Vector of [`Block`](@ref) objects defining the sub-periods.
-  Empty when no explicit blocks are configured.
+
+  - `mode`: Dispatch mode, either `:parallel` (single water balance shared
+    across blocks) or `:chronological` (sequential water balances with
+    intermediate storage).
+  - `blocks`: Vector of [`Block`](@ref) objects defining the sub-periods.
+    Empty when no explicit blocks are configured.
 
 See also: [`Block`](@ref), [`has_blocks`](@ref), [`num_blocks`](@ref),
 [`get_block_names`](@ref), [`get_block_durations`](@ref)
@@ -109,11 +111,18 @@ function __validate_block_mode!(d::Dict{String,Any}, e::CompositeException)::Boo
     end
     mode = d["mode"]
     if !(mode isa String)
-        push!(e, AssertionError("Blocks config 'mode' must be a String, got $(typeof(mode))"))
+        push!(
+            e, AssertionError("Blocks config 'mode' must be a String, got $(typeof(mode))")
+        )
         return false
     end
     if !(mode in VALID_BLOCK_MODES)
-        push!(e, ErrorException("Blocks config 'mode' must be 'parallel' or 'chronological', got '$mode'"))
+        push!(
+            e,
+            ErrorException(
+                "Blocks config 'mode' must be 'parallel' or 'chronological', got '$mode'"
+            ),
+        )
         return false
     end
     return true
@@ -147,16 +156,28 @@ function __validate_block_definitions!(d::Dict{String,Any}, e::CompositeExceptio
             valid = false
         else
             if def["name"] in names_seen
-                push!(e, AssertionError("Block definition $i has duplicate name '$(def["name"])'"))
+                push!(
+                    e,
+                    AssertionError(
+                        "Block definition $i has duplicate name '$(def["name"])'"
+                    ),
+                )
                 valid = false
             end
             push!(names_seen, def["name"])
         end
         if !haskey(def, "duration_hours") || !(def["duration_hours"] isa Real)
-            push!(e, AssertionError("Block definition $i missing or invalid 'duration_hours'"))
+            push!(
+                e, AssertionError("Block definition $i missing or invalid 'duration_hours'")
+            )
             valid = false
         elseif def["duration_hours"] <= 0
-            push!(e, AssertionError("Block definition $i 'duration_hours' must be positive, got $(def["duration_hours"])"))
+            push!(
+                e,
+                AssertionError(
+                    "Block definition $i 'duration_hours' must be positive, got $(def["duration_hours"])",
+                ),
+            )
             valid = false
         end
     end
@@ -177,8 +198,7 @@ function BlockConfig(d::Dict{String,Any}, e::CompositeException)::Union{BlockCon
 
     mode = Symbol(d["mode"])
     blocks = Block[
-        Block(def["name"], Float64(def["duration_hours"]))
-        for def in d["definitions"]
+        Block(def["name"], Float64(def["duration_hours"])) for def in d["definitions"]
     ]
 
     return BlockConfig(mode, blocks)

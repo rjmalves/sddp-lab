@@ -85,7 +85,9 @@ function __build_noncontrollables!(
 
     noncontrollables_d = d["noncontrollables"]
 
-    valid_key_types = __validate_noncontrollables_keys_types_before_build!(noncontrollables_d, e)
+    valid_key_types = __validate_noncontrollables_keys_types_before_build!(
+        noncontrollables_d, e
+    )
     if !valid_key_types
         return false
     end

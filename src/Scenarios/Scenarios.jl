@@ -17,8 +17,9 @@ Container for inflow stochastic processes, keyed by Markov state index.
 In the non-Markov case (single process), the key is always `1`.
 
 # Fields
-- `stochastic_process`: Dict mapping Markov state index (Int) to an
-  [`AbstractStochasticProcess`](@ref) that generates inflow SAA samples.
+
+  - `stochastic_process`: Dict mapping Markov state index (Int) to an
+    [`AbstractStochasticProcess`](@ref) that generates inflow SAA samples.
 
 See also: [`ScenariosData`](@ref), [`get_stochastic_process`](@ref)
 """
@@ -40,10 +41,11 @@ abstract type LoadScenarios end
 A node in the SDDP scenario graph, representing one time stage (or sub-stage).
 
 # Fields
-- `id`: Unique integer node identifier.
-- `stage`: SDDP stage index (1-based).
-- `start_datetime`: Wall-clock start time of this stage.
-- `end_datetime`: Wall-clock end time of this stage.
+
+  - `id`: Unique integer node identifier.
+  - `stage`: SDDP stage index (1-based).
+  - `start_datetime`: Wall-clock start time of this stage.
+  - `end_datetime`: Wall-clock end time of this stage.
 
 See also: [`Graph`](@ref), [`Edge`](@ref)
 """
@@ -61,10 +63,11 @@ A directed edge in the SDDP scenario graph, connecting two [`Node`](@ref)
 instances with a transition probability and discount rate.
 
 # Fields
-- `source`: Reference to the source [`Node`](@ref).
-- `target`: Reference to the target [`Node`](@ref).
-- `probability`: Transition probability (must be in `[0, 1]`).
-- `discount_rate`: Per-stage discount factor applied to future costs.
+
+  - `source`: Reference to the source [`Node`](@ref).
+  - `target`: Reference to the target [`Node`](@ref).
+  - `probability`: Transition probability (must be in `[0, 1]`).
+  - `discount_rate`: Per-stage discount factor applied to future costs.
 
 See also: [`Graph`](@ref), [`Node`](@ref)
 """
@@ -82,8 +85,9 @@ The SDDP scenario tree structure. Contains all nodes across all stages and the
 edges encoding transition probabilities.
 
 # Fields
-- `nodes`: All [`Node`](@ref) objects in the graph, in arbitrary order.
-- `edges`: All [`Edge`](@ref) objects defining the tree structure.
+
+  - `nodes`: All [`Node`](@ref) objects in the graph, in arbitrary order.
+  - `edges`: All [`Edge`](@ref) objects defining the tree structure.
 
 See also: [`ScenariosData`](@ref), [`get_graph`](@ref),
 [`get_number_of_stages`](@ref), [`get_root_node_id`](@ref)
@@ -108,14 +112,15 @@ Root container for all scenario-related configuration. Produced by parsing the
 `scenarios.jsonc` file referenced in `main.jsonc`.
 
 # Fields
-- `seed`: Random seed used for SAA generation (reproducibility).
-- `initial_season`: Season index (1-based) corresponding to the first stage.
-- `branchings`: Number of scenario branchings per stage in the training tree.
-- `graph`: [`Graph`](@ref) defining the SDDP scenario tree topology.
-- `inflow`: [`InflowScenarios`](@ref) container with stochastic process(es).
-- `load`: `LoadScenarios` with deterministic or block load profiles.
-- `block_config`: [`BlockConfig`](@ref) for inner load blocks (if any).
-- `markov_chain`: [`AbstractMarkovChain`](@ref) for Markov state transitions.
+
+  - `seed`: Random seed used for SAA generation (reproducibility).
+  - `initial_season`: Season index (1-based) corresponding to the first stage.
+  - `branchings`: Number of scenario branchings per stage in the training tree.
+  - `graph`: [`Graph`](@ref) defining the SDDP scenario tree topology.
+  - `inflow`: [`InflowScenarios`](@ref) container with stochastic process(es).
+  - `load`: `LoadScenarios` with deterministic or block load profiles.
+  - `block_config`: [`BlockConfig`](@ref) for inner load blocks (if any).
+  - `markov_chain`: [`AbstractMarkovChain`](@ref) for Markov state transitions.
 
 See also: [`get_scenarios`](@ref), [`get_graph`](@ref), [`get_block_config`](@ref)
 """
@@ -187,6 +192,7 @@ end
 Seed Julia's global RNG with the seed stored in `scenarios`.
 
 !!! warning
+
     Deprecated. This function mutates the global RNG and is not thread-safe.
     Pass the seed directly to [`generate_saa`](@ref) instead.
 """
@@ -264,7 +270,9 @@ See also: [`InflowScenarios`](@ref), [`AbstractStochasticProcess`](@ref)
 """
 function get_stochastic_process(inflow::InflowScenarios)
     if length(inflow.stochastic_process) != 1
-        error("Expected single stochastic process, got $(length(inflow.stochastic_process)) processes. Use get_stochastic_process(inflow, state) for Markov mode.")
+        error(
+            "Expected single stochastic process, got $(length(inflow.stochastic_process)) processes. Use get_stochastic_process(inflow, state) for Markov mode.",
+        )
     end
     return first(values(inflow.stochastic_process))
 end

@@ -6,9 +6,7 @@ using Suppressor
 # Replaces the engine with one that uses low iteration counts and few simulations,
 # so that tests exercise the full pipeline without taking minutes.
 function _fast_study(study; num_iters = 10, num_sims = 10)
-    convergence = Engines.Convergence(
-        1, num_iters, [Engines.IterationLimit(num_iters)]
-    )
+    convergence = Engines.Convergence(1, num_iters, [Engines.IterationLimit(num_iters)])
     policy_def = Engines.SDDPPolicyTaskDefinition(
         convergence,
         study.engine.policy.risk_measure,
@@ -125,7 +123,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -142,9 +148,7 @@ end
             @test length(e) == 0
 
             convergence = Engines.Convergence(
-                1,
-                20,
-                [Engines.IterationLimit(10), Engines.LowerBoundStability(0.05, 5)],
+                1, 20, [Engines.IterationLimit(10), Engines.LowerBoundStability(0.05, 5)]
             )
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
@@ -160,7 +164,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -176,9 +188,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -193,7 +203,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.InSampleMC(12, false)
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -211,9 +229,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -228,7 +244,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -246,9 +270,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -263,7 +285,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -281,9 +311,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -298,7 +326,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -316,9 +352,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -333,7 +367,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             model = SDDPlab.build(study, HiGHS.Optimizer)
@@ -375,7 +417,15 @@ end
                 Engines.NoScaling(),
                 Engines.TrainingLogConfig("", 1, false, 1),
             )
-            noscale_engine = Engines.SDDPEngine(noscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            noscale_engine = Engines.SDDPEngine(
+                noscale_policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             noscale_study = SDDPlab.Study(original.inputs, noscale_engine)
             noscale_model = SDDPlab.build(noscale_study, HiGHS.Optimizer)
             noscale_policy = SDDPlab.train(noscale_study, noscale_model)
@@ -394,7 +444,15 @@ end
                 Engines.AutoScaling(),
                 Engines.TrainingLogConfig("", 1, false, 1),
             )
-            autoscale_engine = Engines.SDDPEngine(autoscale_policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            autoscale_engine = Engines.SDDPEngine(
+                autoscale_policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             autoscale_study = SDDPlab.Study(original.inputs, autoscale_engine)
             autoscale_model = SDDPlab.build(autoscale_study, HiGHS.Optimizer)
             autoscale_policy = SDDPlab.train(autoscale_study, autoscale_model)
@@ -402,12 +460,8 @@ end
 
             # The scaled model's bound is in scaled cost units.
             # Unscale: multiply by s_cost * s_gen to recover original units.
-            s_cost = Engines.get_scaling_factor(
-                autoscale_model.scaling, Engines.COST_SCALE
-            )
-            s_gen = Engines.get_scaling_factor(
-                autoscale_model.scaling, :HYDRO_GENERATION
-            )
+            s_cost = Engines.get_scaling_factor(autoscale_model.scaling, Engines.COST_SCALE)
+            s_gen = Engines.get_scaling_factor(autoscale_model.scaling, :HYDRO_GENERATION)
             autoscale_bound_scaled = SDDP.calculate_bound(autoscale_model.policy_graph)
             autoscale_bound = autoscale_bound_scaled * s_cost * s_gen
 
@@ -433,9 +487,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -450,7 +502,15 @@ end
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Threaded(), Engines.DefaultSampling()
             )
-            engine = Engines.SDDPEngine(policy_def, sim_def, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+            engine = Engines.SDDPEngine(
+                policy_def,
+                sim_def,
+                Engines.DiagnosticsConfig(false, 1e6, 1e10),
+                Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+                Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+            )
             study = SDDPlab.Study(original.inputs, engine)
 
             @test study.engine.policy.parallel_scheme isa Engines.Threaded
@@ -483,9 +543,7 @@ end
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 10, [Engines.IterationLimit(10)]
-            )
+            convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -528,9 +586,7 @@ end
                 original = SDDPlab.read_study(example_dir; e = e)
                 @test length(e) == 0
 
-                convergence = Engines.Convergence(
-                    1, 10, [Engines.IterationLimit(10)]
-                )
+                convergence = Engines.Convergence(1, 10, [Engines.IterationLimit(10)])
                 policy_def = Engines.SDDPPolicyTaskDefinition(
                     convergence,
                     Engines.Expectation(),

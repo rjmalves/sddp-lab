@@ -16,6 +16,7 @@ always continues to the next configuration. The function returns after all
 configurations have been attempted.
 
 # Example
+
 ```julia
 results = run_experiment("/path/to/experiment.jsonc")
 for r in results
@@ -31,10 +32,13 @@ function run_experiment(config_path::String)::Vector{ExperimentResult}
     results = ExperimentResult[]
     for (config_name, overrides) in config.configurations
         @info "Running configuration: $config_name"
-        result = _run_single_config(config.base_study_path, config_name, overrides, config.output_dir)
+        result = _run_single_config(
+            config.base_study_path, config_name, overrides, config.output_dir
+        )
         push!(results, result)
         if result.success
-            @info "Configuration \"$config_name\" completed" train_s = result.train_elapsed_seconds simulate_s = result.simulate_elapsed_seconds
+            @info "Configuration \"$config_name\" completed" train_s =
+                result.train_elapsed_seconds simulate_s = result.simulate_elapsed_seconds
         else
             @warn "Configuration \"$config_name\" failed" error = result.error_message
         end
@@ -77,24 +81,44 @@ function _run_single_config(
 
         if base_dict === nothing
             msgs = join([ex.msg for ex in e], "; ")
-            return ExperimentResult(config_name, config_output, 0.0, 0.0, false, "Failed to read main.jsonc: $msgs")
+            return ExperimentResult(
+                config_name,
+                config_output,
+                0.0,
+                0.0,
+                false,
+                "Failed to read main.jsonc: $msgs",
+            )
         end
 
         working_dict = deepcopy(base_dict)
 
         engine_section = get(working_dict, "engine", nothing)
         if !(engine_section isa Dict)
-            return ExperimentResult(config_name, config_output, 0.0, 0.0, false, "Base study \"engine\" key is missing or not a Dict")
+            return ExperimentResult(
+                config_name,
+                config_output,
+                0.0,
+                0.0,
+                false,
+                "Base study \"engine\" key is missing or not a Dict",
+            )
         end
 
         engine_params = get(engine_section, "params", nothing)
         if !(engine_params isa Dict)
-            return ExperimentResult(config_name, config_output, 0.0, 0.0, false, "Base study \"engine.params\" key is missing or not a Dict")
+            return ExperimentResult(
+                config_name,
+                config_output,
+                0.0,
+                0.0,
+                false,
+                "Base study \"engine.params\" key is missing or not a Dict",
+            )
         end
 
         merged_params = deep_merge(
-            convert(Dict{String,Any}, engine_params),
-            convert(Dict{String,Any}, overrides),
+            convert(Dict{String,Any}, engine_params), convert(Dict{String,Any}, overrides)
         )
         working_dict["engine"]["params"] = merged_params
 
@@ -109,7 +133,14 @@ function _run_single_config(
 
         if study === nothing
             msgs = join([string(ex) for ex in e2], "; ")
-            return ExperimentResult(config_name, config_output, 0.0, 0.0, false, "Study construction failed: $msgs")
+            return ExperimentResult(
+                config_name,
+                config_output,
+                0.0,
+                0.0,
+                false,
+                "Study construction failed: $msgs",
+            )
         end
 
         # Use invokelatest so solver constructors (e.g. HiGHS.Optimizer) resolve at current world age
@@ -126,9 +157,18 @@ function _run_single_config(
         try
             env = Base.invokelatest(capture_environment)
             seeds = _extract_seeds(study)
-            Base.invokelatest(write_run_metadata, output_dir, config_name, metadata_config, env; seeds = seeds)
+            Base.invokelatest(
+                write_run_metadata,
+                output_dir,
+                config_name,
+                metadata_config,
+                env;
+                seeds = seeds,
+            )
         catch ex
-            @warn "Failed to write run metadata" config_name exception = (ex, catch_backtrace())
+            @warn "Failed to write run metadata" config_name exception = (
+                ex, catch_backtrace()
+            )
         end
 
         return ExperimentResult(

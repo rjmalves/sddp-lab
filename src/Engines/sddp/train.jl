@@ -20,12 +20,12 @@ function Lab.train(
         :cut_type => generate_cut_type(definition.cut_type),
     )
     if !(definition.duality_handler isa DefaultDuality)
-        train_kwargs[:duality_handler] =
-            generate_duality_handler(definition.duality_handler)
+        train_kwargs[:duality_handler] = generate_duality_handler(
+            definition.duality_handler
+        )
     end
     if !(definition.forward_pass isa DefaultForwardPassStrategy)
-        train_kwargs[:forward_pass] =
-            generate_forward_pass(definition.forward_pass)
+        train_kwargs[:forward_pass] = generate_forward_pass(definition.forward_pass)
     end
 
     logging = definition.logging
@@ -49,10 +49,13 @@ function __capture_training_log(pg::SDDP.PolicyGraph)::Union{TrainingLog,Nothing
         results === nothing && return nothing
         entries = [
             TrainingLogEntry(
-                e.iteration, e.bound, e.simulation_value,
-                e.time, e.total_solves, e.serious_numerical_issue,
-            )
-            for e in results.log
+                e.iteration,
+                e.bound,
+                e.simulation_value,
+                e.time,
+                e.total_solves,
+                e.serious_numerical_issue,
+            ) for e in results.log
         ]
         return TrainingLog(results.status, entries)
     catch ex

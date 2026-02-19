@@ -94,10 +94,7 @@ import SDDPlab: Utils
         @testset "missing-two-required-keys" begin
             d = Dict{String,Any}("other" => 42)
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer),
-                Utils.FieldRule("name", String),
-            ]
+            schema = [Utils.FieldRule("id", Integer), Utils.FieldRule("name", String)]
             @test Utils.validate_schema!(d, schema, e) == false
             @test length(e) == 2
             @test e.exceptions[1] isa ErrorException
@@ -109,9 +106,7 @@ import SDDPlab: Utils
         @testset "wrong-type" begin
             d = Dict{String,Any}("id" => "not_a_number")
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer),
-            ]
+            schema = [Utils.FieldRule("id", Integer)]
             @test Utils.validate_schema!(d, schema, e) == false
             @test length(e) == 1
             @test e.exceptions[1] isa ErrorException
@@ -120,9 +115,7 @@ import SDDPlab: Utils
         @testset "constraint-violation" begin
             d = Dict{String,Any}("id" => -5)
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer; constraints = [Utils.positive()]),
-            ]
+            schema = [Utils.FieldRule("id", Integer; constraints = [Utils.positive()])]
             @test Utils.validate_schema!(d, schema, e) == false
             @test length(e) == 1
             @test e.exceptions[1] isa AssertionError
@@ -149,7 +142,9 @@ import SDDPlab: Utils
             e = CompositeException()
             schema = [
                 Utils.FieldRule("id", Integer; constraints = [Utils.positive()]),
-                Utils.FieldRule("alpha", Float64; required = false, constraints = [Utils.in_range(0, 1)]),
+                Utils.FieldRule(
+                    "alpha", Float64; required = false, constraints = [Utils.in_range(0, 1)]
+                ),
             ]
             @test Utils.validate_schema!(d, schema, e) == true
             @test length(e) == 0
@@ -170,9 +165,7 @@ import SDDPlab: Utils
         @testset "entity-label-in-error-messages" begin
             d = Dict{String,Any}("id" => -5)
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer; constraints = [Utils.positive()]),
-            ]
+            schema = [Utils.FieldRule("id", Integer; constraints = [Utils.positive()])]
             @test Utils.validate_schema!(d, schema, e; entity_label = "Bus 1") == false
             @test length(e) == 1
             @test e.exceptions[1] isa AssertionError
@@ -182,9 +175,7 @@ import SDDPlab: Utils
         @testset "empty-entity-label" begin
             d = Dict{String,Any}("id" => -5)
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer; constraints = [Utils.positive()]),
-            ]
+            schema = [Utils.FieldRule("id", Integer; constraints = [Utils.positive()])]
             @test Utils.validate_schema!(d, schema, e; entity_label = "") == false
             @test length(e) == 1
             @test e.exceptions[1].msg == "id (-5) must be positive"
@@ -206,10 +197,7 @@ import SDDPlab: Utils
         @testset "detects-missing-key" begin
             d = Dict{String,Any}("alpha" => 0.5)
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer),
-                Utils.FieldRule("alpha", Float64),
-            ]
+            schema = [Utils.FieldRule("id", Integer), Utils.FieldRule("alpha", Float64)]
             @test Utils.validate_schema_keys_types!(d, schema, e) == false
             @test length(e) == 1
             @test e.exceptions[1] isa ErrorException
@@ -219,9 +207,7 @@ import SDDPlab: Utils
         @testset "detects-wrong-type" begin
             d = Dict{String,Any}("id" => "not_a_number")
             e = CompositeException()
-            schema = [
-                Utils.FieldRule("id", Integer; constraints = [Utils.positive()]),
-            ]
+            schema = [Utils.FieldRule("id", Integer; constraints = [Utils.positive()])]
             @test Utils.validate_schema_keys_types!(d, schema, e) == false
             @test length(e) == 1
             @test e.exceptions[1] isa ErrorException

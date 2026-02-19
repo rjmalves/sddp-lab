@@ -36,8 +36,7 @@ using SDDP: SDDP
     @testset "generate-stopping-rule-stopping-chain" begin
         chain = Engines.StoppingChain(
             Engines.StoppingCriteria[
-                Engines.IterationLimit(100),
-                Engines.LowerBoundStability(0.05, 10),
+                Engines.IterationLimit(100), Engines.LowerBoundStability(0.05, 10)
             ],
         )
         rule = Engines.generate_stopping_rule(chain)
@@ -93,8 +92,7 @@ using SDDP: SDDP
 
     @testset "generate-risk-measure-convex-combination" begin
         inner_measures = Tuple{Real,Engines.RiskMeasure}[
-            (0.5, Engines.Expectation()),
-            (0.5, Engines.AVaR(0.1)),
+            (0.5, Engines.Expectation()), (0.5, Engines.AVaR(0.1))
         ]
         measure = Engines.generate_risk_measure(Engines.ConvexCombination(inner_measures))
         @test measure isa SDDP.AbstractRiskMeasure
@@ -123,11 +121,26 @@ using SDDP: SDDP
         cut_type = Engines.SingleCut()
         scaling = Engines.NoScaling()
         policy = Engines.SDDPPolicyTaskDefinition(
-            convergence, risk, parallel, sampling, duality, forward_pass, cut_type, scaling,
+            convergence,
+            risk,
+            parallel,
+            sampling,
+            duality,
+            forward_pass,
+            cut_type,
+            scaling,
             Engines.TrainingLogConfig("", 1, false, 1),
         )
         simulation = Engines.SDDPSimulationTaskDefinition(100, parallel, sampling)
-        engine = Engines.SDDPEngine(policy, simulation, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+        engine = Engines.SDDPEngine(
+            policy,
+            simulation,
+            Engines.DiagnosticsConfig(false, 1e6, 1e10),
+            Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+            Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+        )
 
         result = Engines.get_policy_definition(engine)
         @test typeof(result) === Engines.SDDPPolicyTaskDefinition
@@ -144,11 +157,26 @@ using SDDP: SDDP
         cut_type = Engines.SingleCut()
         scaling = Engines.NoScaling()
         policy = Engines.SDDPPolicyTaskDefinition(
-            convergence, risk, parallel, sampling, duality, forward_pass, cut_type, scaling,
+            convergence,
+            risk,
+            parallel,
+            sampling,
+            duality,
+            forward_pass,
+            cut_type,
+            scaling,
             Engines.TrainingLogConfig("", 1, false, 1),
         )
         simulation = Engines.SDDPSimulationTaskDefinition(100, parallel, sampling)
-        engine = Engines.SDDPEngine(policy, simulation, Engines.DiagnosticsConfig(false, 1e6, 1e10), Engines.SolverConfig("HiGHS", Dict{String,Any}()), Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+        engine = Engines.SDDPEngine(
+            policy,
+            simulation,
+            Engines.DiagnosticsConfig(false, 1e6, 1e10),
+            Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+            Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+        )
 
         result = Engines.get_simulation_definition(engine)
         @test typeof(result) === Engines.SDDPSimulationTaskDefinition

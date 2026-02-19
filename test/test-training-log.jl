@@ -22,9 +22,8 @@ using Test
                 "risk_measure" => Dict{String,Any}(
                     "kind" => "Expectation", "params" => Dict{String,Any}()
                 ),
-                "parallel_scheme" => Dict{String,Any}(
-                    "kind" => "Serial", "params" => Dict{String,Any}()
-                ),
+                "parallel_scheme" =>
+                    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             )
             e = CompositeException()
             result = Engines.SDDPPolicyTaskDefinition(policy_dict, e)
@@ -55,9 +54,7 @@ using Test
         end
 
         @testset "partial-fields-use-defaults" begin
-            logging_dict = Dict{String,Any}(
-                "log_frequency" => 10,
-            )
+            logging_dict = Dict{String,Any}("log_frequency" => 10)
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result !== nothing
@@ -71,9 +68,7 @@ using Test
 
     @testset "config-validation-errors" begin
         @testset "negative-log-frequency" begin
-            logging_dict = Dict{String,Any}(
-                "log_frequency" => -1,
-            )
+            logging_dict = Dict{String,Any}("log_frequency" => -1)
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result === nothing
@@ -81,9 +76,7 @@ using Test
         end
 
         @testset "zero-log-frequency" begin
-            logging_dict = Dict{String,Any}(
-                "log_frequency" => 0,
-            )
+            logging_dict = Dict{String,Any}("log_frequency" => 0)
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result === nothing
@@ -91,9 +84,7 @@ using Test
         end
 
         @testset "print-level-out-of-range-negative" begin
-            logging_dict = Dict{String,Any}(
-                "print_level" => -1,
-            )
+            logging_dict = Dict{String,Any}("print_level" => -1)
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result === nothing
@@ -101,9 +92,7 @@ using Test
         end
 
         @testset "print-level-out-of-range-high" begin
-            logging_dict = Dict{String,Any}(
-                "print_level" => 3,
-            )
+            logging_dict = Dict{String,Any}("print_level" => 3)
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result === nothing
@@ -111,9 +100,7 @@ using Test
         end
 
         @testset "invalid-log-frequency-type" begin
-            logging_dict = Dict{String,Any}(
-                "log_frequency" => "not_a_number",
-            )
+            logging_dict = Dict{String,Any}("log_frequency" => "not_a_number")
             e = CompositeException()
             result = Engines.TrainingLogConfig(logging_dict, e)
             @test result === nothing
@@ -135,13 +122,9 @@ using Test
                 "risk_measure" => Dict{String,Any}(
                     "kind" => "Expectation", "params" => Dict{String,Any}()
                 ),
-                "parallel_scheme" => Dict{String,Any}(
-                    "kind" => "Serial", "params" => Dict{String,Any}()
-                ),
-                "logging" => Dict{String,Any}(
-                    "log_frequency" => 2,
-                    "print_level" => 0,
-                ),
+                "parallel_scheme" =>
+                    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+                "logging" => Dict{String,Any}("log_frequency" => 2, "print_level" => 0),
             )
             e = CompositeException()
             result = Engines.SDDPPolicyTaskDefinition(policy_dict, e)
@@ -164,12 +147,9 @@ using Test
                 "risk_measure" => Dict{String,Any}(
                     "kind" => "Expectation", "params" => Dict{String,Any}()
                 ),
-                "parallel_scheme" => Dict{String,Any}(
-                    "kind" => "Serial", "params" => Dict{String,Any}()
-                ),
-                "logging" => Dict{String,Any}(
-                    "log_frequency" => -5,
-                ),
+                "parallel_scheme" =>
+                    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+                "logging" => Dict{String,Any}("log_frequency" => -5),
             )
             e = CompositeException()
             result = Engines.SDDPPolicyTaskDefinition(policy_dict, e)
@@ -227,7 +207,7 @@ using Test
             @test artifact.training_log.status isa Symbol
             @test length(artifact.training_log.iterations) > 0
             @test length(artifact.training_log.iterations) <=
-                  study.engine.policy.convergence.max_iterations
+                study.engine.policy.convergence.max_iterations
 
             first_entry = artifact.training_log.iterations[1]
             @test first_entry.iteration == 1

@@ -6,12 +6,13 @@ using CSV
 Describes a single parameter to sweep in a sensitivity analysis.
 
 # Fields
-- `label`: Human-readable name used in config names and the summary CSV.
-- `path`: Dot-separated path into the engine params dict
-  (e.g., `"policy.risk_measure"` or `"simulation.num_simulated_series"`).
-- `values`: Non-empty list of values to sweep over. Each value may be a
-  scalar (`Int`, `Float64`, `String`) or a `Dict{String,Any}` for structured
-  objects such as risk measures.
+
+  - `label`: Human-readable name used in config names and the summary CSV.
+  - `path`: Dot-separated path into the engine params dict
+    (e.g., `"policy.risk_measure"` or `"simulation.num_simulated_series"`).
+  - `values`: Non-empty list of values to sweep over. Each value may be a
+    scalar (`Int`, `Float64`, `String`) or a `Dict{String,Any}` for structured
+    objects such as risk measures.
 """
 struct SensitivityParameter
     label::String
@@ -25,16 +26,18 @@ end
 Holds the parsed and validated contents of a `sensitivity.jsonc` file.
 
 # Fields
-- `base_study`: Absolute path to the base study directory (contains `main.jsonc`).
-- `output_dir`: Absolute path where per-configuration result subdirectories will be
-  written.
-- `mode`: `"oat"` (one-at-a-time, default) or `"factorial"` (full factorial).
-- `base_overrides`: Engine-params overrides applied to every generated configuration
-  before the per-parameter override is applied.
-- `parameters`: Ordered list of `SensitivityParameter` definitions.
-- `overwrite`: When `true`, allows writing into a non-empty output directory.
+
+  - `base_study`: Absolute path to the base study directory (contains `main.jsonc`).
+  - `output_dir`: Absolute path where per-configuration result subdirectories will be
+    written.
+  - `mode`: `"oat"` (one-at-a-time, default) or `"factorial"` (full factorial).
+  - `base_overrides`: Engine-params overrides applied to every generated configuration
+    before the per-parameter override is applied.
+  - `parameters`: Ordered list of `SensitivityParameter` definitions.
+  - `overwrite`: When `true`, allows writing into a non-empty output directory.
 
 # Example
+
 ```julia
 config = read_sensitivity_config("/path/to/sensitivity.jsonc")
 ```
@@ -54,10 +57,11 @@ end
 Records the outcome of a complete sensitivity analysis run.
 
 # Fields
-- `mode`: `"oat"` or `"factorial"` — the sweep mode that was used.
-- `parameters`: The `SensitivityParameter` definitions from the config.
-- `results`: One `ExperimentResult` per generated configuration.
-- `summary_path`: Absolute path to the `sensitivity_summary.csv` written after the run.
+
+  - `mode`: `"oat"` or `"factorial"` — the sweep mode that was used.
+  - `parameters`: The `SensitivityParameter` definitions from the config.
+  - `results`: One `ExperimentResult` per generated configuration.
+  - `summary_path`: Absolute path to the `sensitivity_summary.csv` written after the run.
 """
 struct SensitivityResult
     mode::String
@@ -77,14 +81,16 @@ jsonc file's directory), `"mode"` (default: `"oat"`), `"base_overrides"` (defaul
 empty dict), `"overwrite"` (default: `false`).
 
 Each entry in `"parameters"` must have:
-- `"path"`: non-empty String (dot-separated path into engine params)
-- `"values"`: non-empty Array
-- `"label"`: non-empty String
+
+  - `"path"`: non-empty String (dot-separated path into engine params)
+  - `"values"`: non-empty Array
+  - `"label"`: non-empty String
 
 Errors are accumulated via `CompositeException` and thrown together when
 validation fails.
 
 # Example
+
 ```julia
 cfg = read_sensitivity_config("/path/to/sensitivity.jsonc")
 ```
@@ -120,21 +126,30 @@ function read_sensitivity_config(path::String)::SensitivityConfig
         throw(e)
     end
 
-    base_study = isabspath(raw_base) ? raw_base : normpath(joinpath(sensitivity_dir, raw_base))
+    base_study =
+        isabspath(raw_base) ? raw_base : normpath(joinpath(sensitivity_dir, raw_base))
 
     if !isdir(base_study)
         push!(e, ErrorException("base_study directory not found: \"$base_study\""))
     end
     if !isfile(joinpath(base_study, "main.jsonc"))
-        push!(e, ErrorException("base_study directory \"$base_study\" does not contain a main.jsonc"))
+        push!(
+            e,
+            ErrorException(
+                "base_study directory \"$base_study\" does not contain a main.jsonc"
+            ),
+        )
     end
 
     raw_output = get(d, "output_dir", "sensitivity_results")
     if !(raw_output isa String)
-        push!(e, ErrorException("\"output_dir\" must be a String, got $(typeof(raw_output))"))
+        push!(
+            e, ErrorException("\"output_dir\" must be a String, got $(typeof(raw_output))")
+        )
         raw_output = "sensitivity_results"
     end
-    output_dir = isabspath(raw_output) ? raw_output : normpath(joinpath(sensitivity_dir, raw_output))
+    output_dir =
+        isabspath(raw_output) ? raw_output : normpath(joinpath(sensitivity_dir, raw_output))
 
     mode = get(d, "mode", "oat")
     if !(mode isa String)
@@ -147,7 +162,12 @@ function read_sensitivity_config(path::String)::SensitivityConfig
 
     raw_overrides = get(d, "base_overrides", Dict{String,Any}())
     if !(raw_overrides isa Dict)
-        push!(e, ErrorException("\"base_overrides\" must be a Dict, got $(typeof(raw_overrides))"))
+        push!(
+            e,
+            ErrorException(
+                "\"base_overrides\" must be a Dict, got $(typeof(raw_overrides))"
+            ),
+        )
         raw_overrides = Dict{String,Any}()
     end
     base_overrides = convert(Dict{String,Any}, raw_overrides)
@@ -160,7 +180,9 @@ function read_sensitivity_config(path::String)::SensitivityConfig
 
     raw_params = d["parameters"]
     if !(raw_params isa Vector)
-        push!(e, ErrorException("\"parameters\" must be an Array, got $(typeof(raw_params))"))
+        push!(
+            e, ErrorException("\"parameters\" must be an Array, got $(typeof(raw_params))")
+        )
         throw(e)
     end
     if isempty(raw_params)
@@ -172,42 +194,62 @@ function read_sensitivity_config(path::String)::SensitivityConfig
 
     for (idx, raw_p) in enumerate(raw_params)
         if !(raw_p isa Dict)
-            push!(e, ErrorException("parameters[$idx] must be a Dict, got $(typeof(raw_p))"))
+            push!(
+                e, ErrorException("parameters[$idx] must be a Dict, got $(typeof(raw_p))")
+            )
             continue
         end
 
         if !haskey(raw_p, "path")
             push!(e, ErrorException("parameters[$idx] is missing required key \"path\""))
         elseif !(raw_p["path"] isa String) || isempty(raw_p["path"])
-            push!(e, ErrorException("parameters[$idx].path must be a non-empty String, got $(repr(raw_p["path"]))"))
+            push!(
+                e,
+                ErrorException(
+                    "parameters[$idx].path must be a non-empty String, got $(repr(raw_p["path"]))",
+                ),
+            )
         end
 
         if !haskey(raw_p, "label")
             push!(e, ErrorException("parameters[$idx] is missing required key \"label\""))
         elseif !(raw_p["label"] isa String) || isempty(raw_p["label"])
-            push!(e, ErrorException("parameters[$idx].label must be a non-empty String, got $(repr(raw_p["label"]))"))
+            push!(
+                e,
+                ErrorException(
+                    "parameters[$idx].label must be a non-empty String, got $(repr(raw_p["label"]))",
+                ),
+            )
         end
 
         if !haskey(raw_p, "values")
             push!(e, ErrorException("parameters[$idx] is missing required key \"values\""))
         elseif !(raw_p["values"] isa Vector)
-            push!(e, ErrorException("parameters[$idx].values must be an Array, got $(typeof(raw_p["values"]))"))
+            push!(
+                e,
+                ErrorException(
+                    "parameters[$idx].values must be an Array, got $(typeof(raw_p["values"]))",
+                ),
+            )
         elseif isempty(raw_p["values"])
             push!(e, ErrorException("parameters[$idx].values must not be empty"))
         end
 
         !isempty(e) && continue
 
-        push!(parameters, SensitivityParameter(
-            raw_p["label"],
-            raw_p["path"],
-            convert(Vector{Any}, raw_p["values"]),
-        ))
+        push!(
+            parameters,
+            SensitivityParameter(
+                raw_p["label"], raw_p["path"], convert(Vector{Any}, raw_p["values"])
+            ),
+        )
     end
 
     !isempty(e) && throw(e)
 
-    return SensitivityConfig(base_study, output_dir, mode, base_overrides, parameters, overwrite)
+    return SensitivityConfig(
+        base_study, output_dir, mode, base_overrides, parameters, overwrite
+    )
 end
 
 """
@@ -223,6 +265,7 @@ are always attempted. Returns a `SensitivityResult` with per-config outcomes
 and the path to the summary CSV.
 
 # Example
+
 ```julia
 result = run_sensitivity("/path/to/sensitivity.jsonc")
 println("Mode: ", result.mode)
@@ -249,12 +292,16 @@ function run_sensitivity(config_path::String)::SensitivityResult
     results = ExperimentResult[]
     for (config_name, overrides) in configs
         @info "Running sensitivity configuration: $config_name"
-        result = _run_single_config(config.base_study, config_name, overrides, config.output_dir)
+        result = _run_single_config(
+            config.base_study, config_name, overrides, config.output_dir
+        )
         push!(results, result)
         if result.success
-            @info "Sensitivity configuration \"$config_name\" completed" train_s = result.train_elapsed_seconds simulate_s = result.simulate_elapsed_seconds
+            @info "Sensitivity configuration \"$config_name\" completed" train_s =
+                result.train_elapsed_seconds simulate_s = result.simulate_elapsed_seconds
         else
-            @warn "Sensitivity configuration \"$config_name\" failed" error = result.error_message
+            @warn "Sensitivity configuration \"$config_name\" failed" error =
+                result.error_message
         end
     end
 
@@ -404,8 +451,15 @@ function _oat_summary_rows(
     end
 
     rows = NamedTuple{
-        (:config_name, :parameter_label, :parameter_value, :success, :train_time_s,
-         :simulate_time_s, :error),
+        (
+            :config_name,
+            :parameter_label,
+            :parameter_value,
+            :success,
+            :train_time_s,
+            :simulate_time_s,
+            :error,
+        ),
         Tuple{String,String,String,Bool,Float64,Float64,String},
     }[]
 
@@ -449,8 +503,15 @@ function _factorial_summary_rows(
     end
 
     rows = NamedTuple{
-        (:config_name, :parameter_label, :parameter_value, :success, :train_time_s,
-         :simulate_time_s, :error),
+        (
+            :config_name,
+            :parameter_label,
+            :parameter_value,
+            :success,
+            :train_time_s,
+            :simulate_time_s,
+            :error,
+        ),
         Tuple{String,String,String,Bool,Float64,Float64,String},
     }[]
 

@@ -52,7 +52,7 @@ function __validate_deterministic_load_unique_bus_node_pairs!(
             push!(
                 e,
                 AssertionError(
-                    "Load - duplicate entry for (bus_id=$(v.bus_id), node_id=$(v.node_id)$block_msg)"
+                    "Load - duplicate entry for (bus_id=$(v.bus_id), node_id=$(v.node_id)$block_msg)",
                 ),
             )
             valid = false
@@ -63,6 +63,8 @@ function __validate_deterministic_load_unique_bus_node_pairs!(
     return valid
 end
 
-function __validate_deterministic_load_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
+function __validate_deterministic_load_consistency!(
+    d::Dict{String,Any}, e::CompositeException
+)::Bool
     return __validate_deterministic_load_unique_bus_node_pairs!(d, e)
 end

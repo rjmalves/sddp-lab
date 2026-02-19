@@ -9,8 +9,13 @@ function SystemData(d::Dict{String,Any}, e::CompositeException)
 
     return if valid_consistency
         SystemData(
-            d["buses"], d["lines"], d["hydros"], d["thermals"],
-            d["noncontrollables"], d["energycontracts"], d["pumpingstations"],
+            d["buses"],
+            d["lines"],
+            d["hydros"],
+            d["thermals"],
+            d["noncontrollables"],
+            d["energycontracts"],
+            d["pumpingstations"],
         )
     else
         nothing

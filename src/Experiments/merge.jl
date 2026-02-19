@@ -8,21 +8,18 @@ override value wins outright.
 Returns a new dict; neither argument is mutated.
 
 # Examples
+
 ```julia
-base     = Dict("a" => 1, "b" => Dict("x" => 10, "y" => 20))
+base = Dict("a" => 1, "b" => Dict("x" => 10, "y" => 20))
 override = Dict("b" => Dict("x" => 99), "c" => 3)
-result   = deep_merge(base, override)
+result = deep_merge(base, override)
 # => Dict("a" => 1, "b" => Dict("x" => 99, "y" => 20), "c" => 3)
 ```
 """
-function deep_merge(
-    base::Dict{String,Any}, override::Dict{String,Any}
-)::Dict{String,Any}
+function deep_merge(base::Dict{String,Any}, override::Dict{String,Any})::Dict{String,Any}
     result = copy(base)
     for (k, v) in override
-        if haskey(result, k) &&
-           isa(result[k], Dict{String,Any}) &&
-           isa(v, Dict{String,Any})
+        if haskey(result, k) && isa(result[k], Dict{String,Any}) && isa(v, Dict{String,Any})
             result[k] = deep_merge(result[k], v)
         else
             result[k] = v

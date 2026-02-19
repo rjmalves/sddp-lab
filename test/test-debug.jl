@@ -18,23 +18,17 @@ using Test
                     "params" => Dict{String,Any}("num_iterations" => 3),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         simulation_dict = Dict{String,Any}(
             "num_simulated_series" => 10,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
-        return Dict{String,Any}(
-            "policy" => policy_dict,
-            "simulation" => simulation_dict,
-        )
+        return Dict{String,Any}("policy" => policy_dict, "simulation" => simulation_dict)
     end
 
     @testset "debug-config-defaults-no-key" begin
@@ -73,9 +67,7 @@ using Test
 
     @testset "debug-config-partial-fields" begin
         params = _base_engine_dict()
-        params["debug"] = Dict{String,Any}(
-            "write_subproblems" => true,
-        )
+        params["debug"] = Dict{String,Any}("write_subproblems" => true)
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
@@ -88,9 +80,7 @@ using Test
 
     @testset "debug-config-invalid-format" begin
         params = _base_engine_dict()
-        params["debug"] = Dict{String,Any}(
-            "subproblem_format" => "csv",
-        )
+        params["debug"] = Dict{String,Any}("subproblem_format" => "csv")
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result === nothing
@@ -99,9 +89,7 @@ using Test
 
     @testset "debug-config-negative-time-limit" begin
         params = _base_engine_dict()
-        params["debug"] = Dict{String,Any}(
-            "det_equiv_time_limit" => -10.0,
-        )
+        params["debug"] = Dict{String,Any}("det_equiv_time_limit" => -10.0)
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result === nothing
@@ -110,9 +98,7 @@ using Test
 
     @testset "debug-config-mps-format" begin
         params = _base_engine_dict()
-        params["debug"] = Dict{String,Any}(
-            "subproblem_format" => "mps",
-        )
+        params["debug"] = Dict{String,Any}("subproblem_format" => "mps")
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
@@ -168,11 +154,7 @@ using Test
                 debug_cfg,
             )
 
-            @suppress Lab.debug(
-                model,
-                engine,
-                tmpdir,
-            )
+            @suppress Lab.debug(model, engine, tmpdir)
 
             debug_dir = joinpath(tmpdir, "debug")
             @test isdir(debug_dir)
@@ -334,8 +316,7 @@ using Test
 
             debug_dir = joinpath(tmpdir, "debug")
             subproblem_files = filter(
-                f -> startswith(f, "subproblem_") && endswith(f, ".lp"),
-                readdir(debug_dir),
+                f -> startswith(f, "subproblem_") && endswith(f, ".lp"), readdir(debug_dir)
             )
             @test length(subproblem_files) > 0
         end

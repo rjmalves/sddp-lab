@@ -2,13 +2,13 @@ import SDDPlab: Engines
 
 using SDDP: SDDP
 
-INSAMPLE_MC_DICT =
-    convert(Dict{String,Any}, Dict("max_depth" => 12, "terminate_on_dummy_leaf" => false))
+INSAMPLE_MC_DICT = convert(
+    Dict{String,Any}, Dict("max_depth" => 12, "terminate_on_dummy_leaf" => false)
+)
 PSR_SAMPLING_DICT = convert(Dict{String,Any}, Dict("num_samples" => 100))
 DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
 
 @testset "engines-sddp-sampling-schemes" begin
-
     @testset "default-sampling-valid" begin
         d, e = __renew(DEFAULT_SAMPLING_DICT)
         result = Engines.DefaultSampling(d, e)
@@ -127,9 +127,8 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
     @testset "sampling-scheme-kind-factory-insample-mc" begin
         d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "sampling_scheme" => Dict{String,Any}(
                 "kind" => "InSampleMC",
                 "params" => Dict{String,Any}(
@@ -148,9 +147,8 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
     @testset "sampling-scheme-kind-factory-psr" begin
         d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "sampling_scheme" => Dict{String,Any}(
                 "kind" => "PSRSampling",
                 "params" => Dict{String,Any}("num_samples" => 50),
@@ -166,9 +164,8 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
     @testset "sampling-scheme-kind-factory-default" begin
         d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "sampling_scheme" => Dict{String,Any}(
                 "kind" => "DefaultSampling", "params" => Dict{String,Any}()
             ),
@@ -182,9 +179,8 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
     @testset "sampling-scheme-backward-compat-simulation" begin
         d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPSimulationTaskDefinition(d, e)
@@ -202,12 +198,10 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -226,12 +220,10 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "sampling_scheme" => Dict{String,Any}(
                 "kind" => "InSampleMC",
                 "params" => Dict{String,Any}(
@@ -250,12 +242,10 @@ DEFAULT_SAMPLING_DICT = convert(Dict{String,Any}, Dict())
     @testset "sampling-scheme-invalid-kind" begin
         d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "sampling_scheme" => Dict{String,Any}(
-                "kind" => "NonExistentSampling",
-                "params" => Dict{String,Any}(),
+                "kind" => "NonExistentSampling", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()

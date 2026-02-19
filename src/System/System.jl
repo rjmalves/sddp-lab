@@ -27,9 +27,10 @@ abstract type SystemEntity end
 Represents a load bus (electrical node) in the power system.
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `deficit_cost`: Penalty cost for unserved energy at this bus (currency/MWh).
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `deficit_cost`: Penalty cost for unserved energy at this bus (currency/MWh).
 
 See also: [`Buses`](@ref), [`get_buses`](@ref)
 """
@@ -45,14 +46,15 @@ end
 Represents a transmission line connecting two buses.
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `source_bus_id`: ID of the sending-end bus.
-- `target_bus_id`: ID of the receiving-end bus.
-- `capacity`: Maximum power flow capacity (MW).
-- `exchange_penalty`: Penalty cost per MW of exchange (currency/MWh).
-- `source_bus`: Reference to the [`Bus`](@ref) at the source end.
-- `target_bus`: Reference to the [`Bus`](@ref) at the target end.
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `source_bus_id`: ID of the sending-end bus.
+  - `target_bus_id`: ID of the receiving-end bus.
+  - `capacity`: Maximum power flow capacity (MW).
+  - `exchange_penalty`: Penalty cost per MW of exchange (currency/MWh).
+  - `source_bus`: Reference to the [`Bus`](@ref) at the source end.
+  - `target_bus`: Reference to the [`Bus`](@ref) at the target end.
 
 See also: [`Lines`](@ref), [`get_lines`](@ref)
 """
@@ -74,18 +76,19 @@ end
 Represents a hydro power plant with reservoir storage.
 
 # Fields
-- `id`: Unique integer identifier.
-- `downstream_id`: ID of the immediately downstream hydro (0 = none).
-- `name`: Human-readable name.
-- `bus_id`: ID of the bus to which this plant is connected.
-- `productivity`: Power conversion factor (MW·s/hm³).
-- `initial_storage`: Reservoir storage at the start of the horizon (hm³).
-- `min_storage`: Minimum operational storage (hm³).
-- `max_storage`: Maximum reservoir capacity (hm³).
-- `min_generation`: Minimum turbine generation (MW).
-- `max_generation`: Maximum turbine generation / installed capacity (MW).
-- `spillage_penalty`: Penalty cost for spilling water (currency/m³).
-- `bus`: Reference to the connected [`Bus`](@ref).
+
+  - `id`: Unique integer identifier.
+  - `downstream_id`: ID of the immediately downstream hydro (0 = none).
+  - `name`: Human-readable name.
+  - `bus_id`: ID of the bus to which this plant is connected.
+  - `productivity`: Power conversion factor (MW·s/hm³).
+  - `initial_storage`: Reservoir storage at the start of the horizon (hm³).
+  - `min_storage`: Minimum operational storage (hm³).
+  - `max_storage`: Maximum reservoir capacity (hm³).
+  - `min_generation`: Minimum turbine generation (MW).
+  - `max_generation`: Maximum turbine generation / installed capacity (MW).
+  - `spillage_penalty`: Penalty cost for spilling water (currency/m³).
+  - `bus`: Reference to the connected [`Bus`](@ref).
 
 See also: [`Hydros`](@ref), [`get_hydros`](@ref), [`upstream`](@ref),
 [`downstream`](@ref)
@@ -112,13 +115,14 @@ end
 Represents a thermal power plant (gas, coal, nuclear, etc.).
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `bus_id`: ID of the bus to which this plant is connected.
-- `min_generation`: Minimum output when committed (MW).
-- `max_generation`: Installed / maximum output capacity (MW).
-- `cost`: Variable generation cost (currency/MWh).
-- `bus`: Reference to the connected [`Bus`](@ref).
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `bus_id`: ID of the bus to which this plant is connected.
+  - `min_generation`: Minimum output when committed (MW).
+  - `max_generation`: Installed / maximum output capacity (MW).
+  - `cost`: Variable generation cost (currency/MWh).
+  - `bus`: Reference to the connected [`Bus`](@ref).
 
 See also: [`Thermals`](@ref), [`get_thermals`](@ref)
 """
@@ -141,12 +145,13 @@ solar PV. The plant has a time-varying maximum generation profile and a
 curtailment penalty when its output is reduced below available capacity.
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `bus_id`: ID of the bus to which this source is connected.
-- `max_generation`: Installed capacity / maximum available generation (MW).
-- `curtailment_cost`: Penalty cost per MW of curtailed generation (currency/MWh).
-- `bus`: Reference to the connected [`Bus`](@ref).
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `bus_id`: ID of the bus to which this source is connected.
+  - `max_generation`: Installed capacity / maximum available generation (MW).
+  - `curtailment_cost`: Penalty cost per MW of curtailed generation (currency/MWh).
+  - `bus`: Reference to the connected [`Bus`](@ref).
 
 See also: [`NonControllables`](@ref), [`get_noncontrollables`](@ref)
 """
@@ -166,14 +171,15 @@ end
 Represents a bilateral energy contract for importing or exporting power.
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `bus_id`: ID of the bus associated with this contract.
-- `contract_type`: `"import"` (power received) or `"export"` (power delivered).
-- `price_per_mwh`: Contract price (currency/MWh); positive = cost for imports.
-- `min_mw`: Minimum contracted power (MW).
-- `max_mw`: Maximum contracted power (MW).
-- `bus`: Reference to the connected [`Bus`](@ref).
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `bus_id`: ID of the bus associated with this contract.
+  - `contract_type`: `"import"` (power received) or `"export"` (power delivered).
+  - `price_per_mwh`: Contract price (currency/MWh); positive = cost for imports.
+  - `min_mw`: Minimum contracted power (MW).
+  - `max_mw`: Maximum contracted power (MW).
+  - `bus`: Reference to the connected [`Bus`](@ref).
 
 See also: [`EnergyContracts`](@ref), [`get_energycontracts`](@ref)
 """
@@ -195,15 +201,16 @@ Represents a pumped-storage facility that transfers water from a source
 reservoir to a destination reservoir, consuming electrical power.
 
 # Fields
-- `id`: Unique integer identifier.
-- `name`: Human-readable name.
-- `bus_id`: ID of the bus where power is consumed.
-- `source_hydro_id`: ID of the hydro reservoir from which water is pumped.
-- `destination_hydro_id`: ID of the hydro reservoir to which water is pumped.
-- `consumption_mw_per_m3s`: Power consumed per unit pumped flow (MW·s/m³).
-- `min_m3s`: Minimum pumping flow rate (m³/s).
-- `max_m3s`: Maximum pumping flow rate (m³/s).
-- `bus`: Reference to the connected [`Bus`](@ref).
+
+  - `id`: Unique integer identifier.
+  - `name`: Human-readable name.
+  - `bus_id`: ID of the bus where power is consumed.
+  - `source_hydro_id`: ID of the hydro reservoir from which water is pumped.
+  - `destination_hydro_id`: ID of the hydro reservoir to which water is pumped.
+  - `consumption_mw_per_m3s`: Power consumed per unit pumped flow (MW·s/m³).
+  - `min_m3s`: Minimum pumping flow rate (m³/s).
+  - `max_m3s`: Maximum pumping flow rate (m³/s).
+  - `bus`: Reference to the connected [`Bus`](@ref).
 
 See also: [`PumpingStations`](@ref), [`get_pumpingstations`](@ref)
 """
@@ -233,7 +240,8 @@ abstract type SystemEntitySet end
 Collection of all [`Bus`](@ref) entities in the power system.
 
 # Fields
-- `entities`: Vector of [`Bus`](@ref) objects.
+
+  - `entities`: Vector of [`Bus`](@ref) objects.
 
 See also: [`get_buses`](@ref), [`get_buses_entities`](@ref)
 """
@@ -247,7 +255,8 @@ end
 Collection of all [`Line`](@ref) entities (transmission lines) in the system.
 
 # Fields
-- `entities`: Vector of [`Line`](@ref) objects.
+
+  - `entities`: Vector of [`Line`](@ref) objects.
 
 See also: [`get_lines`](@ref), [`get_lines_entities`](@ref)
 """
@@ -262,9 +271,10 @@ Collection of all [`Hydro`](@ref) plant entities, along with the directed
 cascade topology graph.
 
 # Fields
-- `entities`: Vector of [`Hydro`](@ref) objects.
-- `topology`: Directed graph (`DiGraph`) encoding upstream/downstream
-  relationships; node indices correspond to hydro IDs.
+
+  - `entities`: Vector of [`Hydro`](@ref) objects.
+  - `topology`: Directed graph (`DiGraph`) encoding upstream/downstream
+    relationships; node indices correspond to hydro IDs.
 
 See also: [`get_hydros`](@ref), [`upstream`](@ref), [`downstream`](@ref)
 """
@@ -279,7 +289,8 @@ end
 Collection of all [`Thermal`](@ref) plant entities in the system.
 
 # Fields
-- `entities`: Vector of [`Thermal`](@ref) objects.
+
+  - `entities`: Vector of [`Thermal`](@ref) objects.
 
 See also: [`get_thermals`](@ref), [`get_thermals_entities`](@ref)
 """
@@ -293,7 +304,8 @@ end
 Collection of all [`NonControllable`](@ref) (renewable) generation entities.
 
 # Fields
-- `entities`: Vector of [`NonControllable`](@ref) objects.
+
+  - `entities`: Vector of [`NonControllable`](@ref) objects.
 
 See also: [`get_noncontrollables`](@ref), [`get_noncontrollables_entities`](@ref)
 """
@@ -307,7 +319,8 @@ end
 Collection of all [`EnergyContract`](@ref) entities in the system.
 
 # Fields
-- `entities`: Vector of [`EnergyContract`](@ref) objects.
+
+  - `entities`: Vector of [`EnergyContract`](@ref) objects.
 
 See also: [`get_energycontracts`](@ref), [`get_energycontracts_entities`](@ref)
 """
@@ -321,7 +334,8 @@ end
 Collection of all [`PumpingStation`](@ref) entities in the system.
 
 # Fields
-- `entities`: Vector of [`PumpingStation`](@ref) objects.
+
+  - `entities`: Vector of [`PumpingStation`](@ref) objects.
 
 See also: [`get_pumpingstations`](@ref), [`get_pumpingstations_entities`](@ref)
 """
@@ -336,13 +350,14 @@ Root container for all power system topology and component data. Produced by
 parsing the `system.jsonc` file referenced in `main.jsonc`.
 
 # Fields
-- `buses`: [`Buses`](@ref) collection.
-- `lines`: [`Lines`](@ref) collection.
-- `hydros`: [`Hydros`](@ref) collection (includes cascade topology).
-- `thermals`: [`Thermals`](@ref) collection.
-- `noncontrollables`: [`NonControllables`](@ref) collection.
-- `energycontracts`: [`EnergyContracts`](@ref) collection.
-- `pumpingstations`: [`PumpingStations`](@ref) collection.
+
+  - `buses`: [`Buses`](@ref) collection.
+  - `lines`: [`Lines`](@ref) collection.
+  - `hydros`: [`Hydros`](@ref) collection (includes cascade topology).
+  - `thermals`: [`Thermals`](@ref) collection.
+  - `noncontrollables`: [`NonControllables`](@ref) collection.
+  - `energycontracts`: [`EnergyContracts`](@ref) collection.
+  - `pumpingstations`: [`PumpingStations`](@ref) collection.
 
 See also: [`get_system`](@ref), [`get_buses`](@ref), [`get_hydros`](@ref)
 """

@@ -15,7 +15,6 @@ function _build_study(example_case::String)
 end
 
 @testset "build-optimizations" begin
-
     @testset "_build_bus_index_map-basic-correctness" begin
         # Construct mock entities with known bus_id assignments to verify map correctness.
         # Bus positions: bus_ids = [10, 20, 30]  (positions 1, 2, 3)
@@ -26,9 +25,9 @@ end
 
         thermals = [
             System.Thermal(1, "T1", 10, 0.0, 100.0, 10.0, Ref(System.Bus(10, "B1", 500.0))),
-            System.Thermal(2, "T2", 20, 0.0, 50.0,  20.0, Ref(System.Bus(20, "B2", 500.0))),
-            System.Thermal(3, "T3", 10, 0.0, 80.0,  15.0, Ref(System.Bus(10, "B1", 500.0))),
-            System.Thermal(4, "T4", 30, 0.0, 40.0,  25.0, Ref(System.Bus(30, "B3", 500.0))),
+            System.Thermal(2, "T2", 20, 0.0, 50.0, 20.0, Ref(System.Bus(20, "B2", 500.0))),
+            System.Thermal(3, "T3", 10, 0.0, 80.0, 15.0, Ref(System.Bus(10, "B1", 500.0))),
+            System.Thermal(4, "T4", 30, 0.0, 40.0, 25.0, Ref(System.Bus(30, "B3", 500.0))),
         ]
 
         result = Engines._build_bus_index_map(thermals, bus_ids, :bus_id)
@@ -69,7 +68,7 @@ end
         lines = [
             System.Line(1, "L1", 1, 2, 100.0, 0.1, Ref(b1), Ref(b2)),  # target=2
             System.Line(2, "L2", 2, 3, 100.0, 0.1, Ref(b2), Ref(b3)),  # target=3
-            System.Line(3, "L3", 1, 2, 80.0,  0.1, Ref(b1), Ref(b2)),  # target=2
+            System.Line(3, "L3", 1, 2, 80.0, 0.1, Ref(b1), Ref(b2)),  # target=2
         ]
         target_map = Engines._build_bus_index_map(lines, bus_ids, :target_bus_id)
 
@@ -89,7 +88,7 @@ end
         lines = [
             System.Line(1, "L1", 1, 2, 100.0, 0.1, Ref(b1), Ref(b2)),  # source=1
             System.Line(2, "L2", 2, 3, 100.0, 0.1, Ref(b2), Ref(b3)),  # source=2
-            System.Line(3, "L3", 1, 3, 80.0,  0.1, Ref(b1), Ref(b3)),  # source=1
+            System.Line(3, "L3", 1, 3, 80.0, 0.1, Ref(b1), Ref(b3)),  # source=1
         ]
         source_map = Engines._build_bus_index_map(lines, bus_ids, :source_bus_id)
 
@@ -128,5 +127,4 @@ end
         end
         @test policy !== nothing
     end
-
 end

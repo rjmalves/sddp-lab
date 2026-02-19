@@ -1,5 +1,7 @@
 
-function __validate_coefficient_matrix_entry_keys_types!(d::Dict{String,Any}, e::CompositeException)
+function __validate_coefficient_matrix_entry_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)
     keys = ["season", "lag", "matrix"]
     types = [Int, Int, Vector{Any}]
 
@@ -9,18 +11,30 @@ function __validate_coefficient_matrix_entry_keys_types!(d::Dict{String,Any}, e:
     return valid_types
 end
 
-function __validate_coefficient_matrix_entry_content!(d::Dict{String,Any}, e::CompositeException)
+function __validate_coefficient_matrix_entry_content!(
+    d::Dict{String,Any}, e::CompositeException
+)
     valid = true
 
     season = d["season"]
     if season <= 0
-        push!(e, AssertionError("VectorAutoRegressive coefficient_matrices entry must have positive season value"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive coefficient_matrices entry must have positive season value",
+            ),
+        )
         valid = false
     end
 
     lag = d["lag"]
     if lag <= 0
-        push!(e, AssertionError("VectorAutoRegressive coefficient_matrices entry must have positive lag value"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive coefficient_matrices entry must have positive lag value",
+            ),
+        )
         valid = false
     end
 
@@ -28,7 +42,8 @@ function __validate_coefficient_matrix_entry_content!(d::Dict{String,Any}, e::Co
 end
 
 function __validate_coefficient_matrix_entry!(d::Dict{String,Any}, e::CompositeException)
-    valid = __validate_coefficient_matrix_entry_keys_types!(d, e) &&
+    valid =
+        __validate_coefficient_matrix_entry_keys_types!(d, e) &&
         __validate_coefficient_matrix_entry_content!(d, e)
     return valid
 end
@@ -55,7 +70,7 @@ function __validate_coefficient_matrix_dimensions!(
             push!(
                 e,
                 AssertionError(
-                    "VectorAutoRegressive coefficient matrix row $i is not a vector",
+                    "VectorAutoRegressive coefficient matrix row $i is not a vector"
                 ),
             )
             valid = false
@@ -76,7 +91,9 @@ function __validate_coefficient_matrix_dimensions!(
     return valid
 end
 
-function __validate_var_marginal_model_keys_types!(d::Dict{String,Any}, e::CompositeException)
+function __validate_var_marginal_model_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)
     keys = ["id", "initial_values", "models"]
     types = [Int, Vector{Float64}, Vector{Dict{String,Any}}]
 
@@ -90,13 +107,19 @@ function __validate_var_marginal_model_content!(d::Dict{String,Any}, e::Composit
     id = d["id"]
     valid = id > 0
     if !valid
-        push!(e, AssertionError("VectorAutoRegressive marginal_model must have positive id value"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive marginal_model must have positive id value"
+            ),
+        )
     end
     return valid
 end
 
 function __validate_var_marginal_model!(d::Dict{String,Any}, e::CompositeException)
-    valid = __validate_var_marginal_model_keys_types!(d, e) &&
+    valid =
+        __validate_var_marginal_model_keys_types!(d, e) &&
         __validate_var_marginal_model_content!(d, e)
     return valid
 end
@@ -116,22 +139,39 @@ function __validate_var_season_model_content!(d::Dict{String,Any}, e::CompositeE
 
     season = d["season"]
     if season <= 0
-        push!(e, AssertionError("VectorAutoRegressive model must have positive season value"))
+        push!(
+            e, AssertionError("VectorAutoRegressive model must have positive season value")
+        )
         valid = false
     end
 
     res_var = d["residual_variance"]
     if res_var <= 0
-        push!(e, AssertionError("VectorAutoRegressive model must have positive residual variance value"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive model must have positive residual variance value"
+            ),
+        )
         valid = false
     end
 
     scale = d["scale_parameters"]
     if length(scale) != 2
-        push!(e, AssertionError("VectorAutoRegressive scale_parameters must have exactly 2 elements [mean, std]"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive scale_parameters must have exactly 2 elements [mean, std]",
+            ),
+        )
         valid = false
     elseif scale[2] <= 0
-        push!(e, AssertionError("VectorAutoRegressive scale_parameters std (second element) must be positive"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive scale_parameters std (second element) must be positive",
+            ),
+        )
         valid = false
     end
 
@@ -139,12 +179,15 @@ function __validate_var_season_model_content!(d::Dict{String,Any}, e::CompositeE
 end
 
 function __validate_var_season_model!(d::Dict{String,Any}, e::CompositeException)
-    valid = __validate_var_season_model_keys_types!(d, e) &&
+    valid =
+        __validate_var_season_model_keys_types!(d, e) &&
         __validate_var_season_model_content!(d, e)
     return valid
 end
 
-function __validate_vectorautoregressive_keys_types!(d::Dict{String,Any}, e::CompositeException)
+function __validate_vectorautoregressive_keys_types!(
+    d::Dict{String,Any}, e::CompositeException
+)
     keys = ["marginal_models", "copulas", "coefficient_matrices"]
     types = [Vector{Dict{String,Any}}, Vector{Dict{String,Any}}, Vector{Dict{String,Any}}]
 
@@ -160,7 +203,9 @@ function __validate_vectorautoregressive_consistency!(
     n_elements = length(d["marginal_models"])
 
     if n_elements == 0
-        push!(e, AssertionError("VectorAutoRegressive must have at least one marginal_model"))
+        push!(
+            e, AssertionError("VectorAutoRegressive must have at least one marginal_model")
+        )
         return false
     end
 
@@ -177,7 +222,12 @@ function __validate_vectorautoregressive_consistency!(
 
     coef_entries = d["coefficient_matrices"]
     if isempty(coef_entries)
-        push!(e, AssertionError("VectorAutoRegressive must have at least one coefficient_matrices entry"))
+        push!(
+            e,
+            AssertionError(
+                "VectorAutoRegressive must have at least one coefficient_matrices entry"
+            ),
+        )
         return false
     end
 

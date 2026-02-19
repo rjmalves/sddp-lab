@@ -4,9 +4,7 @@ function DiagnosticsConfig(d::Dict{String,Any}, e::CompositeException)
 
     return if valid_cross
         DiagnosticsConfig(
-            d["run_numerical_report"],
-            d["warn_threshold"],
-            d["halt_threshold"],
+            d["run_numerical_report"], d["warn_threshold"], d["halt_threshold"]
         )
     else
         nothing
@@ -24,7 +22,7 @@ function __build_diagnostics!(d::Dict{String,Any}, e::CompositeException)::Bool
         push!(
             e,
             ErrorException(
-                "Key 'diagnostics' must be a Dict{String,Any}, got $(typeof(diag))",
+                "Key 'diagnostics' must be a Dict{String,Any}, got $(typeof(diag))"
             ),
         )
         return false
@@ -92,10 +90,7 @@ function __build_debug!(d::Dict{String,Any}, e::CompositeException)::Bool
     dbg = d["debug"]
     if !(dbg isa Dict)
         push!(
-            e,
-            ErrorException(
-                "Key 'debug' must be a Dict{String,Any}, got $(typeof(dbg))",
-            ),
+            e, ErrorException("Key 'debug' must be a Dict{String,Any}, got $(typeof(dbg))")
         )
         return false
     end
@@ -120,7 +115,7 @@ function SolverConfig(d::Dict{String,Any}, e::CompositeException)
         push!(
             e,
             ErrorException(
-                "Key 'attributes' must be a Dict{String,Any}, got $(typeof(attrs))",
+                "Key 'attributes' must be a Dict{String,Any}, got $(typeof(attrs))"
             ),
         )
         return nothing
@@ -140,7 +135,7 @@ function __build_solver!(d::Dict{String,Any}, e::CompositeException)::Bool
         push!(
             e,
             ErrorException(
-                "Key 'solver' must be a Dict{String,Any}, got $(typeof(solver))",
+                "Key 'solver' must be a Dict{String,Any}, got $(typeof(solver))"
             ),
         )
         return false
@@ -173,8 +168,11 @@ end
 
 function Statistical(d::Dict{String,Any}, e::CompositeException)
     valid = validate_schema!(d, STATISTICAL_SCHEMA, e)
-    return valid ?
-           Statistical(d["num_replications"], d["iteration_period"], d["z_score"]) : nothing
+    return if valid
+        Statistical(d["num_replications"], d["iteration_period"], d["z_score"])
+    else
+        nothing
+    end
 end
 
 function SimulationStopping(d::Dict{String,Any}, e::CompositeException)
@@ -385,7 +383,7 @@ function __build_logging!(d::Dict{String,Any}, e::CompositeException)::Bool
         push!(
             e,
             ErrorException(
-                "Key 'logging' must be a Dict{String,Any}, got $(typeof(logging))",
+                "Key 'logging' must be a Dict{String,Any}, got $(typeof(logging))"
             ),
         )
         return false
@@ -432,9 +430,7 @@ function SDDPSimulationTaskDefinition(d::Dict{String,Any}, e::CompositeException
 
     return if valid_keys_types
         SDDPSimulationTaskDefinition(
-            d["num_simulated_series"],
-            d["parallel_scheme"],
-            d["sampling_scheme"],
+            d["num_simulated_series"], d["parallel_scheme"], d["sampling_scheme"]
         )
     else
         nothing
@@ -463,9 +459,7 @@ function generate_stopping_rule(s::Statistical)::SDDP.AbstractStoppingRule
 end
 
 function generate_stopping_rule(s::SimulationStopping)::SDDP.AbstractStoppingRule
-    return SDDP.SimulationStoppingRule(;
-        replications = s.replications, period = s.period
-    )
+    return SDDP.SimulationStoppingRule(; replications = s.replications, period = s.period)
 end
 
 function generate_stopping_rule(s::FirstStageStopping)::SDDP.AbstractStoppingRule
@@ -485,8 +479,8 @@ function generate_parallel_scheme(::Asynchronous)::SDDP.AbstractParallelScheme
     if Distributed.nprocs() == 1
         @warn(
             "Asynchronous parallel scheme requested but no distributed workers " *
-            "are available. Use 'julia -p N' or 'Distributed.addprocs(N)' to " *
-            "add workers. Running on the master process only.",
+                "are available. Use 'julia -p N' or 'Distributed.addprocs(N)' to " *
+                "add workers. Running on the master process only.",
         )
     end
     return SDDP.Asynchronous()
@@ -567,9 +561,7 @@ function generate_sampling_scheme(s::InSampleMC)::SDDP.AbstractSamplingScheme
     )
 end
 
-function generate_sampling_scheme(
-    s::InSampleMC, ::Integer
-)::SDDP.AbstractSamplingScheme
+function generate_sampling_scheme(s::InSampleMC, ::Integer)::SDDP.AbstractSamplingScheme
     return generate_sampling_scheme(s)
 end
 
@@ -577,9 +569,7 @@ function generate_sampling_scheme(s::PSRSampling)::SDDP.AbstractSamplingScheme
     return SDDP.PSRSamplingScheme(s.num_samples)
 end
 
-function generate_sampling_scheme(
-    s::PSRSampling, ::Integer
-)::SDDP.AbstractSamplingScheme
+function generate_sampling_scheme(s::PSRSampling, ::Integer)::SDDP.AbstractSamplingScheme
     return generate_sampling_scheme(s)
 end
 
@@ -595,15 +585,11 @@ function generate_duality_handler(
     return SDDP.StrengthenedConicDuality()
 end
 
-function generate_duality_handler(
-    ::LagrangianDualityHandler
-)::SDDP.AbstractDualityHandler
+function generate_duality_handler(::LagrangianDualityHandler)::SDDP.AbstractDualityHandler
     return SDDP.LagrangianDuality()
 end
 
-function generate_duality_handler(
-    h::BanditDualityHandler
-)::SDDP.AbstractDualityHandler
+function generate_duality_handler(h::BanditDualityHandler)::SDDP.AbstractDualityHandler
     inner = [generate_duality_handler(ih) for ih in h.handlers]
     return SDDP.BanditDuality(inner...)
 end
@@ -616,9 +602,7 @@ function generate_forward_pass(f::RevisitingForwardPassStrategy)::SDDP.AbstractF
     return SDDP.RevisitingForwardPass(f.period)
 end
 
-function generate_forward_pass(
-    ::RiskAdjustedForwardPassStrategy
-)::SDDP.AbstractForwardPass
+function generate_forward_pass(::RiskAdjustedForwardPassStrategy)::SDDP.AbstractForwardPass
     return SDDP.RiskAdjustedForwardPass(;
         forward_pass = SDDP.DefaultForwardPass(),
         risk_measure = SDDP.AVaR(0.5),
@@ -626,9 +610,7 @@ function generate_forward_pass(
     )
 end
 
-function generate_forward_pass(
-    f::RegularizedForwardPassStrategy
-)::SDDP.AbstractForwardPass
+function generate_forward_pass(f::RegularizedForwardPassStrategy)::SDDP.AbstractForwardPass
     return SDDP.RegularizedForwardPass(; rho = f.rho)
 end
 
@@ -650,8 +632,7 @@ function __build_stopping_criteria!(d::Dict{String,Any}, e::CompositeException):
     if sc isa Dict{String,Any}
         result = __kind_factory!(@__MODULE__, d, "stopping_criteria", e)
         if result && d["stopping_criteria"] !== nothing
-            d["stopping_criteria"] =
-                StoppingCriteria[d["stopping_criteria"]::StoppingCriteria]
+            d["stopping_criteria"] = StoppingCriteria[d["stopping_criteria"]::StoppingCriteria]
         end
         return result
     elseif sc isa Vector{Dict{String,Any}}
@@ -683,16 +664,14 @@ function __build_stopping_criteria!(d::Dict{String,Any}, e::CompositeException):
         push!(
             e,
             ErrorException(
-                "stopping_criteria must be a Dict or Vector{Dict}, got $(typeof(sc))",
+                "stopping_criteria must be a Dict or Vector{Dict}, got $(typeof(sc))"
             ),
         )
         return false
     end
 end
 
-function __build_stopping_chain_internals!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __build_stopping_chain_internals!(d::Dict{String,Any}, e::CompositeException)::Bool
     raw_rules = d["rules"]
     built_rules = StoppingCriteria[]
     all_valid = true
@@ -836,9 +815,7 @@ function __build_scaling!(d::Dict{String,Any}, e::CompositeException)::Bool
     return __kind_factory!(@__MODULE__, d, "scaling", e)
 end
 
-function __build_bandit_duality_internals!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __build_bandit_duality_internals!(d::Dict{String,Any}, e::CompositeException)::Bool
     raw_handlers = d["handlers"]
     built_handlers = DualityHandler[]
     all_valid = true
@@ -908,7 +885,7 @@ function __build_convex_combination_internals!(
             push!(
                 e,
                 AssertionError(
-                    "ConvexCombination measures[$i] weight ($weight) must be in (0, 1]",
+                    "ConvexCombination measures[$i] weight ($weight) must be in (0, 1]"
                 ),
             )
             all_valid = false

@@ -3,11 +3,7 @@
 const HYDRO_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
     FieldRule("downstream_id", Integer; constraints = [non_negative()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("bus_id", Integer),
     FieldRule("productivity", Real; constraints = [non_negative()]),
     FieldRule("initial_storage", Real; constraints = [non_negative()]),
@@ -30,7 +26,7 @@ end
 
 function __validate_hydros_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = ["entities", "topology"]
-    keys_types = [Vector{Hydro}, T where {T <: DiGraph{Int64}}]
+    keys_types = [Vector{Hydro}, T where {T<:DiGraph{Int64}}]
 
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)

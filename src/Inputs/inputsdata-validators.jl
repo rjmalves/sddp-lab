@@ -101,4 +101,3 @@ function __build_inputsdata_internals_from_dicts!(
     valid_directory = __validate_directory!(d["path"], e)
     return valid_directory && __build_files!(d, e)
 end
-

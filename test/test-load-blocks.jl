@@ -21,19 +21,48 @@ function _make_buses(n::Int; deficit_cost::Float64 = 50.0)
     return System.Buses(buses)
 end
 
-function _make_thermal(id::Int, bus_idx::Int, buses::System.Buses;
-    cost::Float64 = 10.0, max_gen::Float64 = 100.0)
-    return System.Thermal(id, "thermal$id", buses.entities[bus_idx].id,
-        0.0, max_gen, cost, Ref(buses.entities[bus_idx]))
+function _make_thermal(
+    id::Int,
+    bus_idx::Int,
+    buses::System.Buses;
+    cost::Float64 = 10.0,
+    max_gen::Float64 = 100.0,
+)
+    return System.Thermal(
+        id,
+        "thermal$id",
+        buses.entities[bus_idx].id,
+        0.0,
+        max_gen,
+        cost,
+        Ref(buses.entities[bus_idx]),
+    )
 end
 
-function _make_hydro(id::Int, bus_idx::Int, buses::System.Buses;
-    downstream_id::Int = 0, productivity::Float64 = 1.0,
-    initial_storage::Float64 = 50.0, max_storage::Float64 = 100.0,
-    max_gen::Float64 = 60.0)
-    return System.Hydro(id, downstream_id, "hydro$id", buses.entities[bus_idx].id,
-        productivity, initial_storage, 0.0, max_storage, 0.0, max_gen, 0.01,
-        Ref(buses.entities[bus_idx]))
+function _make_hydro(
+    id::Int,
+    bus_idx::Int,
+    buses::System.Buses;
+    downstream_id::Int = 0,
+    productivity::Float64 = 1.0,
+    initial_storage::Float64 = 50.0,
+    max_storage::Float64 = 100.0,
+    max_gen::Float64 = 60.0,
+)
+    return System.Hydro(
+        id,
+        downstream_id,
+        "hydro$id",
+        buses.entities[bus_idx].id,
+        productivity,
+        initial_storage,
+        0.0,
+        max_storage,
+        0.0,
+        max_gen,
+        0.01,
+        Ref(buses.entities[bus_idx]),
+    )
 end
 
 function _make_system(;
@@ -45,13 +74,9 @@ function _make_system(;
 )
     buses = _make_buses(num_buses; deficit_cost = deficit_cost)
     thermals = System.Thermals([
-        _make_thermal(i, min(i, num_buses), buses; cost = 5.0 * i)
-        for i in 1:num_thermals
+        _make_thermal(i, min(i, num_buses), buses; cost = 5.0 * i) for i in 1:num_thermals
     ])
-    hydro_entities = [
-        _make_hydro(i, min(i, num_buses), buses)
-        for i in 1:num_hydros
-    ]
+    hydro_entities = [_make_hydro(i, min(i, num_buses), buses) for i in 1:num_hydros]
     g = Graphs.DiGraph(num_hydros)
     for (src, dst) in hydro_downstream_pairs
         Graphs.add_edge!(g, src, dst)
@@ -62,8 +87,7 @@ function _make_system(;
     energycontracts = System.EnergyContracts(System.EnergyContract[])
     pumpingstations = System.PumpingStations(System.PumpingStation[])
     return System.SystemData(
-        buses, lines, hydros, thermals,
-        noncontrollables, energycontracts, pumpingstations,
+        buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations
     )
 end
 
@@ -119,9 +143,7 @@ end
     @testset "block-config-invalid-mode" begin
         d = Dict{String,Any}(
             "mode" => "invalid_mode",
-            "definitions" => [
-                Dict{String,Any}("name" => "b1", "duration_hours" => 8.0),
-            ],
+            "definitions" => [Dict{String,Any}("name" => "b1", "duration_hours" => 8.0)],
         )
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
@@ -131,9 +153,7 @@ end
 
     @testset "block-config-missing-mode" begin
         d = Dict{String,Any}(
-            "definitions" => [
-                Dict{String,Any}("name" => "b1", "duration_hours" => 8.0),
-            ],
+            "definitions" => [Dict{String,Any}("name" => "b1", "duration_hours" => 8.0)]
         )
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
@@ -142,9 +162,7 @@ end
     end
 
     @testset "block-config-missing-definitions" begin
-        d = Dict{String,Any}(
-            "mode" => "parallel",
-        )
+        d = Dict{String,Any}("mode" => "parallel")
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
         @test bc === nothing
@@ -152,10 +170,7 @@ end
     end
 
     @testset "block-config-empty-definitions" begin
-        d = Dict{String,Any}(
-            "mode" => "parallel",
-            "definitions" => [],
-        )
+        d = Dict{String,Any}("mode" => "parallel", "definitions" => [])
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
         @test bc === nothing
@@ -178,10 +193,7 @@ end
 
     @testset "block-config-missing-duration" begin
         d = Dict{String,Any}(
-            "mode" => "parallel",
-            "definitions" => [
-                Dict{String,Any}("name" => "peak"),
-            ],
+            "mode" => "parallel", "definitions" => [Dict{String,Any}("name" => "peak")]
         )
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
@@ -192,9 +204,7 @@ end
     @testset "block-config-negative-duration" begin
         d = Dict{String,Any}(
             "mode" => "parallel",
-            "definitions" => [
-                Dict{String,Any}("name" => "peak", "duration_hours" => -5.0),
-            ],
+            "definitions" => [Dict{String,Any}("name" => "peak", "duration_hours" => -5.0)],
         )
         e = CompositeException()
         bc = Scenarios.BlockConfig(d, e)
@@ -220,10 +230,9 @@ end
     end
 
     @testset "block-helpers-with-explicit-blocks" begin
-        bc = Scenarios.BlockConfig(:parallel, [
-            Scenarios.Block("peak", 6.0),
-            Scenarios.Block("offpeak", 18.0),
-        ])
+        bc = Scenarios.BlockConfig(
+            :parallel, [Scenarios.Block("peak", 6.0), Scenarios.Block("offpeak", 18.0)]
+        )
         @test Scenarios.has_blocks(bc) == true
         @test Scenarios.num_blocks(bc) == 2
         @test Scenarios.get_block_names(bc) == ["peak", "offpeak"]
@@ -255,7 +264,7 @@ end
         num_blocks = 3
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, num_blocks)
         end
@@ -292,7 +301,7 @@ end
         num_blocks = 2
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, num_blocks)
         end
@@ -326,7 +335,7 @@ end
         # Instead, test the constraint dimensions via a full SDDP model build.
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, num_blocks)
 
@@ -372,15 +381,19 @@ end
         zeta = 0.0036 * sum(tau_k)
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
             pump_source_map = Dict{Int,Vector{Int}}()
             pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_parallel!(
-                sp, System.get_hydros(system),
-                pump_source_map, pump_dest_map,
-                zeta, w_k, num_blocks,
+                sp,
+                System.get_hydros(system),
+                pump_source_map,
+                pump_dest_map,
+                zeta,
+                w_k,
+                num_blocks,
             )
         end
 
@@ -406,15 +419,19 @@ end
         zeta_k = 0.0036 .* tau_k
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
             pump_source_map = Dict{Int,Vector{Int}}()
             pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_chronological!(
-                sp, System.get_hydros(system),
-                pump_source_map, pump_dest_map,
-                zeta_k, w_k, num_blocks,
+                sp,
+                System.get_hydros(system),
+                pump_source_map,
+                pump_dest_map,
+                zeta_k,
+                w_k,
+                num_blocks,
             )
         end
 
@@ -448,15 +465,19 @@ end
         zeta_k = 0.0036 .* tau_k
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
             pump_source_map = Dict{Int,Vector{Int}}()
             pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_chronological!(
-                sp, System.get_hydros(system),
-                pump_source_map, pump_dest_map,
-                zeta_k, w_k, num_blocks,
+                sp,
+                System.get_hydros(system),
+                pump_source_map,
+                pump_dest_map,
+                zeta_k,
+                w_k,
+                num_blocks,
             )
         end
 
@@ -480,15 +501,19 @@ end
         tau_k = [8.0, 8.0, 8.0]
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
             pump_source_map = Dict{Int,Vector{Int}}()
             pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance!(
-                sp, System.get_hydros(system),
-                pump_source_map, pump_dest_map,
-                :parallel, tau_k, num_blocks,
+                sp,
+                System.get_hydros(system),
+                pump_source_map,
+                pump_dest_map,
+                :parallel,
+                tau_k,
+                num_blocks,
             )
         end
 
@@ -505,15 +530,19 @@ end
         tau_k = [8.0, 8.0, 8.0]
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
             pump_source_map = Dict{Int,Vector{Int}}()
             pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance!(
-                sp, System.get_hydros(system),
-                pump_source_map, pump_dest_map,
-                :chronological, tau_k, num_blocks,
+                sp,
+                System.get_hydros(system),
+                pump_source_map,
+                pump_dest_map,
+                :chronological,
+                tau_k,
+                num_blocks,
             )
         end
 
@@ -532,10 +561,12 @@ end
         tau_k = [6.0, 10.0, 8.0]
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, num_blocks)
-            Engines.add_system_objective!(sp, system, tau_k, Engines.InflowNone(), Engines.no_scaling_config())
+            Engines.add_system_objective!(
+                sp, system, tau_k, Engines.InflowNone(), Engines.no_scaling_config()
+            )
         end
 
         sp = model[1].subproblem
@@ -578,19 +609,23 @@ end
         # Model A: all blocks equal duration
         tau_a = [8.0, 8.0, 8.0]
         model_a = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, 3)
-            Engines.add_system_objective!(sp, system, tau_a, Engines.InflowNone(), Engines.no_scaling_config())
+            Engines.add_system_objective!(
+                sp, system, tau_a, Engines.InflowNone(), Engines.no_scaling_config()
+            )
         end
 
         # Model B: unequal block durations summing to the same total
         tau_b = [4.0, 12.0, 8.0]
         model_b = SDDP.LinearPolicyGraph(;
-            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer,
+            stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, system, 3)
-            Engines.add_system_objective!(sp, system, tau_b, Engines.InflowNone(), Engines.no_scaling_config())
+            Engines.add_system_objective!(
+                sp, system, tau_b, Engines.InflowNone(), Engines.no_scaling_config()
+            )
         end
 
         # Both should construct without error -- the difference in tau_k values
@@ -608,7 +643,9 @@ end
         @test length(e) == 0
 
         # Verify that the loaded study has default block config (no blocks)
-        scenarios = Lab.get_input_module(Inputs.get_files(study.inputs), Scenarios.ScenariosData)
+        scenarios = Lab.get_input_module(
+            Inputs.get_files(study.inputs), Scenarios.ScenariosData
+        )
         bc = Scenarios.get_block_config(scenarios)
         @test Scenarios.has_blocks(bc) == false
         @test Scenarios.num_blocks(bc) == 1
@@ -632,11 +669,14 @@ end
         @test length(e) == 0
 
         # Create a BlockConfig with 3 parallel blocks
-        block_config = Scenarios.BlockConfig(:parallel, [
-            Scenarios.Block("peak", 248.0),
-            Scenarios.Block("shoulder", 248.0),
-            Scenarios.Block("offpeak", 248.0),
-        ])
+        block_config = Scenarios.BlockConfig(
+            :parallel,
+            [
+                Scenarios.Block("peak", 248.0),
+                Scenarios.Block("shoulder", 248.0),
+                Scenarios.Block("offpeak", 248.0),
+            ],
+        )
 
         # Reconstruct ScenariosData with the new block_config
         old_files = Inputs.get_files(original.inputs)
@@ -653,15 +693,12 @@ end
 
         # Reconstruct inputs with the new scenarios
         new_files = Lab.InputModule[
-            f isa Scenarios.ScenariosData ? new_scenarios : f
-            for f in old_files
+            f isa Scenarios.ScenariosData ? new_scenarios : f for f in old_files
         ]
         new_inputs = Inputs.InputsData(Inputs.get_path(original.inputs), new_files)
 
         # Create a fast engine for 3 iterations
-        convergence = Engines.Convergence(
-            1, 3, [Engines.IterationLimit(3)]
-        )
+        convergence = Engines.Convergence(1, 3, [Engines.IterationLimit(3)])
         policy_def = Engines.SDDPPolicyTaskDefinition(
             convergence,
             original.engine.policy.risk_measure,
@@ -714,10 +751,9 @@ end
         @test length(e) == 0
 
         # Create a BlockConfig with 2 chronological blocks
-        block_config = Scenarios.BlockConfig(:chronological, [
-            Scenarios.Block("day", 372.0),
-            Scenarios.Block("night", 372.0),
-        ])
+        block_config = Scenarios.BlockConfig(
+            :chronological, [Scenarios.Block("day", 372.0), Scenarios.Block("night", 372.0)]
+        )
 
         old_files = Inputs.get_files(original.inputs)
         old_scenarios = Lab.get_input_module(old_files, Scenarios.ScenariosData)
@@ -732,14 +768,11 @@ end
         )
 
         new_files = Lab.InputModule[
-            f isa Scenarios.ScenariosData ? new_scenarios : f
-            for f in old_files
+            f isa Scenarios.ScenariosData ? new_scenarios : f for f in old_files
         ]
         new_inputs = Inputs.InputsData(Inputs.get_path(original.inputs), new_files)
 
-        convergence = Engines.Convergence(
-            1, 3, [Engines.IterationLimit(3)]
-        )
+        convergence = Engines.Convergence(1, 3, [Engines.IterationLimit(3)])
         policy_def = Engines.SDDPPolicyTaskDefinition(
             convergence,
             original.engine.policy.risk_measure,

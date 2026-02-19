@@ -54,7 +54,11 @@ function _get_variable_unscale_factor(sym::Symbol, config::ScalingConfig)::Float
         return s_stor
     elseif sym == HYDRO_GENERATION || sym == THERMAL_GENERATION || sym == DEFICIT
         return s_gen
-    elseif sym == TURBINED_FLOW || sym == SPILLAGE || sym == OUTFLOW || sym == INFLOW || sym == INFLOW_SLACK
+    elseif sym == TURBINED_FLOW ||
+        sym == SPILLAGE ||
+        sym == OUTFLOW ||
+        sym == INFLOW ||
+        sym == INFLOW_SLACK
         return s_flow
     elseif sym == DIRECT_EXCHANGE || sym == REVERSE_EXCHANGE || sym == NET_EXCHANGE
         return get_scaling_factor(config, DIRECT_EXCHANGE)
@@ -80,8 +84,7 @@ function _get_variable_unscale_factor(sym::Symbol, config::ScalingConfig)::Float
 end
 
 function _unscale_simulations(
-    simulations::Vector{Vector{Dict{Symbol,Any}}},
-    config::ScalingConfig,
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, config::ScalingConfig
 )::Vector{Vector{Dict{Symbol,Any}}}
     if _is_identity_scaling(config)
         return simulations
@@ -96,7 +99,9 @@ function _unscale_simulations(
                 factor = _get_variable_unscale_factor(sym, config)
                 if factor != DEFAULT_SCALING_FACTOR
                     if sym == STORED_VOLUME && value isa AbstractVector
-                        stage_dict[sym] = [_unscale_state_variable(v, factor) for v in value]
+                        stage_dict[sym] = [
+                            _unscale_state_variable(v, factor) for v in value
+                        ]
                     else
                         stage_dict[sym] = _unscale_value(value, factor)
                     end
@@ -132,7 +137,9 @@ function __variable_exists_in_sim(
     return false
 end
 
-function __is_2d_variable(simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol)::Bool
+function __is_2d_variable(
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol
+)::Bool
     for sim in simulations
         for stage_dict in sim
             if haskey(stage_dict, variable)

@@ -2,11 +2,7 @@
 
 const THERMAL_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("bus_id", Integer),
     FieldRule("min_generation", Real; constraints = [non_negative()]),
     FieldRule("max_generation", Real; constraints = [non_negative()]),

@@ -30,10 +30,11 @@ Each stage has a transition matrix whose columns define the target state
 probabilities.
 
 # Fields
-- `transition_matrices`: Ordered vector of `num_states × num_states` transition
-  matrices, one per stage. Entry `[i, j]` is the probability of moving from
-  state `i` to state `j`.
-- `num_states`: Number of Markov states (inferred from the first matrix).
+
+  - `transition_matrices`: Ordered vector of `num_states × num_states` transition
+    matrices, one per stage. Entry `[i, j]` is the probability of moving from
+    state `i` to state `j`.
+  - `num_states`: Number of Markov states (inferred from the first matrix).
 
 See also: [`NoMarkovChain`](@ref), [`has_markov_chain`](@ref),
 [`num_markov_states`](@ref)

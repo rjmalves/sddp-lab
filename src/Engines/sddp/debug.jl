@@ -39,13 +39,13 @@ function Lab.debug(model::SDDPModel, engine::SDDPEngine, path::String)
                 SDDP.write_subproblem_to_file(node, filename; throw_error = false)
                 push!(written_files, filename)
             catch ex
-                @warn "Failed to write subproblem $node_id" exception =
-                    (ex, catch_backtrace())
+                @warn "Failed to write subproblem $node_id" exception = (
+                    ex, catch_backtrace()
+                )
                 push!(
                     errors,
                     Dict{String,Any}(
-                        "node" => string(node_id),
-                        "error" => sprint(showerror, ex),
+                        "node" => string(node_id), "error" => sprint(showerror, ex)
                     ),
                 )
             end
@@ -62,13 +62,13 @@ function Lab.debug(model::SDDPModel, engine::SDDPEngine, path::String)
             JuMP.write_to_file(det_model, det_path)
             push!(written_files, det_path)
         catch ex
-            @warn "Failed to write deterministic equivalent" exception =
-                (ex, catch_backtrace())
+            @warn "Failed to write deterministic equivalent" exception = (
+                ex, catch_backtrace()
+            )
             push!(
                 errors,
                 Dict{String,Any}(
-                    "step" => "deterministic_equivalent",
-                    "error" => sprint(showerror, ex),
+                    "step" => "deterministic_equivalent", "error" => sprint(showerror, ex)
                 ),
             )
         end

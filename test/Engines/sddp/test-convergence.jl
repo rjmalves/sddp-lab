@@ -39,8 +39,9 @@ DICT_WITH_CHAIN = Dict{String,Any}(
                 ),
                 Dict{String,Any}(
                     "kind" => "LowerBoundStability",
-                    "params" =>
-                        Dict{String,Any}("threshold" => 0.05, "num_iterations" => 10),
+                    "params" => Dict{String,Any}(
+                        "threshold" => 0.05, "num_iterations" => 10
+                    ),
                 ),
             ],
         ),
@@ -170,9 +171,7 @@ DICT_WITH_CHAIN = Dict{String,Any}(
 
     @testset "convergence-empty-stopping-criteria-array" begin
         d = Dict{String,Any}(
-            "min_iterations" => 10,
-            "max_iterations" => 100,
-            "stopping_criteria" => Any[],
+            "min_iterations" => 10, "max_iterations" => 100, "stopping_criteria" => Any[]
         )
         e = CompositeException()
         @test Engines.Convergence(d, e) === nothing

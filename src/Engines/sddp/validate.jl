@@ -1,8 +1,5 @@
 function generate_saa(
-    scenarios::ScenariosData,
-    num_stages::Integer,
-    seed::Integer,
-    branchings::Integer,
+    scenarios::ScenariosData, num_stages::Integer, seed::Integer, branchings::Integer
 )
     initial_season = scenarios.initial_season
     result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
@@ -16,9 +13,7 @@ function generate_saa(
 end
 
 function Lab.validate(
-    model::SDDPModel,
-    validation::OutOfSampleValidation,
-    files::Vector{InputModule},
+    model::SDDPModel, validation::OutOfSampleValidation, files::Vector{InputModule}
 )::SDDPValidationTaskArtifact
     scenarios = get_scenarios(files)
     system = get_system(files)
@@ -52,15 +47,13 @@ function Lab.validate(
     end
 
     sampler = SDDP.OutOfSampleMonteCarlo(
-        model.policy_graph;
-        use_insample_transition = true,
+        model.policy_graph; use_insample_transition = true
     ) do node
         stage = __extract_stage(node)
         markov_state = __extract_markov_state(node)
         oos_stage = oos_saa[markov_state][stage]
         return [
-            SDDP.Noise(oos_stage[b], 1.0 / length(oos_stage))
-            for b in eachindex(oos_stage)
+            SDDP.Noise(oos_stage[b], 1.0 / length(oos_stage)) for b in eachindex(oos_stage)
         ]
     end
 
@@ -99,12 +92,9 @@ function Lab.validate(
 end
 
 function _compute_validation_statistics(
-    sims::Vector{Vector{Dict{Symbol,Any}}},
+    sims::Vector{Vector{Dict{Symbol,Any}}}
 )::Dict{String,Float64}
-    total_costs = Float64[
-        sum(Float64(stage[TOTAL_COST]) for stage in sim)
-        for sim in sims
-    ]
+    total_costs = Float64[sum(Float64(stage[TOTAL_COST]) for stage in sim) for sim in sims]
 
     n = length(total_costs)
     mu = Statistics.mean(total_costs)
@@ -171,7 +161,9 @@ function Lab.save_validation(
     try
         cd(path)
         simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
-        __write_validation_simulation_results(simulations, get_system(files), writer, extension)
+        __write_validation_simulation_results(
+            simulations, get_system(files), writer, extension
+        )
         __write_validation_statistics(artifact.statistics, writer, extension)
     finally
         cd(curdir)
@@ -293,14 +285,11 @@ function __write_validation_simulation_results(
 end
 
 function __write_validation_statistics(
-    statistics::Dict{String,Float64},
-    writer::Function,
-    extension::String,
+    statistics::Dict{String,Float64}, writer::Function, extension::String
 )
     @info "Writing validation_statistics$(extension)"
-    df = DataFrames.DataFrame(
-        metric_name = collect(keys(statistics)),
-        value = collect(values(statistics)),
+    df = DataFrames.DataFrame(;
+        metric_name = collect(keys(statistics)), value = collect(values(statistics))
     )
     sort!(df, :metric_name)
     writer("validation_statistics" * extension, df)

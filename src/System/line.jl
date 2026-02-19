@@ -1,9 +1,7 @@
 # CLASS Line -----------------------------------------------------------------------
 
 function Line(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    valid = validate_schema!(
-        d, LINE_SCHEMA, e; entity_label = "Line $(get(d, "id", "?"))"
-    )
+    valid = validate_schema!(d, LINE_SCHEMA, e; entity_label = "Line $(get(d, "id", "?"))")
 
     bus_refs = valid ? __validate_line_content!(d, buses, e) : nothing
     valid_content = bus_refs !== nothing

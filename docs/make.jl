@@ -21,9 +21,7 @@ makedocs(;
     warnonly = true,
     pages = [
         "Introduction" => "index.md",
-        "User Guide" => [
-            "Getting Started" => "man/getting_started.md",
-        ],
+        "User Guide" => ["Getting Started" => "man/getting_started.md"],
         "Configuration Reference" => [
             "Overview" => "configuration/overview.md",
             "System" => "configuration/system.md",

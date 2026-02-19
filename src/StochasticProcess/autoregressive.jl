@@ -40,7 +40,7 @@ function PeriodicARparameters(v, e)
         end
     end
 
-    PeriodicARparameters(parameter_set)
+    return PeriodicARparameters(parameter_set)
 end
 
 # SIGNAL MODEL TYPE ------------------------------------------------------------------------
@@ -51,7 +51,7 @@ struct UnivariateAutoRegressive
     model::AbstractARparameters
 end
 
-function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
+function UnivariateAutoRegressive(d::Dict{String,Any}, e::CompositeException)
     valid = __validate_univariateautoregressive_dict!(d, e)
 
     if !valid
@@ -59,10 +59,10 @@ function UnivariateAutoRegressive(d::Dict{String, Any}, e::CompositeException)
     end
 
     arp = __build_ar_parameters(d, e)
-    
+
     # TODO: validate that init is same size as maximum lag in models
 
-    UnivariateAutoRegressive(d["id"], d["initial_values"], arp)
+    return UnivariateAutoRegressive(d["id"], d["initial_values"], arp)
 end
 
 # MAIN AR TYPE -----------------------------------------------------------------------------
@@ -75,9 +75,10 @@ a residual [`Naive`](@ref) noise model. Suitable for single-site inflow
 modeling when inter-site correlations are captured through the noise copula.
 
 # Fields
-- `signal_model`: Vector of per-hydro `UnivariateAutoRegressive` AR process
-  definitions.
-- `noise_model`: [`Naive`](@ref) process for the residual noise term.
+
+  - `signal_model`: Vector of per-hydro `UnivariateAutoRegressive` AR process
+    definitions.
+  - `noise_model`: [`Naive`](@ref) process for the residual noise term.
 
 See also: [`VectorAutoRegressive`](@ref), [`generate_saa`](@ref),
 [`get_ar_parameters`](@ref), [`get_ar_scale`](@ref)
@@ -87,7 +88,7 @@ struct AutoRegressive <: AbstractStochasticProcess
     noise_model::Naive
 end
 
-function AutoRegressive(d::Dict{String, Any}, e::CompositeException)
+function AutoRegressive(d::Dict{String,Any}, e::CompositeException)
     valid = __validate_autoregressive_dict!(d, e)
 
     if !valid
@@ -103,23 +104,20 @@ function AutoRegressive(d::Dict{String, Any}, e::CompositeException)
     noise_dict = __build_noise_naive_dict(d)
     noise = Naive(d, e)
 
-    AutoRegressive(signal, noise)
+    return AutoRegressive(signal, noise)
 end
 
 function __build_noise_naive_dict(d)
     naive_dict = copy(d)
 
     for marg_mod in naive_dict["marginal_models"]
-
         delete!(marg_mod, "initial_values")
 
         for mod in marg_mod["models"]
-
             delete!(mod, "scale_parameters")
             delete!(mod, "coefficients")
             mod["kind"] = "Gaussian"
             mod["parameters"] = [0.0, sqrt(pop!(mod, "residual_variance"))]
-
         end
 
         marg_mod["distributions"] = pop!(marg_mod, "models")
@@ -135,16 +133,16 @@ function __get_ids(s::AutoRegressive)
 end
 
 function __get_lag(arp::SimpleARparameters)
-    length(arp.phis)
+    return length(arp.phis)
 end
 
 function __get_lag(arp::PeriodicARparameters)
     max_lags = [__get_lag(i) for i in arp.parameter_set]
-    maximum(max_lags)
+    return maximum(max_lags)
 end
 
 function __get_lag(uar::UnivariateAutoRegressive)
-    __get_lag(uar.model)
+    return __get_lag(uar.model)
 end
 
 """
@@ -159,11 +157,11 @@ length across all seasons, ensuring consistent dimensions.
 See also: [`get_ar_scale`](@ref), [`AutoRegressive`](@ref)
 """
 function get_ar_parameters(arp::SimpleARparameters)
-    arp.phis
+    return arp.phis
 end
 
 function get_ar_parameters(arp::SimpleARparameters, ::Int, ::Bool)
-    get_ar_parameters(arp)
+    return get_ar_parameters(arp)
 end
 
 function get_ar_parameters(arp::PeriodicARparameters, season::Int, pad::Bool = false)
@@ -175,18 +173,18 @@ function get_ar_parameters(arp::PeriodicARparameters, season::Int, pad::Bool = f
         for i in 1:length(aux)
             out[i] += aux[i]
         end
-    else 
+    else
         out = get_ar_parameters(arp.parameter_set[index])
     end
     return out
 end
 
 function get_ar_parameters(uar::UnivariateAutoRegressive, season::Int, pad::Bool = false)
-    get_ar_parameters(uar.model, season, pad)
+    return get_ar_parameters(uar.model, season, pad)
 end
 
 function get_ar_parameters(s::AutoRegressive, season::Int, pad::Bool = false)
-    [get_ar_parameters(uar, season, pad) for uar in s.signal_model]
+    return [get_ar_parameters(uar, season, pad) for uar in s.signal_model]
 end
 
 """
@@ -198,25 +196,25 @@ from an [`AutoRegressive`](@ref) process or its component types.
 See also: [`get_ar_parameters`](@ref), [`AutoRegressive`](@ref)
 """
 function get_ar_scale(arp::SimpleARparameters)
-    arp.scale
+    return arp.scale
 end
 
 function get_ar_scale(arp::SimpleARparameters, ::Int)
-    get_ar_scale(arp)
+    return get_ar_scale(arp)
 end
 
 function get_ar_scale(arp::PeriodicARparameters, season::Int)
     seasons = map(x -> x.season, arp.parameter_set)
     index = findfirst(x -> x == season, seasons)
-    get_ar_scale(arp.parameter_set[index])
+    return get_ar_scale(arp.parameter_set[index])
 end
 
 function get_ar_scale(uar::UnivariateAutoRegressive, season::Int)
-    get_ar_scale(uar.model, season)
+    return get_ar_scale(uar.model, season)
 end
 
 function get_ar_scale(s::AutoRegressive, season::Int)
-    [get_ar_scale(uar, season) for uar in s.signal_model]
+    return [get_ar_scale(uar, season) for uar in s.signal_model]
 end
 
 function length(ar::SimpleARparameters)
@@ -246,12 +244,7 @@ end
 # SDDP METHODS -----------------------------------------------------------------------------
 
 function __generate_saa(
-    rng::AbstractRNG,
-    s::AutoRegressive,
-    initial_season::Integer,
-    N::Integer,
-    B::Integer)
-
-    __generate_saa(rng, s.noise_model, initial_season, N, B)
-    
+    rng::AbstractRNG, s::AutoRegressive, initial_season::Integer, N::Integer, B::Integer
+)
+    return __generate_saa(rng, s.noise_model, initial_season, N, B)
 end

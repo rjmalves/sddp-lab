@@ -37,9 +37,7 @@ BUSES_DICT = Dict{String,Any}(
 
 BUSES = System.Buses(BUSES_DICT, CompositeException())
 
-HYDROS_DICT = Dict{String,Any}(
-    "entities" => [deepcopy(HYDRO1_DICT), deepcopy(HYDRO2_DICT)],
-)
+HYDROS_DICT = Dict{String,Any}("entities" => [deepcopy(HYDRO1_DICT), deepcopy(HYDRO2_DICT)])
 HYDROS = System.Hydros(HYDROS_DICT, BUSES, CompositeException())
 
 DICT = Dict{String,Any}(
@@ -128,14 +126,20 @@ DICT = Dict{String,Any}(
 
     @testset "pumpingstations-unique-ids" begin
         d1 = Dict{String,Any}(
-            "id" => 1, "name" => "PUMP_A", "bus_id" => 1,
-            "source_hydro_id" => 1, "destination_hydro_id" => 2,
+            "id" => 1,
+            "name" => "PUMP_A",
+            "bus_id" => 1,
+            "source_hydro_id" => 1,
+            "destination_hydro_id" => 2,
             "consumption_mw_per_m3s" => 0.85,
             "flow" => Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 150.0),
         )
         d2 = Dict{String,Any}(
-            "id" => 1, "name" => "PUMP_B", "bus_id" => 2,
-            "source_hydro_id" => 2, "destination_hydro_id" => 1,
+            "id" => 1,
+            "name" => "PUMP_B",
+            "bus_id" => 2,
+            "source_hydro_id" => 2,
+            "destination_hydro_id" => 1,
             "consumption_mw_per_m3s" => 0.90,
             "flow" => Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 100.0),
         )
@@ -147,14 +151,20 @@ DICT = Dict{String,Any}(
 
     @testset "pumpingstations-unique-names" begin
         d1 = Dict{String,Any}(
-            "id" => 1, "name" => "PUMP_A", "bus_id" => 1,
-            "source_hydro_id" => 1, "destination_hydro_id" => 2,
+            "id" => 1,
+            "name" => "PUMP_A",
+            "bus_id" => 1,
+            "source_hydro_id" => 1,
+            "destination_hydro_id" => 2,
             "consumption_mw_per_m3s" => 0.85,
             "flow" => Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 150.0),
         )
         d2 = Dict{String,Any}(
-            "id" => 2, "name" => "PUMP_A", "bus_id" => 2,
-            "source_hydro_id" => 2, "destination_hydro_id" => 1,
+            "id" => 2,
+            "name" => "PUMP_A",
+            "bus_id" => 2,
+            "source_hydro_id" => 2,
+            "destination_hydro_id" => 1,
             "consumption_mw_per_m3s" => 0.90,
             "flow" => Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 100.0),
         )
@@ -167,9 +177,8 @@ DICT = Dict{String,Any}(
     @testset "systemdata-without-pumpingstations" begin
         d = Dict{String,Any}(
             "buses" => Dict{String,Any}(
-                "entities" => [
-                    Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
-                ],
+                "entities" =>
+                    [Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0)],
             ),
             "lines" => Dict{String,Any}("entities" => Dict{String,Any}[]),
             "hydros" => Dict{String,Any}("entities" => Dict{String,Any}[]),
@@ -184,25 +193,36 @@ DICT = Dict{String,Any}(
     @testset "systemdata-with-pumpingstations" begin
         d = Dict{String,Any}(
             "buses" => Dict{String,Any}(
-                "entities" => [
-                    Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
-                ],
+                "entities" =>
+                    [Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0)],
             ),
             "lines" => Dict{String,Any}("entities" => Dict{String,Any}[]),
             "hydros" => Dict{String,Any}(
                 "entities" => [
                     Dict{String,Any}(
-                        "id" => 1, "downstream_id" => 0, "name" => "UHE1", "bus_id" => 1,
-                        "productivity" => 1.0, "initial_storage" => 50.0,
-                        "min_storage" => 0.0, "max_storage" => 100.0,
-                        "min_generation" => 0.0, "max_generation" => 300.0,
+                        "id" => 1,
+                        "downstream_id" => 0,
+                        "name" => "UHE1",
+                        "bus_id" => 1,
+                        "productivity" => 1.0,
+                        "initial_storage" => 50.0,
+                        "min_storage" => 0.0,
+                        "max_storage" => 100.0,
+                        "min_generation" => 0.0,
+                        "max_generation" => 300.0,
                         "spillage_penalty" => 0.01,
                     ),
                     Dict{String,Any}(
-                        "id" => 2, "downstream_id" => 0, "name" => "UHE2", "bus_id" => 1,
-                        "productivity" => 1.0, "initial_storage" => 50.0,
-                        "min_storage" => 0.0, "max_storage" => 100.0,
-                        "min_generation" => 0.0, "max_generation" => 300.0,
+                        "id" => 2,
+                        "downstream_id" => 0,
+                        "name" => "UHE2",
+                        "bus_id" => 1,
+                        "productivity" => 1.0,
+                        "initial_storage" => 50.0,
+                        "min_storage" => 0.0,
+                        "max_storage" => 100.0,
+                        "min_generation" => 0.0,
+                        "max_generation" => 300.0,
                         "spillage_penalty" => 0.01,
                     ),
                 ],
@@ -211,10 +231,14 @@ DICT = Dict{String,Any}(
             "pumpingstations" => Dict{String,Any}(
                 "entities" => [
                     Dict{String,Any}(
-                        "id" => 1, "name" => "PUMP_A", "bus_id" => 1,
-                        "source_hydro_id" => 1, "destination_hydro_id" => 2,
+                        "id" => 1,
+                        "name" => "PUMP_A",
+                        "bus_id" => 1,
+                        "source_hydro_id" => 1,
+                        "destination_hydro_id" => 2,
                         "consumption_mw_per_m3s" => 0.85,
-                        "flow" => Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 150.0),
+                        "flow" =>
+                            Dict{String,Any}("min_m3s" => 0.0, "max_m3s" => 150.0),
                     ),
                 ],
             ),

@@ -187,4 +187,3 @@ function __try_conversion!(d::Dict, k::String, t::Type{Matrix{T}} where {T})
     aux = stack(d[k]; dims = 1)
     return d[k] = convert(t, aux)
 end
-

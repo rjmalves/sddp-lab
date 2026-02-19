@@ -3,8 +3,8 @@ import SDDPlab: Engines, Lab, Scenarios, StochasticProcess
 using SDDP: SDDP
 using JuMP: JuMP
 using HiGHS: HiGHS
-import Distributions
-import Copulas
+using Distributions: Distributions
+using Copulas: Copulas
 
 # ===========================================================================
 # Helper: build a valid 2-element VAR(1) params dict with 2 seasons
@@ -46,19 +46,19 @@ function _var1_2elem_2season_dict()
             ),
         ],
         "copulas" => [
-            Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]),
-            Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]),
+            Dict{String,Any}(
+                "kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]
+            ),
+            Dict{String,Any}(
+                "kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]
+            ),
         ],
         "coefficient_matrices" => [
             Dict{String,Any}(
-                "season" => 1,
-                "lag" => 1,
-                "matrix" => [[0.5, 0.1], [0.2, 0.4]],
+                "season" => 1, "lag" => 1, "matrix" => [[0.5, 0.1], [0.2, 0.4]]
             ),
             Dict{String,Any}(
-                "season" => 2,
-                "lag" => 1,
-                "matrix" => [[0.6, 0.15], [0.1, 0.5]],
+                "season" => 2, "lag" => 1, "matrix" => [[0.6, 0.15], [0.1, 0.5]]
             ),
         ],
     )
@@ -104,29 +104,25 @@ function _var2_2elem_2season_dict()
             ),
         ],
         "copulas" => [
-            Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]),
-            Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]),
+            Dict{String,Any}(
+                "kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]
+            ),
+            Dict{String,Any}(
+                "kind" => "GaussianCopula", "parameters" => [[1.0, 0.0], [0.0, 1.0]]
+            ),
         ],
         "coefficient_matrices" => [
             Dict{String,Any}(
-                "season" => 1,
-                "lag" => 1,
-                "matrix" => [[0.5, 0.1], [0.2, 0.4]],
+                "season" => 1, "lag" => 1, "matrix" => [[0.5, 0.1], [0.2, 0.4]]
             ),
             Dict{String,Any}(
-                "season" => 1,
-                "lag" => 2,
-                "matrix" => [[0.1, 0.0], [0.0, 0.1]],
+                "season" => 1, "lag" => 2, "matrix" => [[0.1, 0.0], [0.0, 0.1]]
             ),
             Dict{String,Any}(
-                "season" => 2,
-                "lag" => 1,
-                "matrix" => [[0.6, 0.15], [0.1, 0.5]],
+                "season" => 2, "lag" => 1, "matrix" => [[0.6, 0.15], [0.1, 0.5]]
             ),
             Dict{String,Any}(
-                "season" => 2,
-                "lag" => 2,
-                "matrix" => [[0.05, 0.0], [0.0, 0.05]],
+                "season" => 2, "lag" => 2, "matrix" => [[0.05, 0.0], [0.0, 0.05]]
             ),
         ],
     )
@@ -150,16 +146,10 @@ function _var1_1elem_1season_dict()
                 ],
             ),
         ],
-        "copulas" => [
-            Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0]]),
-        ],
-        "coefficient_matrices" => [
-            Dict{String,Any}(
-                "season" => 1,
-                "lag" => 1,
-                "matrix" => [[0.5]],
-            ),
-        ],
+        "copulas" =>
+            [Dict{String,Any}("kind" => "GaussianCopula", "parameters" => [[1.0]])],
+        "coefficient_matrices" =>
+            [Dict{String,Any}("season" => 1, "lag" => 1, "matrix" => [[0.5]])],
     )
 end
 
@@ -173,10 +163,7 @@ function _build_var_lp_with_method(var_process, method; n_hydro = nothing)
     captured_model = Ref{JuMP.Model}()
 
     model = SDDP.LinearPolicyGraph(;
-        stages = 1,
-        sense = :Min,
-        lower_bound = 0.0,
-        optimizer = HiGHS.Optimizer,
+        stages = 1, sense = :Min, lower_bound = 0.0, optimizer = HiGHS.Optimizer
     ) do sp, t
         JuMP.set_silent(sp)
         sp[Lab.INFLOW] = JuMP.@variable(sp, [1:n_hydro], base_name = "INFLOW")
@@ -622,15 +609,15 @@ end
     @testset "kind-factory-resolution" begin
         d = Dict{String,Any}(
             "stochastic_process" => Dict{String,Any}(
-                "kind" => "VectorAutoRegressive",
-                "params" => _var1_2elem_2season_dict(),
+                "kind" => "VectorAutoRegressive", "params" => _var1_2elem_2season_dict()
             ),
         )
         e = CompositeException()
         inflow = Scenarios.InflowScenarios(d, e)
         @test inflow !== nothing
         @test length(e) == 0
-        @test Scenarios.get_stochastic_process(inflow) isa StochasticProcess.VectorAutoRegressive
+        @test Scenarios.get_stochastic_process(inflow) isa
+            StochasticProcess.VectorAutoRegressive
     end
 
     # ===================================================================
@@ -646,13 +633,11 @@ end
         un = StochasticProcess.UnitaryNaive(
             1,
             Dict{Integer,Distributions.UnivariateDistribution}(
-                1 => Distributions.Normal(0.0, 1.0),
+                1 => Distributions.Normal(0.0, 1.0)
             ),
         )
         copula = Copulas.GaussianCopula([1.0;;])
-        noise = StochasticProcess.Naive(
-            [un], Dict{Integer,Copulas.Copula}(1 => copula)
-        )
+        noise = StochasticProcess.Naive([un], Dict{Integer,Copulas.Copula}(1 => copula))
         ar = StochasticProcess.AutoRegressive([uar], noise)
 
         # SAA generation still works
@@ -664,10 +649,7 @@ end
         # LP structure still works
         captured_model = Ref{JuMP.Model}()
         model = SDDP.LinearPolicyGraph(;
-            stages = 1,
-            sense = :Min,
-            lower_bound = 0.0,
-            optimizer = HiGHS.Optimizer,
+            stages = 1, sense = :Min, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.set_silent(sp)
             sp[Lab.INFLOW] = JuMP.@variable(sp, [1:1], base_name = "INFLOW")

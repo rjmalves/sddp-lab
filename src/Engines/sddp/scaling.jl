@@ -43,18 +43,15 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
     factors[CONTRACT_DISPATCH] = _safe_scaling_factor(max_gen)
     factors[DEFICIT] = _safe_scaling_factor(max_gen)
 
-    max_stor = isempty(hydros) ? DEFAULT_SCALING_FACTOR :
-               maximum(h.max_storage for h in hydros)
+    max_stor =
+        isempty(hydros) ? DEFAULT_SCALING_FACTOR : maximum(h.max_storage for h in hydros)
     flow_values = Float64[
-        Float64(h.max_generation / h.productivity)
-        for h in hydros if h.productivity > MIN_SCALING_FACTOR
+        Float64(h.max_generation / h.productivity) for
+        h in hydros if h.productivity > MIN_SCALING_FACTOR
     ]
     max_flow = isempty(flow_values) ? DEFAULT_SCALING_FACTOR : maximum(flow_values)
 
-    s_hydro = max(
-        _safe_scaling_factor(max_stor),
-        _safe_scaling_factor(max_flow),
-    )
+    s_hydro = max(_safe_scaling_factor(max_stor), _safe_scaling_factor(max_flow))
     factors[STORED_VOLUME] = s_hydro
     factors[FLOW_SCALE] = s_hydro
     factors[TURBINED_FLOW] = s_hydro
@@ -63,8 +60,11 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
     factors[INFLOW] = s_hydro
     factors[PUMPED_FLOW] = s_hydro
 
-    max_cap = isempty(lines) ? DEFAULT_SCALING_FACTOR :
-              maximum(l.capacity for l in lines; init = DEFAULT_SCALING_FACTOR)
+    max_cap = if isempty(lines)
+        DEFAULT_SCALING_FACTOR
+    else
+        maximum(l.capacity for l in lines; init = DEFAULT_SCALING_FACTOR)
+    end
     max_cap = max_cap < MIN_SCALING_FACTOR ? DEFAULT_SCALING_FACTOR : max_cap
     factors[DIRECT_EXCHANGE] = _safe_scaling_factor(max_cap)
     factors[REVERSE_EXCHANGE] = _safe_scaling_factor(max_cap)
@@ -123,11 +123,7 @@ function apply_scaling(system::SystemData, config::ScalingConfig)::SystemData
     s_cost = get_scaling_factor(config, COST_SCALE)
 
     scaled_buses = Bus[
-        Bus(
-            b.id,
-            b.name,
-            b.deficit_cost / s_cost,
-        ) for b in system.buses.entities
+        Bus(b.id, b.name, b.deficit_cost / s_cost) for b in system.buses.entities
     ]
     new_buses = Buses(scaled_buses)
 
@@ -217,5 +213,13 @@ function apply_scaling(system::SystemData, config::ScalingConfig)::SystemData
     ]
     new_pumpingstations = PumpingStations(scaled_pumpingstations)
 
-    return SystemData(new_buses, new_lines, new_hydros, new_thermals, new_noncontrollables, new_energycontracts, new_pumpingstations)
+    return SystemData(
+        new_buses,
+        new_lines,
+        new_hydros,
+        new_thermals,
+        new_noncontrollables,
+        new_energycontracts,
+        new_pumpingstations,
+    )
 end

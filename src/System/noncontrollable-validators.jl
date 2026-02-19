@@ -2,11 +2,7 @@
 
 const NONCONTROLLABLE_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("bus_id", Integer),
     FieldRule("max_generation", Real; constraints = [non_negative()]),
     FieldRule("curtailment_cost", Real; constraints = [non_negative()]),
@@ -53,8 +49,9 @@ function __validate_noncontrollable_bus_id(
     bus_id = d["bus_id"]
     existing_bus_ids = get_ids(buses)
     bus_index = findfirst(==(bus_id), existing_bus_ids)
-    bus_index !== nothing ||
-        push!(e, AssertionError("NonControllable $id - bus_id ($bus_id) not found in buses"))
+    bus_index !== nothing || push!(
+        e, AssertionError("NonControllable $id - bus_id ($bus_id) not found in buses")
+    )
     return bus_index
 end
 

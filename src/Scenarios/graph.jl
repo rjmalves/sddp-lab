@@ -59,11 +59,15 @@ function __validate_graph_keys_types_after_build!(
         return false
     end
     valid_nodes = isa(d["nodes"], Vector{Node})
-    valid_nodes ||
-        push!(e, ErrorException("Key 'nodes' ($(d["nodes"])) can't be converted to Vector{Node}"))
+    valid_nodes || push!(
+        e,
+        ErrorException("Key 'nodes' ($(d["nodes"])) can't be converted to Vector{Node}"),
+    )
     valid_edges = isa(d["edges"], Vector{Edge})
-    valid_edges ||
-        push!(e, ErrorException("Key 'edges' ($(d["edges"])) can't be converted to Vector{Edge}"))
+    valid_edges || push!(
+        e,
+        ErrorException("Key 'edges' ($(d["edges"])) can't be converted to Vector{Edge}"),
+    )
     return valid_nodes && valid_edges
 end
 

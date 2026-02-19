@@ -4,17 +4,13 @@ const DIAGNOSTICS_SCHEMA = [
     FieldRule("halt_threshold", Real; constraints = [positive()]),
 ]
 
-const SOLVER_CONFIG_SCHEMA = [
-    FieldRule("name", String; constraints = [non_empty()]),
-]
+const SOLVER_CONFIG_SCHEMA = [FieldRule("name", String; constraints = [non_empty()])]
 
 const ITERATION_LIMIT_SCHEMA = [
-    FieldRule("num_iterations", Integer; constraints = [positive()]),
+    FieldRule("num_iterations", Integer; constraints = [positive()])
 ]
 
-const TIME_LIMIT_SCHEMA = [
-    FieldRule("time_seconds", Integer; constraints = [positive()]),
-]
+const TIME_LIMIT_SCHEMA = [FieldRule("time_seconds", Integer; constraints = [positive()])]
 
 const LOWER_BOUND_STABILITY_SCHEMA = [
     FieldRule("threshold", Real; constraints = [in_range_exclusive(0.0, 1.0)]),
@@ -42,21 +38,17 @@ const CONVERGENCE_SCHEMA = [
     FieldRule("max_iterations", Integer; constraints = [positive()]),
 ]
 
-const AVAR_SCHEMA = [
-    FieldRule("alpha", Real; constraints = [in_range(0.0, 1.0)]),
-]
+const AVAR_SCHEMA = [FieldRule("alpha", Real; constraints = [in_range(0.0, 1.0)])]
 
 const CVAR_SCHEMA = [
     FieldRule("alpha", Real; constraints = [in_range(0.0, 1.0)]),
     FieldRule("lambda", Real; constraints = [in_range(0.0, 1.0)]),
 ]
 
-const ENTROPIC_SCHEMA = [
-    FieldRule("theta", Real; constraints = [positive()]),
-]
+const ENTROPIC_SCHEMA = [FieldRule("theta", Real; constraints = [positive()])]
 
 const WASSERSTEIN_RM_SCHEMA = [
-    FieldRule("alpha", Real; constraints = [in_range_exclusive(0.0, 1.0)]),
+    FieldRule("alpha", Real; constraints = [in_range_exclusive(0.0, 1.0)])
 ]
 
 const MODIFIED_CHI_SQUARED_SCHEMA = [
@@ -65,7 +57,7 @@ const MODIFIED_CHI_SQUARED_SCHEMA = [
 ]
 
 const SDDP_SIMULATION_TASK_DEFINITION_SCHEMA = [
-    FieldRule("num_simulated_series", Integer; constraints = [positive()]),
+    FieldRule("num_simulated_series", Integer; constraints = [positive()])
 ]
 
 const INSAMPLE_MC_SCHEMA = [
@@ -73,21 +65,15 @@ const INSAMPLE_MC_SCHEMA = [
     FieldRule("terminate_on_dummy_leaf", Bool),
 ]
 
-const PSR_SAMPLING_SCHEMA = [
-    FieldRule("num_samples", Integer; constraints = [positive()]),
-]
+const PSR_SAMPLING_SCHEMA = [FieldRule("num_samples", Integer; constraints = [positive()])]
 
 const REVISITING_FORWARD_PASS_SCHEMA = [
-    FieldRule("period", Integer; constraints = [positive()]),
+    FieldRule("period", Integer; constraints = [positive()])
 ]
 
-const REGULARIZED_FORWARD_PASS_SCHEMA = [
-    FieldRule("rho", Real; constraints = [positive()]),
-]
+const REGULARIZED_FORWARD_PASS_SCHEMA = [FieldRule("rho", Real; constraints = [positive()])]
 
-const INFLOW_PENALTY_SCHEMA = [
-    FieldRule("penalty_cost", Real; constraints = [positive()]),
-]
+const INFLOW_PENALTY_SCHEMA = [FieldRule("penalty_cost", Real; constraints = [positive()])]
 
 const VALIDATION_SCHEMA = [
     FieldRule("num_simulations", Integer; constraints = [positive()]),
@@ -142,7 +128,7 @@ function __validate_stopping_criteria_main_key_type!(
                 push!(
                     e,
                     ErrorException(
-                        "stopping_criteria[$i] must be a Dict, got $(typeof(item))",
+                        "stopping_criteria[$i] must be a Dict, got $(typeof(item))"
                     ),
                 )
                 return false
@@ -158,7 +144,7 @@ function __validate_stopping_criteria_main_key_type!(
         push!(
             e,
             ErrorException(
-                "Key 'stopping_criteria' must be a Dict or a Vector, got $(typeof(sc))",
+                "Key 'stopping_criteria' must be a Dict or a Vector, got $(typeof(sc))"
             ),
         )
         return false
@@ -216,7 +202,7 @@ function __validate_convergence_keys_types_before_build!(
             push!(
                 e,
                 ErrorException(
-                    "Key 'stopping_criteria' must be a Dict or Vector, got $(typeof(sc))",
+                    "Key 'stopping_criteria' must be a Dict or Vector, got $(typeof(sc))"
                 ),
             )
             valid_types = false
@@ -266,34 +252,22 @@ function __validate_sddp_policy_task_definition_keys_types_before_build!(
             e,
         )
     if valid_types && haskey(d, "sampling_scheme")
-        valid_types = __validate_key_types!(
-            d, ["sampling_scheme"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["sampling_scheme"], [Dict{String,Any}], e)
     end
     if valid_types && haskey(d, "duality_handler")
-        valid_types = __validate_key_types!(
-            d, ["duality_handler"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["duality_handler"], [Dict{String,Any}], e)
     end
     if valid_types && haskey(d, "forward_pass")
-        valid_types = __validate_key_types!(
-            d, ["forward_pass"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["forward_pass"], [Dict{String,Any}], e)
     end
     if valid_types && haskey(d, "cut_type")
-        valid_types = __validate_key_types!(
-            d, ["cut_type"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["cut_type"], [Dict{String,Any}], e)
     end
     if valid_types && haskey(d, "scaling")
-        valid_types = __validate_key_types!(
-            d, ["scaling"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["scaling"], [Dict{String,Any}], e)
     end
     if valid_types && haskey(d, "logging")
-        valid_types = __validate_key_types!(
-            d, ["logging"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["logging"], [Dict{String,Any}], e)
     end
     return valid_types
 end
@@ -364,9 +338,7 @@ function __validate_sddp_simulation_task_definition_keys_types_before_build!(
             d, ["num_simulated_series", "parallel_scheme"], [Integer, Dict{String,Any}], e
         )
     if valid_types && haskey(d, "sampling_scheme")
-        valid_types = __validate_key_types!(
-            d, ["sampling_scheme"], [Dict{String,Any}], e
-        )
+        valid_types = __validate_key_types!(d, ["sampling_scheme"], [Dict{String,Any}], e)
     end
     return valid_types
 end
@@ -392,8 +364,7 @@ function __validate_sampling_scheme_main_key_type!(
 )::Bool
     valid_keys = __validate_keys!(d, ["sampling_scheme"], e)
     valid_types =
-        valid_keys &&
-        __validate_key_types!(d, ["sampling_scheme"], [Dict{String,Any}], e)
+        valid_keys && __validate_key_types!(d, ["sampling_scheme"], [Dict{String,Any}], e)
     return valid_types
 end
 
@@ -402,8 +373,7 @@ function __validate_duality_handler_main_key_type!(
 )::Bool
     valid_keys = __validate_keys!(d, ["duality_handler"], e)
     valid_types =
-        valid_keys &&
-        __validate_key_types!(d, ["duality_handler"], [Dict{String,Any}], e)
+        valid_keys && __validate_key_types!(d, ["duality_handler"], [Dict{String,Any}], e)
     return valid_types
 end
 
@@ -412,8 +382,7 @@ function __validate_forward_pass_main_key_type!(
 )::Bool
     valid_keys = __validate_keys!(d, ["forward_pass"], e)
     valid_types =
-        valid_keys &&
-        __validate_key_types!(d, ["forward_pass"], [Dict{String,Any}], e)
+        valid_keys && __validate_key_types!(d, ["forward_pass"], [Dict{String,Any}], e)
     return valid_types
 end
 
@@ -422,24 +391,17 @@ function __validate_cut_type_main_key_type!(
 )::Bool
     valid_keys = __validate_keys!(d, ["cut_type"], e)
     valid_types =
-        valid_keys &&
-        __validate_key_types!(d, ["cut_type"], [Dict{String,Any}], e)
+        valid_keys && __validate_key_types!(d, ["cut_type"], [Dict{String,Any}], e)
     return valid_types
 end
 
-function __validate_scaling_main_key_type!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_scaling_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(d, ["scaling"], e)
-    valid_types =
-        valid_keys &&
-        __validate_key_types!(d, ["scaling"], [Dict{String,Any}], e)
+    valid_types = valid_keys && __validate_key_types!(d, ["scaling"], [Dict{String,Any}], e)
     return valid_types
 end
 
-function __validate_convergence_min_max!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_convergence_min_max!(d::Dict{String,Any}, e::CompositeException)::Bool
     min_iterations = d["min_iterations"]
     max_iterations = d["max_iterations"]
     valid = max_iterations >= min_iterations
@@ -477,10 +439,7 @@ function __validate_convex_combination_weights!(
     weight_sum = sum(first(m) for m in measures)
     valid = abs(weight_sum - 1.0) <= 1e-6
     valid || push!(
-        e,
-        AssertionError(
-            "ConvexCombination weights sum to $weight_sum, expected 1.0",
-        ),
+        e, AssertionError("ConvexCombination weights sum to $weight_sum, expected 1.0")
     )
     return valid
 end
@@ -517,10 +476,7 @@ function __validate_bandit_duality_handlers_key_type!(
         return false
     end
     if isempty(handlers)
-        push!(
-            e,
-            AssertionError("BanditDualityHandler must have at least 2 handlers"),
-        )
+        push!(e, AssertionError("BanditDualityHandler must have at least 2 handlers"))
         return false
     end
     return true
@@ -530,10 +486,7 @@ function __validate_bandit_duality_handler_count!(
     handlers::Vector{DualityHandler}, e::CompositeException
 )::Bool
     valid = length(handlers) >= 2
-    valid || push!(
-        e,
-        AssertionError("BanditDualityHandler must have at least 2 handlers"),
-    )
+    valid || push!(e, AssertionError("BanditDualityHandler must have at least 2 handlers"))
     return valid
 end
 
@@ -568,13 +521,9 @@ function __build_sddp_simulation_task_definition_internals_from_dicts!(
     return valid_parallel && valid_sampling
 end
 
-function __validate_validation_keys_types!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_validation_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     valid_keys = __validate_keys!(
-        d,
-        ["num_simulations", "seed", "branchings", "parallel_scheme"],
-        e,
+        d, ["num_simulations", "seed", "branchings", "parallel_scheme"], e
     )
     valid_types =
         valid_keys && __validate_key_types!(

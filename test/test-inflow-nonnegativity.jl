@@ -4,8 +4,8 @@ using SDDP: SDDP
 using JuMP: JuMP
 using HiGHS: HiGHS
 using Suppressor
-import Distributions
-import Copulas
+using Distributions: Distributions
+using Copulas: Copulas
 
 @testset "inflow-nonnegativity" begin
     # =======================================================================
@@ -26,19 +26,16 @@ import Copulas
                 "risk_measure" => Dict{String,Any}(
                     "kind" => "Expectation", "params" => Dict{String,Any}()
                 ),
-                "parallel_scheme" => Dict{String,Any}(
-                    "kind" => "Serial", "params" => Dict{String,Any}()
-                ),
+                "parallel_scheme" =>
+                    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             )
             simulation_dict = Dict{String,Any}(
                 "num_simulated_series" => 10,
-                "parallel_scheme" => Dict{String,Any}(
-                    "kind" => "Serial", "params" => Dict{String,Any}()
-                ),
+                "parallel_scheme" =>
+                    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             )
             return Dict{String,Any}(
-                "policy" => policy_dict,
-                "simulation" => simulation_dict,
+                "policy" => policy_dict, "simulation" => simulation_dict
             )
         end
 
@@ -55,8 +52,7 @@ import Copulas
             params = _base_engine_dict()
             params["modeling"] = Dict{String,Any}(
                 "inflow_non_negativity" => Dict{String,Any}(
-                    "kind" => "InflowNone",
-                    "params" => Dict{String,Any}(),
+                    "kind" => "InflowNone", "params" => Dict{String,Any}()
                 ),
             )
             e = CompositeException()
@@ -86,8 +82,7 @@ import Copulas
             params = _base_engine_dict()
             params["modeling"] = Dict{String,Any}(
                 "inflow_non_negativity" => Dict{String,Any}(
-                    "kind" => "InflowTruncation",
-                    "params" => Dict{String,Any}(),
+                    "kind" => "InflowTruncation", "params" => Dict{String,Any}()
                 ),
             )
             e = CompositeException()
@@ -145,8 +140,7 @@ import Copulas
             params = _base_engine_dict()
             params["modeling"] = Dict{String,Any}(
                 "inflow_non_negativity" => Dict{String,Any}(
-                    "kind" => "NonExistentMethod",
-                    "params" => Dict{String,Any}(),
+                    "kind" => "NonExistentMethod", "params" => Dict{String,Any}()
                 ),
             )
             e = CompositeException()
@@ -227,9 +221,7 @@ import Copulas
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 5, [Engines.IterationLimit(5)]
-            )
+            convergence = Engines.Convergence(1, 5, [Engines.IterationLimit(5)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -280,9 +272,7 @@ import Copulas
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 3, [Engines.IterationLimit(3)]
-            )
+            convergence = Engines.Convergence(1, 3, [Engines.IterationLimit(3)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -328,9 +318,7 @@ import Copulas
             original = SDDPlab.read_study(example_dir; e = e)
             @test length(e) == 0
 
-            convergence = Engines.Convergence(
-                1, 5, [Engines.IterationLimit(5)]
-            )
+            convergence = Engines.Convergence(1, 5, [Engines.IterationLimit(5)])
             policy_def = Engines.SDDPPolicyTaskDefinition(
                 convergence,
                 Engines.Expectation(),
@@ -384,13 +372,11 @@ import Copulas
         un = StochasticProcess.UnitaryNaive(
             1,
             Dict{Integer,Distributions.UnivariateDistribution}(
-                1 => Distributions.Normal(0.0, 1.0),
+                1 => Distributions.Normal(0.0, 1.0)
             ),
         )
         copula = Copulas.GaussianCopula([1.0;;])
-        noise = StochasticProcess.Naive(
-            [un], Dict{Integer,Copulas.Copula}(1 => copula)
-        )
+        noise = StochasticProcess.Naive([un], Dict{Integer,Copulas.Copula}(1 => copula))
         return StochasticProcess.AutoRegressive([uar], noise)
     end
 
@@ -401,10 +387,7 @@ import Copulas
         n_hydro = 1
 
         model = SDDP.LinearPolicyGraph(;
-            stages = 1,
-            sense = :Min,
-            lower_bound = 0.0,
-            optimizer = HiGHS.Optimizer,
+            stages = 1, sense = :Min, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             JuMP.set_silent(sp)
             sp[Lab.INFLOW] = JuMP.@variable(sp, [1:n_hydro], base_name = "INFLOW")
@@ -500,7 +483,9 @@ import Copulas
             m = JuMP.Model()
             tau_k = [744.0]
             scaling = Engines.no_scaling_config()
-            penalty = Engines._inflow_penalty_expr(m, Engines.InflowTruncation(), tau_k, scaling)
+            penalty = Engines._inflow_penalty_expr(
+                m, Engines.InflowTruncation(), tau_k, scaling
+            )
             @test penalty == 0.0
         end
 
@@ -534,7 +519,8 @@ import Copulas
             # scaled_coeff = 500.0 * 0.0036 * 744.0 * 10.0 / (1.0 * 1.0)
             expected_coeff = 500.0 * 0.0036 * 744.0 * 10.0
             @test penalty isa JuMP.GenericAffExpr
-            @test JuMP.coefficient(penalty, m[Lab.NOISE_ADJUSTMENT_SLACK][1]) == expected_coeff
+            @test JuMP.coefficient(penalty, m[Lab.NOISE_ADJUSTMENT_SLACK][1]) ==
+                expected_coeff
         end
     end
 end

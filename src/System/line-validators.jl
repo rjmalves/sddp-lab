@@ -2,11 +2,7 @@
 
 const LINE_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("source_bus_id", Integer),
     FieldRule("target_bus_id", Integer),
     FieldRule("capacity", Real; constraints = [positive()]),

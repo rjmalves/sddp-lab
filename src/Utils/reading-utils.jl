@@ -18,7 +18,7 @@ function __json_to_dict(arr::AbstractVector)::Vector{Any}
     return [__json_to_dict(x) for x in arr]
 end
 
-function __json_to_dict(x::T)::T where T
+function __json_to_dict(x::T)::T where {T}
     # For primitive types (String, Number, Bool, Nothing), return as-is
     return x
 end

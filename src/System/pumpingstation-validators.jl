@@ -2,11 +2,7 @@
 
 const PUMPING_STATION_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("bus_id", Integer),
     FieldRule("source_hydro_id", Integer),
     FieldRule("destination_hydro_id", Integer),
@@ -71,27 +67,40 @@ function __validate_pumpingstation_hydro_ids!(
 
     source_index = findfirst(==(source_id), hydro_ids)
     if source_index === nothing
-        push!(e, AssertionError("PumpingStation $id - source_hydro_id ($source_id) not found in hydros"))
+        push!(
+            e,
+            AssertionError(
+                "PumpingStation $id - source_hydro_id ($source_id) not found in hydros"
+            ),
+        )
         valid = false
     end
 
     dest_index = findfirst(==(dest_id), hydro_ids)
     if dest_index === nothing
-        push!(e, AssertionError("PumpingStation $id - destination_hydro_id ($dest_id) not found in hydros"))
+        push!(
+            e,
+            AssertionError(
+                "PumpingStation $id - destination_hydro_id ($dest_id) not found in hydros"
+            ),
+        )
         valid = false
     end
 
     if valid && source_id == dest_id
-        push!(e, AssertionError("PumpingStation $id - source_hydro_id and destination_hydro_id must be different (both are $source_id)"))
+        push!(
+            e,
+            AssertionError(
+                "PumpingStation $id - source_hydro_id and destination_hydro_id must be different (both are $source_id)",
+            ),
+        )
         valid = false
     end
 
     return valid
 end
 
-function __validate_pumpingstation_flow!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_pumpingstation_flow!(d::Dict{String,Any}, e::CompositeException)::Bool
     id = d["id"]
     if !haskey(d, "flow")
         push!(e, AssertionError("PumpingStation $id - missing required key: flow"))
@@ -125,18 +134,28 @@ function __validate_pumpingstation_flow!(
         return false
     end
     if min_m3s < 0
-        push!(e, AssertionError("PumpingStation $id - flow.min_m3s must be non-negative, got $min_m3s"))
+        push!(
+            e,
+            AssertionError(
+                "PumpingStation $id - flow.min_m3s must be non-negative, got $min_m3s"
+            ),
+        )
         valid = false
     end
     if max_m3s < 0
-        push!(e, AssertionError("PumpingStation $id - flow.max_m3s must be non-negative, got $max_m3s"))
+        push!(
+            e,
+            AssertionError(
+                "PumpingStation $id - flow.max_m3s must be non-negative, got $max_m3s"
+            ),
+        )
         valid = false
     end
     if valid && min_m3s > max_m3s
         push!(
             e,
             AssertionError(
-                "PumpingStation $id - flow.min_m3s ($min_m3s) must be <= flow.max_m3s ($max_m3s)"
+                "PumpingStation $id - flow.min_m3s ($min_m3s) must be <= flow.max_m3s ($max_m3s)",
             ),
         )
         valid = false

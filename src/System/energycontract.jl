@@ -89,7 +89,9 @@ function __build_energycontracts!(
 
     energycontracts_d = d["energycontracts"]
 
-    valid_key_types = __validate_energycontracts_keys_types_before_build!(energycontracts_d, e)
+    valid_key_types = __validate_energycontracts_keys_types_before_build!(
+        energycontracts_d, e
+    )
     if !valid_key_types
         return false
     end

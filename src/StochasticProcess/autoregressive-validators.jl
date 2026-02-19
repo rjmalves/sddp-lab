@@ -4,7 +4,7 @@
 function __validate_ar_parameters_keys_types!(d, e)
     keys = ["season", "coefficients", "residual_variance", "scale_parameters"]
     types = [Int, Vector{Float64}, Float64, Vector{Float64}]
-    
+
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, types, e)
 
@@ -24,7 +24,12 @@ function __validate_ar_parameters_residual_variance(d, e)
     res_var = d["residual_variance"]
     valid = res_var > 0
     if !valid
-        push!(e, AssertionError("AutoRegressive model must have positive residual variance value"))
+        push!(
+            e,
+            AssertionError(
+                "AutoRegressive model must have positive residual variance value"
+            ),
+        )
     end
     return valid
 end
@@ -36,15 +41,17 @@ function __validate_ar_parameters_coefficients(d, e)
 end
 
 function __validate_ar_parameters_keys_content(d, e)
-    valid = __validate_ar_parameters_season(d, e) &
+    valid =
+        __validate_ar_parameters_season(d, e) &
         __validate_ar_parameters_residual_variance(d, e) &
         __validate_ar_parameters_coefficients(d, e)
-    
+
     return valid
 end
 
 function __validate_ar_parameters_dict!(d, e)
-    valid = __validate_ar_parameters_keys_types!(d, e) &&
+    valid =
+        __validate_ar_parameters_keys_types!(d, e) &&
         __validate_ar_parameters_keys_content(d, e)
 
     return valid
@@ -55,7 +62,7 @@ end
 function __validate_univariateautoregressive_keys_types!(d, e)
     keys = ["id", "initial_values", "models"]
     types = [Int, Vector{Float64}, Vector{Dict{String,Any}}]
-    
+
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, types, e)
 
@@ -72,9 +79,10 @@ function __validate_univariateautoregressive_season(d, e)
 end
 
 function __validate_univariateautoregressive_dict!(d, e)
-    valid =  __validate_univariateautoregressive_keys_types!(d, e) &&
+    valid =
+        __validate_univariateautoregressive_keys_types!(d, e) &&
         __validate_univariateautoregressive_season(d, e)
-    
+
     return valid
 end
 
@@ -83,7 +91,7 @@ end
 function __validate_autoregressive_keys_types!(d, e)
     keys = ["marginal_models", "copulas"]
     types = [Vector{Dict{String,Any}}, Vector{Dict{String,Any}}]
-    
+
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, types, e)
 
@@ -91,7 +99,7 @@ function __validate_autoregressive_keys_types!(d, e)
 end
 
 function __validate_autoregressive_dict!(d, e)
-    valid =  __validate_autoregressive_keys_types!(d, e)
-    
+    valid = __validate_autoregressive_keys_types!(d, e)
+
     return valid
 end

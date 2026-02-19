@@ -1,7 +1,7 @@
 using SHA
 using Dates
 using JSON
-import Pkg
+using Pkg: Pkg
 
 """
     EnvironmentSnapshot
@@ -10,13 +10,15 @@ Captures a point-in-time snapshot of the Julia execution environment for
 reproducibility tracking.
 
 # Fields
-- `julia_version`: Julia version string (e.g. `"1.10.2"`).
-- `os_machine`: OS and architecture string from `Sys.MACHINE`.
-- `package_versions`: Dict mapping key package names to their version strings.
-- `num_threads`: Number of Julia threads at capture time.
-- `timestamp`: ISO 8601 timestamp string (UTC).
+
+  - `julia_version`: Julia version string (e.g. `"1.10.2"`).
+  - `os_machine`: OS and architecture string from `Sys.MACHINE`.
+  - `package_versions`: Dict mapping key package names to their version strings.
+  - `num_threads`: Number of Julia threads at capture time.
+  - `timestamp`: ISO 8601 timestamp string (UTC).
 
 # Example
+
 ```julia
 env = capture_environment()
 println(env.julia_version)  # "1.10.2"
@@ -40,6 +42,7 @@ Reads key package versions from `Pkg.dependencies()`. If that call fails
 `"unknown"` and a warning is logged.
 
 # Example
+
 ```julia
 env = capture_environment()
 println(env.julia_version)   # e.g. "1.10.2"
@@ -83,6 +86,7 @@ iteration order) produce identical hashes.
 Returns a lowercase hexadecimal string of 64 characters.
 
 # Example
+
 ```julia
 d1 = Dict{String,Any}("z" => 1, "a" => 2)
 d2 = Dict{String,Any}("a" => 2, "z" => 1)
@@ -100,25 +104,28 @@ end
 Write a `metadata.json` file to `<output_dir>/<config_name>/metadata.json`.
 
 The file contains four top-level keys:
-- `"config_hash"`: SHA-256 of the canonically-serialized config dict.
-- `"config"`: the full engine configuration dict as-is.
-- `"environment"`: the environment snapshot as a plain dict.
-- `"seeds"`: any seeds extracted from the study (e.g. `"saa_seed"`).
+
+  - `"config_hash"`: SHA-256 of the canonically-serialized config dict.
+  - `"config"`: the full engine configuration dict as-is.
+  - `"environment"`: the environment snapshot as a plain dict.
+  - `"seeds"`: any seeds extracted from the study (e.g. `"saa_seed"`).
 
 Write failures are caught and logged as warnings; they do NOT abort the
 calling experiment run.
 
 # Arguments
-- `output_dir`: Parent directory (the experiment output root).
-- `config_name`: Name of the configuration; used as the subdirectory name.
-- `config_dict`: Raw engine params dict (before `Study` construction).
-- `env`: An `EnvironmentSnapshot` from `capture_environment()`.
-- `seeds`: Optional `Dict{String,Any}` of seed values (default: empty dict).
+
+  - `output_dir`: Parent directory (the experiment output root).
+  - `config_name`: Name of the configuration; used as the subdirectory name.
+  - `config_dict`: Raw engine params dict (before `Study` construction).
+  - `env`: An `EnvironmentSnapshot` from `capture_environment()`.
+  - `seeds`: Optional `Dict{String,Any}` of seed values (default: empty dict).
 
 # Example
+
 ```julia
 env = capture_environment()
-write_run_metadata("/tmp/exp", "iter3", params_dict, env; seeds=Dict("saa_seed"=>42))
+write_run_metadata("/tmp/exp", "iter3", params_dict, env; seeds = Dict("saa_seed" => 42))
 ```
 """
 function write_run_metadata(
@@ -159,14 +166,16 @@ comparing the `config_hash` fields.
 
 Returns `true` when both files exist and their `config_hash` values are
 identical. Returns `false` (with a `@warn`) in all other cases:
-- Either directory is missing `metadata.json`.
-- Either file cannot be parsed as JSON.
-- The `config_hash` field is absent or differs.
+
+  - Either directory is missing `metadata.json`.
+  - Either file cannot be parsed as JSON.
+  - The `config_hash` field is absent or differs.
 
 When hashes match but `num_threads` differ between the two environments, a
 `@warn` is emitted to flag potential non-determinism in threaded runs.
 
 # Example
+
 ```julia
 ok = verify_reproducibility("/tmp/exp/run1/iter3", "/tmp/exp/run2/iter3")
 ```
@@ -225,7 +234,7 @@ function _write_json_sorted(io::IO, d::Dict)
         write(io, ':')
         _write_json_sorted(io, d[k])
     end
-    write(io, '}')
+    return write(io, '}')
 end
 
 function _write_json_sorted(io::IO, v::AbstractVector)
@@ -234,11 +243,11 @@ function _write_json_sorted(io::IO, v::AbstractVector)
         i > 1 && write(io, ',')
         _write_json_sorted(io, item)
     end
-    write(io, ']')
+    return write(io, ']')
 end
 
 function _write_json_sorted(io::IO, v)
-    JSON.print(io, v)
+    return JSON.print(io, v)
 end
 
 function _load_metadata(dir::String)::Union{Dict{String,Any},Nothing}
@@ -250,7 +259,8 @@ function _load_metadata(dir::String)::Union{Dict{String,Any},Nothing}
     try
         return JSON.parsefile(filepath)
     catch ex
-        @warn "verify_reproducibility: failed to parse metadata.json" dir filepath exception = ex
+        @warn "verify_reproducibility: failed to parse metadata.json" dir filepath exception =
+            ex
         return nothing
     end
 end

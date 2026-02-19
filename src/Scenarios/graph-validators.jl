@@ -62,15 +62,11 @@ function __validate_edge_source_target!(
     target_id = d["target"]
     node_ids = [n.id for n in nodes]
     valid_source = source_id in node_ids
-    valid_source || push!(
-        e,
-        AssertionError("Edge - source node id ($source_id) not found in nodes"),
-    )
+    valid_source ||
+        push!(e, AssertionError("Edge - source node id ($source_id) not found in nodes"))
     valid_target = target_id in node_ids
-    valid_target || push!(
-        e,
-        AssertionError("Edge - target node id ($target_id) not found in nodes"),
-    )
+    valid_target ||
+        push!(e, AssertionError("Edge - target node id ($target_id) not found in nodes"))
     return valid_source && valid_target
 end
 
@@ -91,9 +87,7 @@ end
 
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
 
-function __validate_graph_unique_node_ids!(
-    nodes::Vector{Node}, e::CompositeException
-)::Bool
+function __validate_graph_unique_node_ids!(nodes::Vector{Node}, e::CompositeException)::Bool
     node_ids = [n.id for n in nodes]
     valid = length(unique(node_ids)) == length(node_ids)
     valid || push!(e, AssertionError("Graph - node ids must be unique"))
@@ -169,7 +163,7 @@ function __validate_graph_reachability!(
     valid || push!(
         e,
         AssertionError(
-            "Graph - nodes $unreachable are not reachable from root node $root_id",
+            "Graph - nodes $unreachable are not reachable from root node $root_id"
         ),
     )
     return valid
@@ -182,7 +176,8 @@ function __validate_graph_consistency!(
     valid_single_root = __validate_graph_single_root!(nodes, edges, e)
     valid_probability_sums = __validate_graph_probability_sums!(nodes, edges, e)
     valid_reachability = __validate_graph_reachability!(nodes, edges, e)
-    return valid_unique_ids && valid_single_root && valid_probability_sums &&
+    return valid_unique_ids &&
+           valid_single_root &&
+           valid_probability_sums &&
            valid_reachability
 end
-

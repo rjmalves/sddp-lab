@@ -8,7 +8,6 @@ RISK_ADJUSTED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict())
 REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
 
 @testset "engines-sddp-forward-passes" begin
-
     @testset "default-forward-pass-valid" begin
         d, e = __renew(DEFAULT_FORWARD_PASS_DICT)
         result = Engines.DefaultForwardPassStrategy(d, e)
@@ -116,15 +115,12 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "forward_pass" => Dict{String,Any}(
-                "kind" => "DefaultForwardPassStrategy",
-                "params" => Dict{String,Any}(),
+                "kind" => "DefaultForwardPassStrategy", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()
@@ -144,12 +140,10 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "forward_pass" => Dict{String,Any}(
                 "kind" => "RevisitingForwardPassStrategy",
                 "params" => Dict{String,Any}("period" => 10),
@@ -172,12 +166,10 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "forward_pass" => Dict{String,Any}(
                 "kind" => "RiskAdjustedForwardPassStrategy",
                 "params" => Dict{String,Any}(),
@@ -199,12 +191,10 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "forward_pass" => Dict{String,Any}(
                 "kind" => "RegularizedForwardPassStrategy",
                 "params" => Dict{String,Any}("rho" => 0.25),
@@ -227,12 +217,10 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -251,15 +239,12 @@ REGULARIZED_FORWARD_PASS_DICT = convert(Dict{String,Any}, Dict("rho" => 0.1))
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "forward_pass" => Dict{String,Any}(
-                "kind" => "NonExistentForwardPass",
-                "params" => Dict{String,Any}(),
+                "kind" => "NonExistentForwardPass", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()

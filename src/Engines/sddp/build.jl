@@ -70,8 +70,9 @@ function add_system_elements!(m::JuMP.Model, ses::Lines, num_blocks::Int)
         JuMP.set_upper_bound(m[REVERSE_EXCHANGE][n, k], ses.entities[n].capacity)
     end
 
-    m[NET_EXCHANGE] = JuMP.@expression(
-        m, [n = 1:num_lines, k = 1:num_blocks],
+    return m[NET_EXCHANGE] = JuMP.@expression(
+        m,
+        [n = 1:num_lines, k = 1:num_blocks],
         m[DIRECT_EXCHANGE][n, k] - m[REVERSE_EXCHANGE][n, k]
     )
 end
@@ -87,7 +88,8 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals, num_blocks::Int)
     end
 
     m[THERMAL_GENERATION_COST] = JuMP.@expression(
-        m, [n = 1:num_thermals, k = 1:num_blocks],
+        m,
+        [n = 1:num_thermals, k = 1:num_blocks],
         ses.entities[n].cost * m[THERMAL_GENERATION][n, k]
     )
 
@@ -108,7 +110,8 @@ function add_system_elements!(m::JuMP.Model, ses::NonControllables, num_blocks::
     end
 
     m[NC_CURTAILMENT] = JuMP.@expression(
-        m, [n = 1:num_nc, k = 1:num_blocks],
+        m,
+        [n = 1:num_nc, k = 1:num_blocks],
         ses.entities[n].max_generation - m[NC_GENERATION][n, k]
     )
 
@@ -152,8 +155,14 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros, num_blocks::Int)
         m, [1:num_hydros, 1:num_blocks], base_name = String(TURBINED_FLOW)
     )
     for n in 1:num_hydros, k in 1:num_blocks
-        JuMP.set_lower_bound(m[TURBINED_FLOW][n, k], ses.entities[n].min_generation / ses.entities[n].productivity)
-        JuMP.set_upper_bound(m[TURBINED_FLOW][n, k], ses.entities[n].max_generation / ses.entities[n].productivity)
+        JuMP.set_lower_bound(
+            m[TURBINED_FLOW][n, k],
+            ses.entities[n].min_generation / ses.entities[n].productivity,
+        )
+        JuMP.set_upper_bound(
+            m[TURBINED_FLOW][n, k],
+            ses.entities[n].max_generation / ses.entities[n].productivity,
+        )
     end
 
     m[SPILLAGE] = JuMP.@variable(
@@ -164,12 +173,12 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros, num_blocks::Int)
     end
 
     m[OUTFLOW] = JuMP.@expression(
-        m, [n = 1:num_hydros, k = 1:num_blocks],
-        m[TURBINED_FLOW][n, k] + m[SPILLAGE][n, k]
+        m, [n = 1:num_hydros, k = 1:num_blocks], m[TURBINED_FLOW][n, k] + m[SPILLAGE][n, k]
     )
 
     m[HYDRO_GENERATION] = JuMP.@expression(
-        m, [n = 1:num_hydros, k = 1:num_blocks],
+        m,
+        [n = 1:num_hydros, k = 1:num_blocks],
         ses.entities[n].productivity * m[TURBINED_FLOW][n, k]
     )
 
@@ -201,7 +210,8 @@ function add_system_elements!(m::JuMP.Model, ses::PumpingStations, num_blocks::I
         JuMP.set_upper_bound(m[PUMPED_FLOW][n, k], ses.entities[n].max_m3s)
     end
     m[PUMP_POWER] = JuMP.@expression(
-        m, [n = 1:num_stations, k = 1:num_blocks],
+        m,
+        [n = 1:num_stations, k = 1:num_blocks],
         ses.entities[n].consumption_mw_per_m3s * m[PUMPED_FLOW][n, k]
     )
     return nothing
@@ -219,7 +229,8 @@ function add_system_elements!(m::JuMP.Model, s::SystemData, num_blocks::Int)
 end
 
 function add_hydro_balance_parallel!(
-    m::JuMP.Model, hydros::Hydros,
+    m::JuMP.Model,
+    hydros::Hydros,
     pump_source_map::Dict{Int,Vector{Int}},
     pump_dest_map::Dict{Int,Vector{Int}},
     zeta::Float64,
@@ -232,32 +243,28 @@ function add_hydro_balance_parallel!(
         m,
         [n = 1:num_hydros],
         m[STORED_VOLUME][n].out ==
-            m[STORED_VOLUME][n].in +
-            zeta * m[INFLOW][n] -
-            zeta * sum(
-                w_k[k] * m[OUTFLOW][n, k] for k in 1:num_blocks
-            ) +
-            zeta * sum(
-                w_k[k] * m[OUTFLOW][j, k]
-                for j in 1:num_hydros if downstream(hydros.entities[j].id, hydros) == hydros.entities[n]
-                for k in 1:num_blocks
-            ) -
-            zeta * sum(
-                w_k[k] * m[PUMPED_FLOW][j, k]
-                for j in get(pump_source_map, n, Int[])
-                for k in 1:num_blocks
-            ) +
-            zeta * sum(
-                w_k[k] * m[PUMPED_FLOW][j, k]
-                for j in get(pump_dest_map, n, Int[])
-                for k in 1:num_blocks
-            )
+            m[STORED_VOLUME][n].in + zeta * m[INFLOW][n] -
+        zeta * sum(w_k[k] * m[OUTFLOW][n, k] for k in 1:num_blocks) +
+        zeta * sum(
+            w_k[k] * m[OUTFLOW][j, k] for j in 1:num_hydros if
+            downstream(hydros.entities[j].id, hydros) == hydros.entities[n] for
+            k in 1:num_blocks
+        ) -
+        zeta * sum(
+            w_k[k] * m[PUMPED_FLOW][j, k] for j in get(pump_source_map, n, Int[]) for
+            k in 1:num_blocks
+        ) +
+        zeta * sum(
+            w_k[k] * m[PUMPED_FLOW][j, k] for j in get(pump_dest_map, n, Int[]) for
+            k in 1:num_blocks
+        )
     )
     return nothing
 end
 
 function add_hydro_balance_chronological!(
-    m::JuMP.Model, hydros::Hydros,
+    m::JuMP.Model,
+    hydros::Hydros,
     pump_source_map::Dict{Int,Vector{Int}},
     pump_dest_map::Dict{Int,Vector{Int}},
     zeta_k::Vector{Float64},
@@ -287,9 +294,9 @@ function add_hydro_balance_chronological!(
 
     function _net_flow_expr(n, k)
         upstream_flow = sum(
-            m[OUTFLOW][j, k]
-            for j in 1:num_hydros if downstream(hydros.entities[j].id, hydros) == hydros.entities[n];
-            init = 0.0
+            m[OUTFLOW][j, k] for j in 1:num_hydros if
+            downstream(hydros.entities[j].id, hydros) == hydros.entities[n];
+            init = 0.0,
         )
         source_pump = sum(
             m[PUMPED_FLOW][j, k] for j in get(pump_source_map, n, Int[]); init = 0.0
@@ -305,14 +312,15 @@ function add_hydro_balance_chronological!(
         [n = 1:num_hydros, k = 1:K],
         _curr_vol(n, k) ==
             _prev_vol(n, k) +
-            zeta_k[k] * w_k[k] * m[INFLOW][n] +
-            zeta_k[k] * _net_flow_expr(n, k)
+        zeta_k[k] * w_k[k] * m[INFLOW][n] +
+        zeta_k[k] * _net_flow_expr(n, k)
     )
     return nothing
 end
 
 function add_hydro_balance!(
-    m::JuMP.Model, hydros::Hydros,
+    m::JuMP.Model,
+    hydros::Hydros,
     pump_source_map::Dict{Int,Vector{Int}},
     pump_dest_map::Dict{Int,Vector{Int}},
     block_mode::Symbol,
@@ -410,18 +418,40 @@ function add_system_objective!(
     SDDP.@stageobjective(
         m,
         sum(
-            tau_k[k] * sum(thermals[n].cost * m[THERMAL_GENERATION][n, k] for n in 1:num_thermals) +
+            tau_k[k] *
+            sum(thermals[n].cost * m[THERMAL_GENERATION][n, k] for n in 1:num_thermals) +
             tau_k[k] * sum(buses[n].deficit_cost * m[DEFICIT][n, k] for n in 1:num_buses) +
-            tau_k[k] * sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n, k] for n in 1:num_lines) +
-            tau_k[k] * sum(lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n, k] for n in 1:num_lines) +
+            tau_k[k] *
+            sum(lines[n].exchange_penalty * m[DIRECT_EXCHANGE][n, k] for n in 1:num_lines) +
             tau_k[k] * sum(
-                hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n, k] for
-                n in 1:num_hydros
+                lines[n].exchange_penalty * m[REVERSE_EXCHANGE][n, k] for n in 1:num_lines
             ) +
-            tau_k[k] * sum(hydros[n].spillage_penalty * m[SPILLAGE][n, k] for n in 1:num_hydros) +
-            tau_k[k] * (num_nc > 0 ? sum(noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n, k] for n in 1:num_nc) : 0.0) +
-            tau_k[k] * (num_contracts > 0 ? sum(contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n, k] for n in 1:num_contracts) : 0.0)
-            for k in 1:K
+            tau_k[k] * sum(
+                hydros[n].bus[].deficit_cost * 1.0001 * m[HYDRO_MIN_GENERATION_SLACK][n, k]
+                for n in 1:num_hydros
+            ) +
+            tau_k[k] *
+            sum(hydros[n].spillage_penalty * m[SPILLAGE][n, k] for n in 1:num_hydros) +
+            tau_k[k] * (
+                if num_nc > 0
+                    sum(
+                    noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n, k] for
+                    n in 1:num_nc
+                )
+                else
+                    0.0
+                end
+            ) +
+            tau_k[k] * (
+                if num_contracts > 0
+                    sum(
+                    contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n, k] for
+                    n in 1:num_contracts
+                )
+                else
+                    0.0
+                end
+            ) for k in 1:K
         ) + penalty
     )
 end
@@ -501,11 +531,11 @@ function add_inflow_uncertainty!(
                 m,
                 (m[STCHP][i].out - s_t[1]) / s_t[2] ==
                     sum(
-                        ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2]
-                        for l in 1:m_l
-                    ) +
-                    m[ω_INFLOW][n] +
-                    m[NOISE_ADJUSTMENT_SLACK][n],
+                    ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2] for
+                    l in 1:m_l
+                ) +
+                m[ω_INFLOW][n] +
+                m[NOISE_ADJUSTMENT_SLACK][n],
                 base_name = "ar_main" * string(n),
             )
         end
@@ -517,19 +547,16 @@ function add_inflow_uncertainty!(
                 m,
                 (m[STCHP][i].out - s_t[1]) / s_t[2] ==
                     sum(
-                        ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2]
-                        for l in 1:m_l
-                    ) +
-                    m[ω_INFLOW][n],
+                    ar_c[l] * (m[STCHP][i + l - 1].in - l_s[l][1]) / l_s[l][2] for
+                    l in 1:m_l
+                ) + m[ω_INFLOW][n],
                 base_name = "ar_main" * string(n),
             )
         end
     end
 
     if method isa InflowPenalty
-        m[INFLOW_SLACK] = JuMP.@variable(
-            m, [1:n_hydro], base_name = String(INFLOW_SLACK)
-        )
+        m[INFLOW_SLACK] = JuMP.@variable(m, [1:n_hydro], base_name = String(INFLOW_SLACK))
         for n in 1:n_hydro
             JuMP.set_lower_bound(m[INFLOW_SLACK][n], 0)
             JuMP.set_lower_bound(m[INFLOW][n], 0)
@@ -543,13 +570,9 @@ function add_inflow_uncertainty!(
         for n in 1:n_hydro
             JuMP.set_lower_bound(m[INFLOW][n], 0)
         end
-        JuMP.@constraint(
-            m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out
-        )
+        JuMP.@constraint(m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out)
     else
-        JuMP.@constraint(
-            m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out
-        )
+        JuMP.@constraint(m, inflow[n = 1:n_hydro], m[INFLOW][n] == m[STCHP][index_t[n]].out)
     end
 
     JuMP.@constraint(
@@ -584,7 +607,9 @@ function add_inflow_uncertainty!(
         lag_scales[l] = get_var_scales(s, ls)
     end
 
-    coef_matrices = Matrix{Float64}[get_var_coefficient_matrix(s, season, l) for l in 1:max_lag]
+    coef_matrices = Matrix{Float64}[
+        get_var_coefficient_matrix(s, season, l) for l in 1:max_lag
+    ]
 
     m[ω_INFLOW] = JuMP.@variable(m, [1:N], base_name = String(ω_INFLOW))
     m[STCHP] = JuMP.@variable(
@@ -613,16 +638,14 @@ function add_inflow_uncertainty!(
                 m,
                 (m[STCHP][i_n].out - s_n[1]) / s_n[2] ==
                     sum(
-                        sum(
-                            coef_matrices[l][n, mm] *
-                            (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
-                            lag_scales[l][mm][2]
-                            for mm in 1:N
-                        )
-                        for l in 1:max_lag
-                    ) +
-                    m[ω_INFLOW][n] +
-                    m[NOISE_ADJUSTMENT_SLACK][n],
+                    sum(
+                        coef_matrices[l][n, mm] *
+                        (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
+                        lag_scales[l][mm][2] for mm in 1:N
+                    ) for l in 1:max_lag
+                ) +
+                m[ω_INFLOW][n] +
+                m[NOISE_ADJUSTMENT_SLACK][n],
                 base_name = "var_main" * string(n),
             )
         end
@@ -634,24 +657,19 @@ function add_inflow_uncertainty!(
                 m,
                 (m[STCHP][i_n].out - s_n[1]) / s_n[2] ==
                     sum(
-                        sum(
-                            coef_matrices[l][n, mm] *
-                            (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
-                            lag_scales[l][mm][2]
-                            for mm in 1:N
-                        )
-                        for l in 1:max_lag
-                    ) +
-                    m[ω_INFLOW][n],
+                    sum(
+                        coef_matrices[l][n, mm] *
+                        (m[STCHP][index_t[mm] + l - 1].in - lag_scales[l][mm][1]) /
+                        lag_scales[l][mm][2] for mm in 1:N
+                    ) for l in 1:max_lag
+                ) + m[ω_INFLOW][n],
                 base_name = "var_main" * string(n),
             )
         end
     end
 
     if method isa InflowPenalty
-        m[INFLOW_SLACK] = JuMP.@variable(
-            m, [1:N], base_name = String(INFLOW_SLACK)
-        )
+        m[INFLOW_SLACK] = JuMP.@variable(m, [1:N], base_name = String(INFLOW_SLACK))
         for n in 1:N
             JuMP.set_lower_bound(m[INFLOW_SLACK][n], 0)
             JuMP.set_lower_bound(m[INFLOW][n], 0)
@@ -665,13 +683,9 @@ function add_inflow_uncertainty!(
         for n in 1:N
             JuMP.set_lower_bound(m[INFLOW][n], 0)
         end
-        JuMP.@constraint(
-            m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out
-        )
+        JuMP.@constraint(m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out)
     else
-        JuMP.@constraint(
-            m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out
-        )
+        JuMP.@constraint(m, inflow[n = 1:N], m[INFLOW][n] == m[STCHP][index_t[n]].out)
     end
 
     if !isempty(memory_states)
@@ -688,7 +702,9 @@ function generate_saa(scenarios::ScenariosData, num_stages::Integer)
     branchings = scenarios.branchings
     result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
     for (state, process) in scenarios.inflow.stochastic_process
-        result[state] = StochasticProcess.generate_saa(process, initial_season, num_stages, branchings)
+        result[state] = StochasticProcess.generate_saa(
+            process, initial_season, num_stages, branchings
+        )
     end
     return result
 end
@@ -707,7 +723,10 @@ function generate_saa(scenarios::ScenariosData, num_stages::Integer, seed::Integ
 end
 
 function add_uncertainties!(
-    m::JuMP.Model, process::AbstractStochasticProcess, season::Int, method::InflowNonNegativity
+    m::JuMP.Model,
+    process::AbstractStochasticProcess,
+    season::Int,
+    method::InflowNonNegativity,
 )
     return add_inflow_uncertainty!(m, process, season, method)
 end
@@ -806,7 +825,9 @@ function __generate_subproblem_builder(
     if method isa InflowTruncation || method isa InflowTruncationWithPenalty
         for (state, saa_stages) in SAA
             for stage_idx in eachindex(saa_stages)
-                saa_stages[stage_idx] = [max.(0.0, omega) for omega in saa_stages[stage_idx]]
+                saa_stages[stage_idx] = [
+                    max.(0.0, omega) for omega in saa_stages[stage_idx]
+                ]
             end
         end
     end
@@ -824,7 +845,9 @@ function __generate_subproblem_builder(
 
     hydro_bus_map = _build_bus_index_map(hydros_entities, bus_ids, :bus_id)
     thermal_bus_map = _build_bus_index_map(thermals_entities, bus_ids, :bus_id)
-    noncontrollable_bus_map = _build_bus_index_map(noncontrollable_entities, bus_ids, :bus_id)
+    noncontrollable_bus_map = _build_bus_index_map(
+        noncontrollable_entities, bus_ids, :bus_id
+    )
     contract_bus_map = _build_bus_index_map(contracts_entities, bus_ids, :bus_id)
     pumping_bus_map = _build_bus_index_map(pumping_entities, bus_ids, :bus_id)
     pump_source_map = _build_bus_index_map(pumping_entities, hydro_ids, :source_hydro_id)
@@ -854,8 +877,7 @@ function __generate_subproblem_builder(
 
         add_system_elements!(m, system, K)
         add_hydro_balance!(
-            m, get_hydros(system), pump_source_map, pump_dest_map,
-            block_mode, tau_k, K
+            m, get_hydros(system), pump_source_map, pump_dest_map, block_mode, tau_k, K
         )
 
         process = get_stochastic_process(scenarios.inflow, markov_state)
@@ -863,11 +885,21 @@ function __generate_subproblem_builder(
         add_inflow_uncertainty!(m, process, season, method)
 
         __add_load_balance!(
-            m, scenarios, load_node_id, s_gen, bus_ids, K,
-            hydro_bus_map, thermal_bus_map, noncontrollable_bus_map,
-            line_target_map, line_source_map,
-            contract_bus_map, contracts_entities,
-            pumping_bus_map, pumping_entities
+            m,
+            scenarios,
+            load_node_id,
+            s_gen,
+            bus_ids,
+            K,
+            hydro_bus_map,
+            thermal_bus_map,
+            noncontrollable_bus_map,
+            line_target_map,
+            line_source_map,
+            contract_bus_map,
+            contracts_entities,
+            pumping_bus_map,
+            pumping_entities,
         )
 
         Ω_node = vec(SAA[markov_state][stage])
@@ -909,19 +941,21 @@ function __add_load_balance!(
         sum(m[THERMAL_GENERATION][j, k] for j in get(thermal_bus_map, n, Int[])) +
         sum(m[NC_GENERATION][j, k] for j in get(noncontrollable_bus_map, n, Int[])) +
         sum(
-            contracts_entities[j].contract_type == "import" ? m[CONTRACT_DISPATCH][j, k] : -m[CONTRACT_DISPATCH][j, k]
-            for j in get(contract_bus_map, n, Int[])
-        ) -
-        sum(m[PUMP_POWER][j, k] for j in get(pumping_bus_map, n, Int[])) +
+            if contracts_entities[j].contract_type == "import"
+                m[CONTRACT_DISPATCH][j, k]
+            else
+                -m[CONTRACT_DISPATCH][j, k]
+            end for j in get(contract_bus_map, n, Int[])
+        ) - sum(m[PUMP_POWER][j, k] for j in get(pumping_bus_map, n, Int[])) +
         sum(
-            m[DIRECT_EXCHANGE][j, k] - m[REVERSE_EXCHANGE][j, k]
-            for j in get(line_target_map, n, Int[])
+            m[DIRECT_EXCHANGE][j, k] - m[REVERSE_EXCHANGE][j, k] for
+            j in get(line_target_map, n, Int[])
         ) +
         sum(
-            m[REVERSE_EXCHANGE][j, k] - m[DIRECT_EXCHANGE][j, k]
-            for j in get(line_source_map, n, Int[])
+            m[REVERSE_EXCHANGE][j, k] - m[DIRECT_EXCHANGE][j, k] for
+            j in get(line_source_map, n, Int[])
         ) +
         m[DEFICIT][n, k] == get_load(bus_ids[n], node, k, scenarios) / load_scale
-    );
+    )
     return nothing
 end

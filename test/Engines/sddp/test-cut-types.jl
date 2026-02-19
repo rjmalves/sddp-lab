@@ -6,7 +6,6 @@ SINGLE_CUT_DICT = convert(Dict{String,Any}, Dict())
 MULTI_CUT_DICT = convert(Dict{String,Any}, Dict())
 
 @testset "engines-sddp-cut-types" begin
-
     @testset "single-cut-valid" begin
         d, e = __renew(SINGLE_CUT_DICT)
         result = Engines.SingleCut(d, e)
@@ -43,16 +42,12 @@ MULTI_CUT_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
-            "cut_type" => Dict{String,Any}(
-                "kind" => "SingleCut",
-                "params" => Dict{String,Any}(),
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "cut_type" =>
+                Dict{String,Any}("kind" => "SingleCut", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -71,16 +66,12 @@ MULTI_CUT_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
-            "cut_type" => Dict{String,Any}(
-                "kind" => "MultiCut",
-                "params" => Dict{String,Any}(),
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "cut_type" =>
+                Dict{String,Any}("kind" => "MultiCut", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -99,12 +90,10 @@ MULTI_CUT_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -123,15 +112,12 @@ MULTI_CUT_DICT = convert(Dict{String,Any}, Dict())
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "cut_type" => Dict{String,Any}(
-                "kind" => "NonExistentCutType",
-                "params" => Dict{String,Any}(),
+                "kind" => "NonExistentCutType", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()

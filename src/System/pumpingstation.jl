@@ -1,6 +1,8 @@
 # CLASS PumpingStation -----------------------------------------------------------------------
 
-function PumpingStation(d::Dict{String,Any}, buses::Buses, hydros::Hydros, e::CompositeException)
+function PumpingStation(
+    d::Dict{String,Any}, buses::Buses, hydros::Hydros, e::CompositeException
+)
     valid = validate_schema!(
         d, PUMPING_STATION_SCHEMA, e; entity_label = "PumpingStation $(get(d, "id", "?"))"
     )
@@ -27,7 +29,9 @@ end
 
 # CLASS PumpingStations -----------------------------------------------------------------------
 
-function PumpingStations(d::Dict{String,Any}, buses::Buses, hydros::Hydros, e::CompositeException)
+function PumpingStations(
+    d::Dict{String,Any}, buses::Buses, hydros::Hydros, e::CompositeException
+)
     valid_internals = __build_pumpingstations_internals_from_dicts!(d, buses, hydros, e)
     valid_keys_types = valid_internals && __validate_pumpingstations_keys_types!(d, e)
     valid_consistency = valid_keys_types && __validate_pumpingstations_consistency!(d, e)
@@ -91,7 +95,9 @@ function __build_pumpingstations!(
 
     pumpingstations_d = d["pumpingstations"]
 
-    valid_key_types = __validate_pumpingstations_keys_types_before_build!(pumpingstations_d, e)
+    valid_key_types = __validate_pumpingstations_keys_types_before_build!(
+        pumpingstations_d, e
+    )
     if !valid_key_types
         return false
     end

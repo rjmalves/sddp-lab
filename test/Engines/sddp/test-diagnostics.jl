@@ -48,10 +48,7 @@ using HiGHS: HiGHS
     end
 
     @testset "diagnostics-config-missing-key" begin
-        d = Dict{String,Any}(
-            "run_numerical_report" => true,
-            "warn_threshold" => 1e6,
-        )
+        d = Dict{String,Any}("run_numerical_report" => true, "warn_threshold" => 1e6)
         e = CompositeException()
         result = Engines.DiagnosticsConfig(d, e)
         @test result === nothing
@@ -124,23 +121,17 @@ using HiGHS: HiGHS
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         simulation_dict = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
-        params = Dict{String,Any}(
-            "policy" => policy_dict,
-            "simulation" => simulation_dict,
-        )
+        params = Dict{String,Any}("policy" => policy_dict, "simulation" => simulation_dict)
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
@@ -160,23 +151,18 @@ using HiGHS: HiGHS
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         simulation_dict = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         diagnostics_dict = Dict{String,Any}(
-            "run_numerical_report" => true,
-            "warn_threshold" => 1e4,
-            "halt_threshold" => 1e8,
+            "run_numerical_report" => true, "warn_threshold" => 1e4, "halt_threshold" => 1e8
         )
         params = Dict{String,Any}(
             "policy" => policy_dict,

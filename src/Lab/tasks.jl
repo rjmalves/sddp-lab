@@ -15,10 +15,7 @@ function save_simulation(
 
 function validate(model::Model, validation, files::Vector{InputModule}) end
 function save_validation(
-    artifact,
-    path::String,
-    format::TaskResultsFormat,
-    files::Vector{InputModule},
+    artifact, path::String, format::TaskResultsFormat, files::Vector{InputModule}
 ) end
 
 function diagnose(model::Model, engine::Engine)::Bool end

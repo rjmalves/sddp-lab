@@ -58,12 +58,18 @@ function __build_system_internals_from_dicts!(
         true
     end
     valid_pumpingstations = if haskey(d, "pumpingstations")
-        (valid_buses && valid_hydros) && __build_pumpingstations!(d, d["buses"], d["hydros"], e)
+        (valid_buses && valid_hydros) &&
+            __build_pumpingstations!(d, d["buses"], d["hydros"], e)
     else
         d["pumpingstations"] = PumpingStations(PumpingStation[])
         true
     end
-    return valid_lines && valid_hydros && valid_thermals && valid_noncontrollables && valid_energycontracts && valid_pumpingstations
+    return valid_lines &&
+           valid_hydros &&
+           valid_thermals &&
+           valid_noncontrollables &&
+           valid_energycontracts &&
+           valid_pumpingstations
 end
 
 function __cast_system_internals_from_files!(
@@ -90,5 +96,11 @@ function __cast_system_internals_from_files!(
         true
     end
 
-    return valid_buses && valid_lines && valid_hydros && valid_thermals && valid_noncontrollables && valid_energycontracts && valid_pumpingstations
+    return valid_buses &&
+           valid_lines &&
+           valid_hydros &&
+           valid_thermals &&
+           valid_noncontrollables &&
+           valid_energycontracts &&
+           valid_pumpingstations
 end

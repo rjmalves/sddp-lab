@@ -15,7 +15,14 @@ function __validate_sddp_engine_keys_types!(
     valid_types =
         valid_keys && __validate_key_types!(
             d,
-            ["policy", "simulation", "diagnostics", "solver", "inflow_non_negativity", "debug"],
+            [
+                "policy",
+                "simulation",
+                "diagnostics",
+                "solver",
+                "inflow_non_negativity",
+                "debug",
+            ],
             [
                 SDDPPolicyTaskDefinition,
                 SDDPSimulationTaskDefinition,

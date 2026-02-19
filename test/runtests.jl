@@ -16,6 +16,6 @@ end
 
 @testset "SDDPlab" begin
     for tf in test_files
-            include(tf)
+        include(tf)
     end
 end

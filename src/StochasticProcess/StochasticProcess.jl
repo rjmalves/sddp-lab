@@ -45,12 +45,14 @@ Uses Julia's default (global) RNG. For reproducible results, use the
 `generate_saa(s, initial_season, N, B, seed)` overload.
 
 # Arguments
-- `s`: An [`AbstractStochasticProcess`](@ref) instance.
-- `initial_season`: Season index (1-based) for the first stage.
-- `N`: Number of stages.
-- `B`: Number of scenario branchings per stage.
+
+  - `s`: An [`AbstractStochasticProcess`](@ref) instance.
+  - `initial_season`: Season index (1-based) for the first stage.
+  - `N`: Number of stages.
+  - `B`: Number of scenario branchings per stage.
 
 # Returns
+
 A `Vector{Vector{Vector{Float64}}}` with shape `[N][B][num_hydros]`.
 
 See also: [`Naive`](@ref), [`AutoRegressive`](@ref), [`VectorAutoRegressive`](@ref)
@@ -70,13 +72,15 @@ Creates a fresh `MersenneTwister` RNG from `seed`, ensuring deterministic
 output independent of global RNG state.
 
 # Arguments
-- `s`: An [`AbstractStochasticProcess`](@ref) instance.
-- `initial_season`: Season index (1-based) for the first stage.
-- `N`: Number of stages.
-- `B`: Number of scenario branchings per stage.
-- `seed`: Integer random seed for the `MersenneTwister` RNG.
+
+  - `s`: An [`AbstractStochasticProcess`](@ref) instance.
+  - `initial_season`: Season index (1-based) for the first stage.
+  - `N`: Number of stages.
+  - `B`: Number of scenario branchings per stage.
+  - `seed`: Integer random seed for the `MersenneTwister` RNG.
 
 # Example
+
 ```julia
 saa = generate_saa(process, 1, 60, 10, 42)
 length(saa)      # 60 stages

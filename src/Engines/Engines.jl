@@ -23,7 +23,8 @@ Internal container for variable scaling factors used during model construction
 and result un-scaling. Maps each variable [`Symbol`] to a multiplicative factor.
 
 # Fields
-- `factors`: Dict mapping variable symbols to their scaling factors.
+
+  - `factors`: Dict mapping variable symbols to their scaling factors.
 
 See also: [`NoScaling`](@ref), [`AutoScaling`](@ref)
 """
@@ -38,8 +39,9 @@ Concrete [`Model`](@ref) subtype produced by [`build`](@ref) for SDDP-based
 engines. Wraps an `SDDP.PolicyGraph` together with its [`ScalingConfig`](@ref).
 
 # Fields
-- `policy_graph`: The `SDDP.PolicyGraph` subproblem tree.
-- `scaling`: The [`ScalingConfig`](@ref) used during construction.
+
+  - `policy_graph`: The `SDDP.PolicyGraph` subproblem tree.
+  - `scaling`: The [`ScalingConfig`](@ref) used during construction.
 """
 struct SDDPModel <: Model
     policy_graph::SDDP.PolicyGraph
@@ -64,7 +66,8 @@ abstract type StoppingCriteria end
 Stop training after a fixed number of SDDP iterations.
 
 # Fields
-- `num_iterations`: Maximum number of iterations before halting.
+
+  - `num_iterations`: Maximum number of iterations before halting.
 
 See also: [`Convergence`](@ref), [`TimeLimit`](@ref)
 """
@@ -78,7 +81,8 @@ end
 Stop training when a wall-clock time limit is reached.
 
 # Fields
-- `time_seconds`: Maximum wall-clock training time in seconds.
+
+  - `time_seconds`: Maximum wall-clock training time in seconds.
 
 See also: [`Convergence`](@ref), [`IterationLimit`](@ref)
 """
@@ -93,8 +97,9 @@ Stop training when the lower bound (expected cost estimate) has not improved by
 more than `threshold` (relative) over the last `num_iterations` iterations.
 
 # Fields
-- `threshold`: Relative improvement threshold (e.g., `1e-4`).
-- `num_iterations`: Window size (number of past iterations) to check.
+
+  - `threshold`: Relative improvement threshold (e.g., `1e-4`).
+  - `num_iterations`: Window size (number of past iterations) to check.
 
 See also: [`Convergence`](@ref), [`Statistical`](@ref)
 """
@@ -111,9 +116,10 @@ Stop training using a statistical convergence test. At every
 z-score test is applied to the gap between the lower bound and simulated cost.
 
 # Fields
-- `num_replications`: Number of Monte Carlo replications for the test.
-- `iteration_period`: Number of iterations between statistical tests.
-- `z_score`: Critical z-score (e.g., `1.96` for 95% confidence).
+
+  - `num_replications`: Number of Monte Carlo replications for the test.
+  - `iteration_period`: Number of iterations between statistical tests.
+  - `z_score`: Critical z-score (e.g., `1.96` for 95% confidence).
 
 See also: [`Convergence`](@ref), [`SimulationStopping`](@ref)
 """
@@ -131,8 +137,9 @@ Runs `replications` simulations every `period` iterations and stops when the
 gap is within the statistical tolerance.
 
 # Fields
-- `replications`: Number of simulations per statistical check.
-- `period`: Iteration period between checks.
+
+  - `replications`: Number of simulations per statistical check.
+  - `period`: Iteration period between checks.
 
 See also: [`Statistical`](@ref), [`Convergence`](@ref)
 """
@@ -148,8 +155,9 @@ Stop training when the first-stage cost stabilizes to within `atol` absolute
 tolerance over the last `iterations` iterations.
 
 # Fields
-- `atol`: Absolute tolerance on the first-stage cost change.
-- `iterations`: Window size to check stability.
+
+  - `atol`: Absolute tolerance on the first-stage cost change.
+  - `iterations`: Window size to check stability.
 
 See also: [`Convergence`](@ref), [`LowerBoundStability`](@ref)
 """
@@ -165,9 +173,11 @@ A composite stopping criterion that halts training when **any** of its member
 rules triggers. Use this to combine multiple stopping rules with OR logic.
 
 # Fields
-- `rules`: Vector of [`StoppingCriteria`](@ref) to evaluate at each iteration.
+
+  - `rules`: Vector of [`StoppingCriteria`](@ref) to evaluate at each iteration.
 
 # Example
+
 ```julia
 # Stop after 200 iterations OR when lower bound is stable
 chain = StoppingChain([IterationLimit(200), LowerBoundStability(1e-4, 10)])
@@ -186,9 +196,10 @@ Controls the SDDP training loop termination. Enforces a minimum number of
 iterations before any stopping rule is evaluated, and an absolute maximum.
 
 # Fields
-- `min_iterations`: Minimum iterations to run before evaluating stopping rules.
-- `max_iterations`: Hard maximum; training stops regardless of other criteria.
-- `stopping_criteria`: Ordered vector of [`StoppingCriteria`](@ref) to evaluate.
+
+  - `min_iterations`: Minimum iterations to run before evaluating stopping rules.
+  - `max_iterations`: Hard maximum; training stops regardless of other criteria.
+  - `stopping_criteria`: Ordered vector of [`StoppingCriteria`](@ref) to evaluate.
 
 See also: [`SDDPPolicyTaskDefinition`](@ref), [`IterationLimit`](@ref),
 [`Statistical`](@ref)
@@ -281,7 +292,8 @@ Average Value-at-Risk (also known as CVaR or Expected Shortfall) at level
 scenarios.
 
 # Fields
-- `alpha`: Confidence level in `(0, 1)`. Smaller `alpha` = more risk-averse.
+
+  - `alpha`: Confidence level in `(0, 1)`. Smaller `alpha` = more risk-averse.
 
 See also: [`CVaR`](@ref), [`RiskMeasure`](@ref)
 """
@@ -296,8 +308,9 @@ Convex combination of [`Expectation`](@ref) and [`AVaR`](@ref):
 `lambda * E[cost] + (1 - lambda) * AVaR_alpha[cost]`.
 
 # Fields
-- `alpha`: Confidence level for the AVaR component (in `(0, 1)`).
-- `lambda`: Weight on the expectation component (in `[0, 1]`).
+
+  - `alpha`: Confidence level for the AVaR component (in `(0, 1)`).
+  - `lambda`: Weight on the expectation component (in `[0, 1]`).
 
 See also: [`AVaR`](@ref), [`RiskMeasure`](@ref)
 """
@@ -313,7 +326,8 @@ Entropic risk measure with parameter `theta`. Higher `theta` yields more
 risk-averse behavior.
 
 # Fields
-- `theta`: Risk aversion parameter (positive real number).
+
+  - `theta`: Risk aversion parameter (positive real number).
 
 See also: [`RiskMeasure`](@ref)
 """
@@ -327,7 +341,8 @@ end
 Wasserstein distance-based distributionally robust risk measure.
 
 # Fields
-- `alpha`: Radius of the Wasserstein uncertainty ball.
+
+  - `alpha`: Radius of the Wasserstein uncertainty ball.
 
 See also: [`RiskMeasure`](@ref)
 """
@@ -342,8 +357,9 @@ Modified chi-squared distributionally robust risk measure. Constructs a
 confidence set around the empirical distribution.
 
 # Fields
-- `radius`: Radius of the chi-squared uncertainty set.
-- `minimum_std`: Minimum standard deviation floor to avoid degenerate sets.
+
+  - `radius`: Radius of the chi-squared uncertainty set.
+  - `minimum_std`: Minimum standard deviation floor to avoid degenerate sets.
 
 See also: [`RiskMeasure`](@ref)
 """
@@ -359,9 +375,11 @@ Weighted convex combination of multiple [`RiskMeasure`](@ref) instances.
 The weights must sum to one.
 
 # Fields
-- `measures`: Vector of `(weight, RiskMeasure)` tuples defining the combination.
+
+  - `measures`: Vector of `(weight, RiskMeasure)` tuples defining the combination.
 
 # Example
+
 ```julia
 rm = ConvexCombination([(0.7, Expectation()), (0.3, AVaR(0.05))])
 ```
@@ -397,8 +415,9 @@ struct DefaultSampling <: SamplingScheme end
 In-sample Monte Carlo sampling with configurable depth and leaf termination.
 
 # Fields
-- `max_depth`: Maximum depth (number of stages) per forward pass sample.
-- `terminate_on_dummy_leaf`: Whether to stop sampling at dummy leaf nodes.
+
+  - `max_depth`: Maximum depth (number of stages) per forward pass sample.
+  - `terminate_on_dummy_leaf`: Whether to stop sampling at dummy leaf nodes.
 
 See also: [`DefaultSampling`](@ref), [`PSRSampling`](@ref)
 """
@@ -413,7 +432,8 @@ end
 PSR-style sampling that draws a fixed number of independent forward trajectories.
 
 # Fields
-- `num_samples`: Number of forward-pass sample trajectories per iteration.
+
+  - `num_samples`: Number of forward-pass sample trajectories per iteration.
 
 See also: [`DefaultSampling`](@ref), [`InSampleMC`](@ref)
 """
@@ -478,7 +498,8 @@ A multi-armed bandit duality handler that dynamically selects among multiple
 duality handlers based on observed cut quality.
 
 # Fields
-- `handlers`: Vector of candidate [`DualityHandler`](@ref) instances.
+
+  - `handlers`: Vector of candidate [`DualityHandler`](@ref) instances.
 
 See also: [`DualityHandler`](@ref)
 """
@@ -513,7 +534,8 @@ struct DefaultForwardPassStrategy <: ForwardPassStrategy end
 Revisit previously explored forward-pass trajectories periodically.
 
 # Fields
-- `period`: How often (in iterations) to revisit past trajectories.
+
+  - `period`: How often (in iterations) to revisit past trajectories.
 
 See also: [`DefaultForwardPassStrategy`](@ref), [`ForwardPassStrategy`](@ref)
 """
@@ -537,8 +559,9 @@ struct RiskAdjustedForwardPassStrategy <: ForwardPassStrategy end
 Regularized forward-pass that adds an L2 penalty to stabilize the cut planes.
 
 # Fields
-- `rho`: Regularization parameter (positive real). Larger values = more
-  regularization.
+
+  - `rho`: Regularization parameter (positive real). Larger values = more
+    regularization.
 
 See also: [`DefaultForwardPassStrategy`](@ref), [`ForwardPassStrategy`](@ref)
 """
@@ -611,11 +634,12 @@ struct AutoScaling <: ScalingMode end
 Configuration for capturing and writing the SDDP training log.
 
 # Fields
-- `log_file`: Path to the log file (relative to the output directory).
-- `log_frequency`: Number of iterations between log entries.
-- `log_every_iteration`: When `true`, log every iteration regardless of
-  `log_frequency`.
-- `print_level`: Verbosity level for console output (0 = silent, higher = more).
+
+  - `log_file`: Path to the log file (relative to the output directory).
+  - `log_frequency`: Number of iterations between log entries.
+  - `log_every_iteration`: When `true`, log every iteration regardless of
+    `log_frequency`.
+  - `print_level`: Verbosity level for console output (0 = silent, higher = more).
 
 See also: [`TrainingLog`](@ref), [`SDDPPolicyTaskDefinition`](@ref)
 """
@@ -633,13 +657,14 @@ A single row in the SDDP training log capturing convergence metrics at one
 iteration.
 
 # Fields
-- `iteration`: SDDP iteration number.
-- `bound`: Current lower bound (expected future cost estimate).
-- `simulation_value`: Simulated cost from the forward pass.
-- `time`: Cumulative wall-clock time in seconds.
-- `total_solves`: Cumulative number of LP subproblem solves.
-- `serious_numerical_issue`: `true` if a numerical issue was detected this
-  iteration.
+
+  - `iteration`: SDDP iteration number.
+  - `bound`: Current lower bound (expected future cost estimate).
+  - `simulation_value`: Simulated cost from the forward pass.
+  - `time`: Cumulative wall-clock time in seconds.
+  - `total_solves`: Cumulative number of LP subproblem solves.
+  - `serious_numerical_issue`: `true` if a numerical issue was detected this
+    iteration.
 
 See also: [`TrainingLog`](@ref), [`TrainingLogConfig`](@ref)
 """
@@ -658,9 +683,10 @@ end
 Complete record of an SDDP training run.
 
 # Fields
-- `status`: Terminal status symbol (e.g., `:iteration_limit`, `:time_limit`,
-  `:statistical`).
-- `iterations`: Vector of [`TrainingLogEntry`](@ref), one per logged iteration.
+
+  - `status`: Terminal status symbol (e.g., `:iteration_limit`, `:time_limit`,
+    `:statistical`).
+  - `iterations`: Vector of [`TrainingLogEntry`](@ref), one per logged iteration.
 
 See also: [`TrainingLogEntry`](@ref), [`TrainingLogConfig`](@ref)
 """
@@ -677,15 +703,16 @@ choices (convergence, risk measure, parallelism, duality, etc.) are bundled
 into this struct and passed to SDDP.jl's `train` function.
 
 # Fields
-- `convergence`: [`Convergence`](@ref) — stopping criteria and iteration limits.
-- `risk_measure`: [`RiskMeasure`](@ref) — objective risk functional.
-- `parallel_scheme`: [`ParallelScheme`](@ref) — forward-pass parallelism.
-- `sampling_scheme`: [`SamplingScheme`](@ref) — scenario sampling method.
-- `duality_handler`: [`DualityHandler`](@ref) — cut-coefficient computation.
-- `forward_pass`: [`ForwardPassStrategy`](@ref) — forward-pass behavior.
-- `cut_type`: [`CutType`](@ref) — single or multi-cut generation.
-- `scaling`: [`ScalingMode`](@ref) — variable scaling.
-- `logging`: [`TrainingLogConfig`](@ref) — log capture and verbosity settings.
+
+  - `convergence`: [`Convergence`](@ref) — stopping criteria and iteration limits.
+  - `risk_measure`: [`RiskMeasure`](@ref) — objective risk functional.
+  - `parallel_scheme`: [`ParallelScheme`](@ref) — forward-pass parallelism.
+  - `sampling_scheme`: [`SamplingScheme`](@ref) — scenario sampling method.
+  - `duality_handler`: [`DualityHandler`](@ref) — cut-coefficient computation.
+  - `forward_pass`: [`ForwardPassStrategy`](@ref) — forward-pass behavior.
+  - `cut_type`: [`CutType`](@ref) — single or multi-cut generation.
+  - `scaling`: [`ScalingMode`](@ref) — variable scaling.
+  - `logging`: [`TrainingLogConfig`](@ref) — log capture and verbosity settings.
 
 See also: [`SDDPEngine`](@ref), [`Convergence`](@ref)
 """
@@ -708,9 +735,10 @@ Artifact returned by [`train`](@ref). Contains the trained policy and an
 optional training log.
 
 # Fields
-- `policy`: The trained `SDDP.PolicyGraph`.
-- `training_log`: [`TrainingLog`](@ref) captured during training, or `nothing`
-  when logging is disabled.
+
+  - `policy`: The trained `SDDP.PolicyGraph`.
+  - `training_log`: [`TrainingLog`](@ref) captured during training, or `nothing`
+    when logging is disabled.
 
 See also: [`TrainingLog`](@ref), [`save_policy`](@ref)
 """
@@ -725,9 +753,10 @@ end
 Specification for the SDDP simulation phase.
 
 # Fields
-- `num_simulated_series`: Number of independent Monte Carlo trajectories.
-- `parallel_scheme`: [`ParallelScheme`](@ref) for parallel simulation.
-- `sampling_scheme`: [`SamplingScheme`](@ref) for scenario sampling.
+
+  - `num_simulated_series`: Number of independent Monte Carlo trajectories.
+  - `parallel_scheme`: [`ParallelScheme`](@ref) for parallel simulation.
+  - `sampling_scheme`: [`SamplingScheme`](@ref) for scenario sampling.
 
 See also: [`SDDPEngine`](@ref)
 """
@@ -744,9 +773,10 @@ Artifact returned by `simulate`. Contains the full simulation
 trajectory data.
 
 # Fields
-- `definition`: The [`SDDPSimulationTaskDefinition`](@ref) used.
-- `simulations`: Nested vector of simulation results (series × stages × vars).
-- `scaling`: The [`ScalingConfig`](@ref) needed to un-scale variable values.
+
+  - `definition`: The [`SDDPSimulationTaskDefinition`](@ref) used.
+  - `simulations`: Nested vector of simulation results (series × stages × vars).
+  - `scaling`: The [`ScalingConfig`](@ref) needed to un-scale variable values.
 
 See also: [`SDDPSimulationTaskDefinition`](@ref), [`ScalingConfig`](@ref)
 """
@@ -762,10 +792,11 @@ end
 Configuration for pre-solve numerical diagnostics.
 
 # Fields
-- `run_numerical_report`: When `true`, run SDDP.jl's numerical diagnostics
-  before training begins.
-- `warn_threshold`: Warn when any numerical metric exceeds this value.
-- `halt_threshold`: Abort training when any metric exceeds this value.
+
+  - `run_numerical_report`: When `true`, run SDDP.jl's numerical diagnostics
+    before training begins.
+  - `warn_threshold`: Warn when any numerical metric exceeds this value.
+  - `halt_threshold`: Abort training when any metric exceeds this value.
 
 See also: [`SDDPEngine`](@ref)
 """
@@ -781,11 +812,13 @@ end
 Configuration for the LP/MIP solver used in each SDDP subproblem.
 
 # Fields
-- `solver_name`: Name of the solver package (e.g., `"HiGHS"`, `"GLPK"`).
-- `attributes`: Dict of solver-specific attribute key-value pairs passed via
-  `set_optimizer_attribute`.
+
+  - `solver_name`: Name of the solver package (e.g., `"HiGHS"`, `"GLPK"`).
+  - `attributes`: Dict of solver-specific attribute key-value pairs passed via
+    `set_optimizer_attribute`.
 
 # Example
+
 ```julia
 # HiGHS with a 60-second time limit
 SolverConfig("HiGHS", Dict("time_limit" => 60.0))
@@ -828,8 +861,9 @@ Add a slack variable with a penalty cost to absorb negative inflow realizations.
 Keeps the model feasible without modifying scenario data.
 
 # Fields
-- `penalty_cost`: Cost per unit of inflow slack (currency/m³). Should be large
-  enough to discourage use in normal conditions.
+
+  - `penalty_cost`: Cost per unit of inflow slack (currency/m³). Should be large
+    enough to discourage use in normal conditions.
 
 See also: [`InflowTruncation`](@ref), [`InflowNonNegativity`](@ref)
 """
@@ -854,7 +888,8 @@ Truncate negative inflow realizations to zero AND add an inflow slack variable
 with a penalty cost for any remaining infeasibility.
 
 # Fields
-- `penalty_cost`: Cost per unit of inflow slack (currency/m³).
+
+  - `penalty_cost`: Cost per unit of inflow slack (currency/m³).
 
 See also: [`InflowTruncation`](@ref), [`InflowPenalty`](@ref)
 """
@@ -869,11 +904,12 @@ Configuration for out-of-sample policy validation using a fresh set of
 inflow scenarios.
 
 # Fields
-- `num_simulations`: Number of out-of-sample trajectories to simulate.
-- `seed`: Random seed for generating the validation SAA (must differ from the
-  training seed to ensure independence).
-- `branchings`: Number of scenario branchings per stage in the validation tree.
-- `parallel_scheme`: [`ParallelScheme`](@ref) for parallel validation.
+
+  - `num_simulations`: Number of out-of-sample trajectories to simulate.
+  - `seed`: Random seed for generating the validation SAA (must differ from the
+    training seed to ensure independence).
+  - `branchings`: Number of scenario branchings per stage in the validation tree.
+  - `parallel_scheme`: [`ParallelScheme`](@ref) for parallel validation.
 
 See also: [`SDDPEngine`](@ref), [`ParallelScheme`](@ref)
 """
@@ -891,9 +927,10 @@ Artifact produced by `validate`. Contains out-of-sample simulation
 results and pre-computed summary statistics.
 
 # Fields
-- `simulations`: Nested vector of simulation results (series × stages × vars).
-- `scaling`: The [`ScalingConfig`](@ref) for un-scaling variable values.
-- `statistics`: Dict of summary statistics (mean, std, quantiles, CI bounds).
+
+  - `simulations`: Nested vector of simulation results (series × stages × vars).
+  - `scaling`: The [`ScalingConfig`](@ref) for un-scaling variable values.
+  - `statistics`: Dict of summary statistics (mean, std, quantiles, CI bounds).
 """
 struct SDDPValidationTaskArtifact
     simulations::Vector{Vector{Dict{Symbol,Any}}}
@@ -908,13 +945,14 @@ Configuration for writing subproblem model files and optionally solving the
 deterministic equivalent for debugging.
 
 # Fields
-- `write_subproblems`: When `true`, write each subproblem to a file.
-- `subproblem_nodes`: List of node IDs to write (empty = all nodes).
-- `subproblem_format`: File format: `"mof"` (default), `"lp"`, or `"mps"`.
-- `deterministic_equivalent`: When `true`, solve the full deterministic
-  equivalent problem.
-- `det_equiv_time_limit`: Time limit in seconds for the deterministic
-  equivalent solve.
+
+  - `write_subproblems`: When `true`, write each subproblem to a file.
+  - `subproblem_nodes`: List of node IDs to write (empty = all nodes).
+  - `subproblem_format`: File format: `"mof"` (default), `"lp"`, or `"mps"`.
+  - `deterministic_equivalent`: When `true`, solve the full deterministic
+    equivalent problem.
+  - `det_equiv_time_limit`: Time limit in seconds for the deterministic
+    equivalent solve.
 
 See also: [`SDDPEngine`](@ref)
 """
@@ -933,17 +971,19 @@ Complete configuration for the SDDP algorithm engine. This is the concrete
 [`Engine`](@ref) type built from the `engine` section of `main.jsonc`.
 
 # Fields
-- `policy`: [`SDDPPolicyTaskDefinition`](@ref) — training algorithm settings.
-- `simulation`: [`SDDPSimulationTaskDefinition`](@ref) — simulation settings.
-- `diagnostics`: [`DiagnosticsConfig`](@ref) — numerical report settings.
-- `solver`: [`SolverConfig`](@ref) — LP solver and attributes.
-- `inflow_non_negativity`: [`InflowNonNegativity`](@ref) — negative inflow
-  handling strategy.
-- `validation`: [`OutOfSampleValidation`](@ref) or `nothing` — optional
-  out-of-sample validation settings.
-- `debug`: [`DebugConfig`](@ref) — subproblem file export and det-equiv settings.
+
+  - `policy`: [`SDDPPolicyTaskDefinition`](@ref) — training algorithm settings.
+  - `simulation`: [`SDDPSimulationTaskDefinition`](@ref) — simulation settings.
+  - `diagnostics`: [`DiagnosticsConfig`](@ref) — numerical report settings.
+  - `solver`: [`SolverConfig`](@ref) — LP solver and attributes.
+  - `inflow_non_negativity`: [`InflowNonNegativity`](@ref) — negative inflow
+    handling strategy.
+  - `validation`: [`OutOfSampleValidation`](@ref) or `nothing` — optional
+    out-of-sample validation settings.
+  - `debug`: [`DebugConfig`](@ref) — subproblem file export and det-equiv settings.
 
 # Example
+
 ```julia
 study = read_study("/path/to/my_study")
 engine = study.engine  # SDDPEngine

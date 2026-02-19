@@ -11,8 +11,7 @@ CONVERGENCE_DICT_VAL = Dict{String,Any}(
     "min_iterations" => 5,
     "max_iterations" => 5,
     "stopping_criteria" => Dict{String,Any}(
-        "kind" => "IterationLimit",
-        "params" => Dict{String,Any}("num_iterations" => 5),
+        "kind" => "IterationLimit", "params" => Dict{String,Any}("num_iterations" => 5)
     ),
 )
 
@@ -20,8 +19,9 @@ RISK_MEASURE_DICT_VAL = Dict{String,Any}(
     "kind" => "Expectation", "params" => Dict{String,Any}()
 )
 
-PARALLEL_SCHEME_DICT_VAL =
-    Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}())
+PARALLEL_SCHEME_DICT_VAL = Dict{String,Any}(
+    "kind" => "Serial", "params" => Dict{String,Any}()
+)
 
 POLICY_DICT_VAL = Dict{String,Any}(
     "convergence" => CONVERGENCE_DICT_VAL,
@@ -30,15 +30,15 @@ POLICY_DICT_VAL = Dict{String,Any}(
 )
 
 SIMULATION_DICT_VAL = Dict{String,Any}(
-    "num_simulated_series" => 10,
-    "parallel_scheme" => PARALLEL_SCHEME_DICT_VAL,
+    "num_simulated_series" => 10, "parallel_scheme" => PARALLEL_SCHEME_DICT_VAL
 )
 
 VALIDATION_DICT = Dict{String,Any}(
     "num_simulations" => 50,
     "seed" => 99999,
     "branchings" => 20,
-    "parallel_scheme" => Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+    "parallel_scheme" =>
+        Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
 )
 
 ENGINE_DICT_WITH_VALIDATION = Dict{String,Any}(
@@ -413,33 +413,40 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
         function _make_graph_dict_val(num_stages::Int)
             nodes = []
             for i in 1:num_stages
-                push!(nodes, Dict{String,Any}(
-                    "id" => i,
-                    "stage" => i,
-                    "start_datetime" => "2024-0$(i)-01",
-                    "end_datetime" => "2024-0$(i + 1)-01",
-                ))
+                push!(
+                    nodes,
+                    Dict{String,Any}(
+                        "id" => i,
+                        "stage" => i,
+                        "start_datetime" => "2024-0$(i)-01",
+                        "end_datetime" => "2024-0$(i + 1)-01",
+                    ),
+                )
             end
             edges = []
             for i in 1:(num_stages - 1)
-                push!(edges, Dict{String,Any}(
-                    "source" => i,
-                    "target" => i + 1,
-                    "probability" => 1.0,
-                    "discount_rate" => 0.0,
-                ))
+                push!(
+                    edges,
+                    Dict{String,Any}(
+                        "source" => i,
+                        "target" => i + 1,
+                        "probability" => 1.0,
+                        "discount_rate" => 0.0,
+                    ),
+                )
             end
             return Dict{String,Any}(
-                "params" => Dict{String,Any}("nodes" => nodes, "edges" => edges),
+                "params" => Dict{String,Any}("nodes" => nodes, "edges" => edges)
             )
         end
 
         function _make_load_dict_val(num_stages::Int)
             values = []
             for i in 1:num_stages
-                push!(values, Dict{String,Any}(
-                    "bus_id" => 1, "node_id" => i, "value" => 100.0
-                ))
+                push!(
+                    values,
+                    Dict{String,Any}("bus_id" => 1, "node_id" => i, "value" => 100.0),
+                )
             end
             return Dict{String,Any}(
                 "kind" => "DeterministicLoad",
@@ -453,9 +460,8 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
                 "initial_season" => 1,
                 "branchings" => 10,
                 "graph" => _make_graph_dict_val(2),
-                "inflow" => Dict{String,Any}(
-                    "stochastic_process" => _make_ar_dict_val(50.0, 10.0),
-                ),
+                "inflow" =>
+                    Dict{String,Any}("stochastic_process" => _make_ar_dict_val(50.0, 10.0)),
                 "load" => _make_load_dict_val(2),
             )
             e = CompositeException()
@@ -489,10 +495,7 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
             # Build ScenariosData with Markov chain and 2 AR processes
             function _make_markov_chain_dict_val()
                 return Dict{String,Any}(
-                    "transition_matrices" => [
-                        [[0.5, 0.5]],
-                        [[0.8, 0.2], [0.3, 0.7]],
-                    ],
+                    "transition_matrices" => [[[0.5, 0.5]], [[0.8, 0.2], [0.3, 0.7]]]
                 )
             end
 
@@ -574,29 +577,30 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
                     "params" => Dict{String,Any}(
                         "nodes" => [
                             Dict{String,Any}(
-                                "id" => 1, "stage" => 1,
+                                "id" => 1,
+                                "stage" => 1,
                                 "start_datetime" => "2024-01-01",
                                 "end_datetime" => "2024-02-01",
                             ),
                             Dict{String,Any}(
-                                "id" => 2, "stage" => 2,
+                                "id" => 2,
+                                "stage" => 2,
                                 "start_datetime" => "2024-02-01",
                                 "end_datetime" => "2024-03-01",
                             ),
                         ],
                         "edges" => [
                             Dict{String,Any}(
-                                "source" => 1, "target" => 2,
-                                "probability" => 1.0, "discount_rate" => 0.0,
+                                "source" => 1,
+                                "target" => 2,
+                                "probability" => 1.0,
+                                "discount_rate" => 0.0,
                             ),
                         ],
                     ),
                 ),
                 "markov_chain" => Dict{String,Any}(
-                    "transition_matrices" => [
-                        [[0.5, 0.5]],
-                        [[0.8, 0.2], [0.3, 0.7]],
-                    ],
+                    "transition_matrices" => [[[0.5, 0.5]], [[0.8, 0.2], [0.3, 0.7]]]
                 ),
                 "inflow" => Dict{String,Any}(
                     "stochastic_process" => Dict{String,Any}(
@@ -624,34 +628,39 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
             @test length(e_sc) == 0
 
             # Build minimal system
-            system_d = convert(Dict{String,Any}, Dict(
-                "buses" => Dict{String,Any}(
-                    "entities" => [
-                        Dict{String,Any}(
-                            "id" => 1, "name" => "bus1", "deficit_cost" => 1000.0
-                        ),
-                    ],
+            system_d = convert(
+                Dict{String,Any},
+                Dict(
+                    "buses" => Dict{String,Any}(
+                        "entities" => [
+                            Dict{String,Any}(
+                                "id" => 1,
+                                "name" => "bus1",
+                                "deficit_cost" => 1000.0,
+                            ),
+                        ],
+                    ),
+                    "lines" => Dict{String,Any}("entities" => Any[]),
+                    "thermals" => Dict{String,Any}("entities" => Any[]),
+                    "hydros" => Dict{String,Any}(
+                        "entities" => [
+                            Dict{String,Any}(
+                                "id" => 1,
+                                "name" => "hydro1",
+                                "bus_id" => 1,
+                                "downstream_id" => 0,
+                                "productivity" => 1.0,
+                                "initial_storage" => 50.0,
+                                "min_storage" => 0.0,
+                                "max_storage" => 100.0,
+                                "min_generation" => 0.0,
+                                "max_generation" => 80.0,
+                                "spillage_penalty" => 0.001,
+                            ),
+                        ],
+                    ),
                 ),
-                "lines" => Dict{String,Any}("entities" => Any[]),
-                "thermals" => Dict{String,Any}("entities" => Any[]),
-                "hydros" => Dict{String,Any}(
-                    "entities" => [
-                        Dict{String,Any}(
-                            "id" => 1,
-                            "name" => "hydro1",
-                            "bus_id" => 1,
-                            "downstream_id" => 0,
-                            "productivity" => 1.0,
-                            "initial_storage" => 50.0,
-                            "min_storage" => 0.0,
-                            "max_storage" => 100.0,
-                            "min_generation" => 0.0,
-                            "max_generation" => 80.0,
-                            "spillage_penalty" => 0.001,
-                        ),
-                    ],
-                ),
-            ))
+            )
             e_sys = CompositeException()
             system = SDDPlab.System.SystemData(system_d, e_sys)
             @test system !== nothing

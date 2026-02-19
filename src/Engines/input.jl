@@ -77,10 +77,7 @@ function OutOfSampleValidation(d::Dict{String,Any}, e::CompositeException)
 
     return if valid_keys_types
         OutOfSampleValidation(
-            d["num_simulations"],
-            d["seed"],
-            d["branchings"],
-            d["parallel_scheme"],
+            d["num_simulations"], d["seed"], d["branchings"], d["parallel_scheme"]
         )
     else
         nothing
@@ -98,7 +95,7 @@ function __build_validation!(d::Dict{String,Any}, e::CompositeException)::Bool
         push!(
             e,
             ErrorException(
-                "Key 'validation' must be a Dict{String,Any}, got $(typeof(val))",
+                "Key 'validation' must be a Dict{String,Any}, got $(typeof(val))"
             ),
         )
         return false

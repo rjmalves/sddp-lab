@@ -6,10 +6,7 @@ using DataFrames
 _example_dir() = abspath(joinpath(@__DIR__, "..", "..", "example", "1dtoy"))
 
 function _write_two_config_experiment(
-    tmpdir::String,
-    example_path::String;
-    max_iterations::Int = 3,
-    num_simulations::Int = 5,
+    tmpdir::String, example_path::String; max_iterations::Int = 3, num_simulations::Int = 5
 )
     example_escaped = replace(abspath(example_path), "\\" => "/")
     results_dir = joinpath(tmpdir, "results")
@@ -67,10 +64,7 @@ function _write_two_config_experiment(
     return exp_path, results_dir
 end
 
-function _write_mock_operation_system(
-    dir::String,
-    stage_costs::Vector{Vector{Float64}},
-)
+function _write_mock_operation_system(dir::String, stage_costs::Vector{Vector{Float64}})
     mkpath(dir)
     rows = NamedTuple{
         (:stage, :variable_name, :entity_id, :scenario, :value),
@@ -127,8 +121,15 @@ end
 
     @testset "all expected keys are present" begin
         expected_keys = [
-            "mean_cost", "std_cost", "ci_lower_95", "ci_upper_95",
-            "p05_cost", "p50_cost", "p95_cost", "min_cost", "max_cost",
+            "mean_cost",
+            "std_cost",
+            "ci_lower_95",
+            "ci_upper_95",
+            "p05_cost",
+            "p50_cost",
+            "p95_cost",
+            "min_cost",
+            "max_cost",
             "num_simulations",
         ]
         for k in expected_keys
@@ -171,7 +172,13 @@ end
     @testset "returns empty vector when file exists but has no STAGE_COST rows" begin
         mktempdir() do tmpdir
             rows = [
-                (stage = 1, variable_name = "FUTURE_COST", entity_id = 1, scenario = 1, value = 5.0),
+                (
+                    stage = 1,
+                    variable_name = "FUTURE_COST",
+                    entity_id = 1,
+                    scenario = 1,
+                    value = 5.0,
+                ),
             ]
             CSV.write(joinpath(tmpdir, "operation_system.csv"), rows)
             costs = SDDPlab._load_total_costs(tmpdir)
@@ -211,10 +218,20 @@ end
     @testset "reads timing values correctly" begin
         mktempdir() do tmpdir
             rows = [
-                (config_name = "cfg_a", success = true, train_time_s = 5.2,
-                 simulate_time_s = 1.1, error = ""),
-                (config_name = "cfg_b", success = true, train_time_s = 6.8,
-                 simulate_time_s = 2.3, error = ""),
+                (
+                    config_name = "cfg_a",
+                    success = true,
+                    train_time_s = 5.2,
+                    simulate_time_s = 1.1,
+                    error = "",
+                ),
+                (
+                    config_name = "cfg_b",
+                    success = true,
+                    train_time_s = 6.8,
+                    simulate_time_s = 2.3,
+                    error = "",
+                ),
             ]
             CSV.write(joinpath(tmpdir, "experiment_summary.csv"), rows)
 
@@ -326,8 +343,10 @@ end
 @testset "write_comparison unit" begin
     mktempdir() do tmpdir
         # Set up two config directories with known costs
-        for (name, costs) in [("cfg_a", [[100.0, 200.0], [150.0, 250.0]]),
-                               ("cfg_b", [[50.0, 50.0],  [60.0, 60.0]])]
+        for (name, costs) in [
+            ("cfg_a", [[100.0, 200.0], [150.0, 250.0]]),
+            ("cfg_b", [[50.0, 50.0], [60.0, 60.0]]),
+        ]
             _write_mock_operation_system(joinpath(tmpdir, name), costs)
         end
 
@@ -344,11 +363,19 @@ end
             df = CSV.read(summary_path, DataFrame)
             @test nrow(df) == 2
             expected_cols = [
-                "config_name", "mean_cost", "std_cost",
-                "ci_lower_95", "ci_upper_95",
-                "p05_cost", "p50_cost", "p95_cost",
-                "min_cost", "max_cost",
-                "num_scenarios", "train_time_s", "simulate_time_s",
+                "config_name",
+                "mean_cost",
+                "std_cost",
+                "ci_lower_95",
+                "ci_upper_95",
+                "p05_cost",
+                "p50_cost",
+                "p95_cost",
+                "min_cost",
+                "max_cost",
+                "num_scenarios",
+                "train_time_s",
+                "simulate_time_s",
             ]
             col_set = names(df)
             for col in expected_cols

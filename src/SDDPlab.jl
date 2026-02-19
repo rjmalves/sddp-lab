@@ -237,9 +237,7 @@ export Engine,
     ParquetFormat,
     InputModule
 
-export get_reader,
-    get_writer,
-    get_extension
+export get_reader, get_writer, get_extension
 
 export LOAD,
     DEFICIT,

@@ -71,7 +71,9 @@ function VectorAutoRegressive(d::Dict{String,Any}, e::CompositeException)
     noise_dict = __build_var_noise_naive_dict(d)
     noise = Naive(noise_dict, e)
 
-    return VectorAutoRegressive(season_parameters, noise, ids, initial_values, max_lag, num_seasons)
+    return VectorAutoRegressive(
+        season_parameters, noise, ids, initial_values, max_lag, num_seasons
+    )
 end
 
 # Transforms the VAR params dict into a Naive-compatible dict for noise model construction.
@@ -154,5 +156,5 @@ function __generate_saa(
     N::Integer,
     B::Integer,
 )
-    __generate_saa(rng, s.noise_model, initial_season, N, B)
+    return __generate_saa(rng, s.noise_model, initial_season, N, B)
 end

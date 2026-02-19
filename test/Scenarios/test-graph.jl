@@ -18,7 +18,10 @@ function __make_valid_graph_dict()
         ],
         "edges" => [
             Dict{String,Any}(
-                "source" => 1, "target" => 2, "probability" => 1.0, "discount_rate" => 0.0
+                "source" => 1,
+                "target" => 2,
+                "probability" => 1.0,
+                "discount_rate" => 0.0,
             ),
         ],
     )

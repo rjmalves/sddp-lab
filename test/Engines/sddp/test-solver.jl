@@ -8,8 +8,7 @@ import MathOptInterface as MOI
     # -----------------------------------------------------------------------
     @testset "solver-config-valid-name-and-attributes" begin
         d = Dict{String,Any}(
-            "name" => "HiGHS",
-            "attributes" => Dict{String,Any}("output_flag" => false),
+            "name" => "HiGHS", "attributes" => Dict{String,Any}("output_flag" => false)
         )
         e = CompositeException()
         result = Engines.SolverConfig(d, e)
@@ -135,23 +134,17 @@ import MathOptInterface as MOI
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         simulation_dict = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
-        params = Dict{String,Any}(
-            "policy" => policy_dict,
-            "simulation" => simulation_dict,
-        )
+        params = Dict{String,Any}("policy" => policy_dict, "simulation" => simulation_dict)
         e = CompositeException()
         result = Engines.SDDPEngine(params, e)
         @test result !== nothing
@@ -170,22 +163,18 @@ import MathOptInterface as MOI
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         simulation_dict = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         solver_dict = Dict{String,Any}(
-            "name" => "HiGHS",
-            "attributes" => Dict{String,Any}("output_flag" => false),
+            "name" => "HiGHS", "attributes" => Dict{String,Any}("output_flag" => false)
         )
         params = Dict{String,Any}(
             "policy" => policy_dict,
@@ -221,7 +210,15 @@ import MathOptInterface as MOI
         )
         diag = Engines.DiagnosticsConfig(false, 1e6, 1e10)
         solver = Engines.SolverConfig("HiGHS", Dict{String,Any}("output_flag" => false))
-        engine = Engines.SDDPEngine(policy, simulation, diag, solver, Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
+        engine = Engines.SDDPEngine(
+            policy,
+            simulation,
+            diag,
+            solver,
+            Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+        )
         @test engine.solver.solver_name == "HiGHS"
         @test engine.solver.attributes == Dict{String,Any}("output_flag" => false)
     end

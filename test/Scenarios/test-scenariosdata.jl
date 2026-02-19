@@ -43,7 +43,9 @@ function __make_scenariosdata_dict()
                 "id" => 1,
                 "distributions" => [
                     Dict{String,Any}(
-                        "season" => 1, "kind" => "Normal", "parameters" => [70.0, 7.0]
+                        "season" => 1,
+                        "kind" => "Normal",
+                        "parameters" => [70.0, 7.0],
                     ),
                 ],
             ),
@@ -166,7 +168,7 @@ end
         d = __make_scenariosdata_dict()
         e = CompositeException()
         d["load"]["params"]["values"] = [
-            Dict{String,Any}("bus_id" => 1, "node_id" => 99, "value" => 100.0),
+            Dict{String,Any}("bus_id" => 1, "node_id" => 99, "value" => 100.0)
         ]
         u = Scenarios.ScenariosData(d, e)
         @test u === nothing
@@ -234,7 +236,9 @@ end
         end
 
         @testset "set-seed-emits-deprecation-warning" begin
-            @test_logs (:warn, r"set_seed! mutates the global RNG") Scenarios.set_seed!(scenarios)
+            @test_logs (:warn, r"set_seed! mutates the global RNG") Scenarios.set_seed!(
+                scenarios
+            )
         end
     end
 end

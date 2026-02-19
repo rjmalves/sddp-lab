@@ -34,12 +34,10 @@ using Graphs
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -58,16 +56,12 @@ using Graphs
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
-            "scaling" => Dict{String,Any}(
-                "kind" => "NoScaling",
-                "params" => Dict{String,Any}(),
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "scaling" =>
+                Dict{String,Any}("kind" => "NoScaling", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -86,16 +80,12 @@ using Graphs
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
-            "scaling" => Dict{String,Any}(
-                "kind" => "AutoScaling",
-                "params" => Dict{String,Any}(),
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "scaling" =>
+                Dict{String,Any}("kind" => "AutoScaling", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -114,15 +104,12 @@ using Graphs
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "scaling" => Dict{String,Any}(
-                "kind" => "NonExistentScaling",
-                "params" => Dict{String,Any}(),
+                "kind" => "NonExistentScaling", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()
@@ -144,10 +131,7 @@ using Graphs
     end
 
     @testset "scaling-config-lookup" begin
-        factors = Dict{Symbol,Float64}(
-            :STORAGE => 50000.0,
-            :HYDRO_GENERATION => 500.0,
-        )
+        factors = Dict{Symbol,Float64}(:STORAGE => 50000.0, :HYDRO_GENERATION => 500.0)
         config = Engines.ScalingConfig(factors)
         @test Engines.get_scaling_factor(config, :STORAGE) == 50000.0
         @test Engines.get_scaling_factor(config, :HYDRO_GENERATION) == 500.0
@@ -166,30 +150,56 @@ using Graphs
 
     @testset "compute-scaling-factors-with-system" begin
         # Build a minimal system for testing
-        buses = System.Buses([
-            System.Bus(1, "bus1", 50.0),
-        ])
+        buses = System.Buses([System.Bus(1, "bus1", 50.0)])
         lines = System.Lines(System.Line[])
         hydros = System.Hydros(
             [
                 System.Hydro(
-                    1, 0, "hydro1", 1, 2.0, 25000.0, 0.0, 50000.0, 0.0, 500.0, 1.0,
+                    1,
+                    0,
+                    "hydro1",
+                    1,
+                    2.0,
+                    25000.0,
+                    0.0,
+                    50000.0,
+                    0.0,
+                    500.0,
+                    1.0,
                     Ref(buses.entities[1]),
                 ),
                 System.Hydro(
-                    2, 0, "hydro2", 1, 1.5, 10000.0, 0.0, 20000.0, 0.0, 300.0, 1.0,
+                    2,
+                    0,
+                    "hydro2",
+                    1,
+                    1.5,
+                    10000.0,
+                    0.0,
+                    20000.0,
+                    0.0,
+                    300.0,
+                    1.0,
                     Ref(buses.entities[1]),
                 ),
             ],
             Graphs.DiGraph(2),
         )
         thermals = System.Thermals([
-            System.Thermal(1, "thermal1", 1, 0.0, 100.0, 10.0, Ref(buses.entities[1])),
+            System.Thermal(1, "thermal1", 1, 0.0, 100.0, 10.0, Ref(buses.entities[1]))
         ])
         noncontrollables = System.NonControllables(System.NonControllable[])
         energycontracts = System.EnergyContracts(System.EnergyContract[])
         pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations)
+        system = System.SystemData(
+            buses,
+            lines,
+            hydros,
+            thermals,
+            noncontrollables,
+            energycontracts,
+            pumpingstations,
+        )
 
         config = Engines.compute_scaling_factors(system)
 
@@ -212,18 +222,24 @@ using Graphs
     end
 
     @testset "compute-scaling-factors-empty-hydros" begin
-        buses = System.Buses([
-            System.Bus(1, "bus1", 100.0),
-        ])
+        buses = System.Buses([System.Bus(1, "bus1", 100.0)])
         lines = System.Lines(System.Line[])
         hydros = System.Hydros(System.Hydro[], Graphs.DiGraph(0))
         thermals = System.Thermals([
-            System.Thermal(1, "thermal1", 1, 0.0, 200.0, 5.0, Ref(buses.entities[1])),
+            System.Thermal(1, "thermal1", 1, 0.0, 200.0, 5.0, Ref(buses.entities[1]))
         ])
         noncontrollables = System.NonControllables(System.NonControllable[])
         energycontracts = System.EnergyContracts(System.EnergyContract[])
         pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations)
+        system = System.SystemData(
+            buses,
+            lines,
+            hydros,
+            thermals,
+            noncontrollables,
+            energycontracts,
+            pumpingstations,
+        )
 
         config = Engines.compute_scaling_factors(system)
 
@@ -241,14 +257,22 @@ using Graphs
     end
 
     @testset "compute-scaling-factors-zero-values" begin
-        buses = System.Buses([
-            System.Bus(1, "bus1", 0.0),
-        ])
+        buses = System.Buses([System.Bus(1, "bus1", 0.0)])
         lines = System.Lines(System.Line[])
         hydros = System.Hydros(
             [
                 System.Hydro(
-                    1, 0, "hydro1", 1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    1,
+                    0,
+                    "hydro1",
+                    1,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
                     Ref(buses.entities[1]),
                 ),
             ],
@@ -258,7 +282,15 @@ using Graphs
         noncontrollables = System.NonControllables(System.NonControllable[])
         energycontracts = System.EnergyContracts(System.EnergyContract[])
         pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations)
+        system = System.SystemData(
+            buses,
+            lines,
+            hydros,
+            thermals,
+            noncontrollables,
+            energycontracts,
+            pumpingstations,
+        )
 
         config = Engines.compute_scaling_factors(system)
 
@@ -270,14 +302,22 @@ using Graphs
     # APPLY SCALING TESTS ---------------------------------------------------------------
 
     @testset "apply-scaling-creates-scaled-system" begin
-        buses = System.Buses([
-            System.Bus(1, "bus1", 50.0),
-        ])
+        buses = System.Buses([System.Bus(1, "bus1", 50.0)])
         lines = System.Lines(System.Line[])
         hydros = System.Hydros(
             [
                 System.Hydro(
-                    1, 0, "hydro1", 1, 1.0, 50.0, 0.0, 100.0, 0.0, 60.0, 1.0,
+                    1,
+                    0,
+                    "hydro1",
+                    1,
+                    1.0,
+                    50.0,
+                    0.0,
+                    100.0,
+                    0.0,
+                    60.0,
+                    1.0,
                     Ref(buses.entities[1]),
                 ),
             ],
@@ -290,7 +330,15 @@ using Graphs
         noncontrollables = System.NonControllables(System.NonControllable[])
         energycontracts = System.EnergyContracts(System.EnergyContract[])
         pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations)
+        system = System.SystemData(
+            buses,
+            lines,
+            hydros,
+            thermals,
+            noncontrollables,
+            energycontracts,
+            pumpingstations,
+        )
 
         config = Engines.compute_scaling_factors(system)
         scaled = Engines.apply_scaling(system, config)

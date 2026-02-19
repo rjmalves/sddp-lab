@@ -4,11 +4,15 @@ struct UnitaryNaive
 end
 
 function UnitaryNaive(d::Dict{String,Any})::UnitaryNaive
-    distributions = Dict(enumerate([__build_unitarynaive_seasonal_model(id) for id in d["distributions"]]))
+    distributions = Dict(
+        enumerate([__build_unitarynaive_seasonal_model(id) for id in d["distributions"]])
+    )
     return UnitaryNaive(d["id"], distributions)
 end
 
-function __build_unitarynaive_seasonal_model(d::Dict{String,Any})::Distributions.UnivariateDistribution
+function __build_unitarynaive_seasonal_model(
+    d::Dict{String,Any}
+)::Distributions.UnivariateDistribution
     return __instantiate_distribution(d["kind"], Tuple(real(d["parameters"])))
 end
 
@@ -20,14 +24,16 @@ reservoir has an independent univariate marginal distribution for each season,
 combined via a seasonal copula for cross-sectional dependence.
 
 # Fields
-- `models`: Per-hydro `UnitaryNaive` marginal distribution sets (one per
-  hydro).
-- `copulas`: Per-season copula objects for joint sampling.
+
+  - `models`: Per-hydro `UnitaryNaive` marginal distribution sets (one per
+    hydro).
+  - `copulas`: Per-season copula objects for joint sampling.
 
 # Example
+
 ```julia
 # Naive processes are constructed from the stochastic_process.jsonc config
-process = study.inputs.files |> get_scenarios |> (s -> get_stochastic_process(s.inflow))
+process = (s -> get_stochastic_process(s.inflow))(get_scenarios(study.inputs.files))
 saa = generate_saa(process, 1, 60, 200, 42)
 ```
 
@@ -101,7 +107,9 @@ function __build_mvdist(s::Naive, season::Int)::Copulas.SklarDist
     return SklarDist(s.copulas[season], marginals)
 end
 
-function __instantiate_distribution(name::String, params::Tuple)::Distributions.UnivariateDistribution
+function __instantiate_distribution(
+    name::String, params::Tuple
+)::Distributions.UnivariateDistribution
     return getfield(Distributions, Symbol(name))(params...)
 end
 

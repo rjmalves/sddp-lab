@@ -8,8 +8,9 @@ AVAR_DICT = convert(Dict{String,Any}, Dict("alpha" => 0.5))
 CVAR_DICT = convert(Dict{String,Any}, Dict("alpha" => 0.2, "lambda" => 0.5))
 ENTROPIC_DICT = convert(Dict{String,Any}, Dict("theta" => 0.1))
 WASSERSTEIN_RM_DICT = convert(Dict{String,Any}, Dict("alpha" => 0.5))
-MODIFIED_CHI_SQUARED_DICT =
-    convert(Dict{String,Any}, Dict("radius" => 0.1, "minimum_std" => 0.25))
+MODIFIED_CHI_SQUARED_DICT = convert(
+    Dict{String,Any}, Dict("radius" => 0.1, "minimum_std" => 0.25)
+)
 CONVEX_COMBINATION_DICT = convert(
     Dict{String,Any},
     Dict(
@@ -17,15 +18,13 @@ CONVEX_COMBINATION_DICT = convert(
             Dict{String,Any}(
                 "weight" => 0.5,
                 "risk_measure" => Dict{String,Any}(
-                    "kind" => "Expectation",
-                    "params" => Dict{String,Any}(),
+                    "kind" => "Expectation", "params" => Dict{String,Any}()
                 ),
             ),
             Dict{String,Any}(
                 "weight" => 0.5,
                 "risk_measure" => Dict{String,Any}(
-                    "kind" => "AVaR",
-                    "params" => Dict{String,Any}("alpha" => 0.1),
+                    "kind" => "AVaR", "params" => Dict{String,Any}("alpha" => 0.1)
                 ),
             ),
         ],
@@ -210,8 +209,7 @@ CONVEX_COMBINATION_DICT = convert(
                     Dict{String,Any}(
                         "weight" => 0.3,
                         "risk_measure" => Dict{String,Any}(
-                            "kind" => "Expectation",
-                            "params" => Dict{String,Any}(),
+                            "kind" => "Expectation", "params" => Dict{String,Any}()
                         ),
                     ),
                     Dict{String,Any}(
@@ -237,8 +235,7 @@ CONVEX_COMBINATION_DICT = convert(
                     Dict{String,Any}(
                         "weight" => 0.5,
                         "risk_measure" => Dict{String,Any}(
-                            "kind" => "Expectation",
-                            "params" => Dict{String,Any}(),
+                            "kind" => "Expectation", "params" => Dict{String,Any}()
                         ),
                     ),
                     Dict{String,Any}(
@@ -278,8 +275,7 @@ CONVEX_COMBINATION_DICT = convert(
                     Dict{String,Any}(
                         "weight" => 0.0,
                         "risk_measure" => Dict{String,Any}(
-                            "kind" => "Expectation",
-                            "params" => Dict{String,Any}(),
+                            "kind" => "Expectation", "params" => Dict{String,Any}()
                         ),
                     ),
                     Dict{String,Any}(
@@ -299,12 +295,7 @@ CONVEX_COMBINATION_DICT = convert(
 
     @testset "convex-combination-missing-risk-measure-key" begin
         d = convert(
-            Dict{String,Any},
-            Dict(
-                "measures" => [
-                    Dict{String,Any}("weight" => 1.0),
-                ],
-            ),
+            Dict{String,Any}, Dict("measures" => [Dict{String,Any}("weight" => 1.0)])
         )
         e = CompositeException()
         @test Engines.ConvexCombination(d, e) === nothing
@@ -339,8 +330,7 @@ CONVEX_COMBINATION_DICT = convert(
                     Dict{String,Any}(
                         "weight" => 0.7,
                         "risk_measure" => Dict{String,Any}(
-                            "kind" => "Expectation",
-                            "params" => Dict{String,Any}(),
+                            "kind" => "Expectation", "params" => Dict{String,Any}()
                         ),
                     ),
                     Dict{String,Any}(

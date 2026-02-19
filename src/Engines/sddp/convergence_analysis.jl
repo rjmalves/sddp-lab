@@ -25,9 +25,11 @@ The gap is defined as `simulation_value - bound`. The relative gap is
 `gap_absolute / |bound|`. Returns `NaN` for iterations where the bound is zero.
 
 # Arguments
-- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+  - `training_log`: A [`TrainingLog`](@ref) from a completed training run.
 
 # Example
+
 ```julia
 artifact = train(study, model)
 df = compute_gap_trajectory(artifact.training_log)
@@ -37,7 +39,7 @@ See also: [`compute_convergence_rate`](@ref), [`generate_convergence_report`](@r
 """
 function compute_gap_trajectory(training_log::TrainingLog)::DataFrame
     n = length(training_log.iterations)
-    df = DataFrame(
+    df = DataFrame(;
         iteration = Vector{Int}(undef, n),
         bound = Vector{Float64}(undef, n),
         simulation_value = Vector{Float64}(undef, n),
@@ -64,22 +66,25 @@ end
 Compute convergence rate metrics from a completed training run.
 
 Returns a dictionary with the following keys:
-- `"bound_improvement_rate"`: Mean per-iteration improvement in the lower bound
-  over the second half of training.
-- `"gap_reduction_rate"`: Slope of `log(relative_gap)` vs iteration (negative =
-  converging).
-- `"total_time_seconds"`: Total wall-clock training time.
-- `"time_per_iteration_mean"`: Mean seconds per iteration.
-- `"time_per_iteration_std"`: Standard deviation of per-iteration time.
-- `"iterations_total"`: Total number of iterations.
-- `"final_bound"`: Lower bound at the last iteration.
-- `"final_simulation_value"`: Simulated cost at the last iteration.
-- `"final_gap_relative"`: Relative gap at the last iteration.
+
+  - `"bound_improvement_rate"`: Mean per-iteration improvement in the lower bound
+    over the second half of training.
+  - `"gap_reduction_rate"`: Slope of `log(relative_gap)` vs iteration (negative =
+    converging).
+  - `"total_time_seconds"`: Total wall-clock training time.
+  - `"time_per_iteration_mean"`: Mean seconds per iteration.
+  - `"time_per_iteration_std"`: Standard deviation of per-iteration time.
+  - `"iterations_total"`: Total number of iterations.
+  - `"final_bound"`: Lower bound at the last iteration.
+  - `"final_simulation_value"`: Simulated cost at the last iteration.
+  - `"final_gap_relative"`: Relative gap at the last iteration.
 
 # Arguments
-- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+  - `training_log`: A [`TrainingLog`](@ref) from a completed training run.
 
 # Example
+
 ```julia
 rates = compute_convergence_rate(artifact.training_log)
 println("Final gap: ", rates["final_gap_relative"])
@@ -111,10 +116,13 @@ function compute_convergence_rate(training_log::TrainingLog)::Dict{String,Float6
     else
         improvements = Float64[]
         for k in (half + 1):n
-            push!(improvements, training_log.iterations[k].bound - training_log.iterations[k - 1].bound)
+            push!(
+                improvements,
+                training_log.iterations[k].bound - training_log.iterations[k - 1].bound,
+            )
         end
-        result["bound_improvement_rate"] = isempty(improvements) ? 0.0 :
-                                           sum(improvements) / length(improvements)
+        result["bound_improvement_rate"] =
+            isempty(improvements) ? 0.0 : sum(improvements) / length(improvements)
     end
 
     gap_trajectory = compute_gap_trajectory(training_log)
@@ -132,8 +140,8 @@ function compute_convergence_rate(training_log::TrainingLog)::Dict{String,Float6
         iter_times = times
     end
     result["total_time_seconds"] = times[end]
-    result["time_per_iteration_mean"] = isempty(iter_times) ? NaN :
-                                        sum(iter_times) / length(iter_times)
+    result["time_per_iteration_mean"] =
+        isempty(iter_times) ? NaN : sum(iter_times) / length(iter_times)
     if length(iter_times) < 2
         result["time_per_iteration_std"] = NaN
     else
@@ -148,8 +156,11 @@ function compute_convergence_rate(training_log::TrainingLog)::Dict{String,Float6
     result["final_bound"] = last_entry.bound
     result["final_simulation_value"] = last_entry.simulation_value
     abs_bound = abs(last_entry.bound)
-    result["final_gap_relative"] = abs_bound == 0.0 ? NaN :
-                                   (last_entry.simulation_value - last_entry.bound) / abs_bound
+    result["final_gap_relative"] = if abs_bound == 0.0
+        NaN
+    else
+        (last_entry.simulation_value - last_entry.bound) / abs_bound
+    end
 
     return result
 end
@@ -161,27 +172,31 @@ Detect whether the SDDP lower bound has become stationary (stopped improving).
 
 Examines the last `window` iterations and checks whether the relative range
 of bound values falls below `threshold`. Returns a dictionary with:
-- `"is_stationary"`: `true` if the bound is stationary.
-- `"stationary_since_iteration"`: The earliest iteration where stationarity
-  holds (0 if not stationary).
-- `"bound_range_in_window"`: Absolute range of bound values in the window.
-- `"relative_bound_range"`: Relative range (`range / |final_bound|`).
+
+  - `"is_stationary"`: `true` if the bound is stationary.
+  - `"stationary_since_iteration"`: The earliest iteration where stationarity
+    holds (0 if not stationary).
+  - `"bound_range_in_window"`: Absolute range of bound values in the window.
+  - `"relative_bound_range"`: Relative range (`range / |final_bound|`).
 
 # Arguments
-- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
-- `window`: Number of trailing iterations to examine (default: 20).
-- `threshold`: Relative range threshold for declaring stationarity (default: `1e-6`).
+
+  - `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+  - `window`: Number of trailing iterations to examine (default: 20).
+  - `threshold`: Relative range threshold for declaring stationarity (default: `1e-6`).
 
 # Example
+
 ```julia
-info = detect_bound_stationarity(artifact.training_log; window=30, threshold=1e-5)
-info["is_stationary"] && println("Converged at iteration ", info["stationary_since_iteration"])
+info = detect_bound_stationarity(artifact.training_log; window = 30, threshold = 1e-5)
+info["is_stationary"] &&
+    println("Converged at iteration ", info["stationary_since_iteration"])
 ```
 
 See also: [`compute_convergence_rate`](@ref), [`generate_convergence_report`](@ref)
 """
 function detect_bound_stationarity(
-    training_log::TrainingLog; window::Int=20, threshold::Float64=1e-6
+    training_log::TrainingLog; window::Int = 20, threshold::Float64 = 1e-6
 )::Dict{String,Any}
     n = length(training_log.iterations)
     result = Dict{String,Any}()
@@ -203,8 +218,11 @@ function detect_bound_stationarity(
     bound_max = maximum(bounds_in_window)
     bound_range = bound_max - bound_min
     abs_final_bound = abs(training_log.iterations[end].bound)
-    relative_range = abs_final_bound == 0.0 ? (bound_range == 0.0 ? 0.0 : Inf) :
-                     bound_range / abs_final_bound
+    relative_range = if abs_final_bound == 0.0
+        (bound_range == 0.0 ? 0.0 : Inf)
+    else
+        bound_range / abs_final_bound
+    end
 
     is_stationary = relative_range < threshold
 
@@ -215,8 +233,11 @@ function detect_bound_stationarity(
         for i in n:-1:1
             b = training_log.iterations[i].bound
             range_from_here = abs(final_bound - b)
-            rel_range_here = abs_final_bound == 0.0 ? (range_from_here == 0.0 ? 0.0 : Inf) :
-                             range_from_here / abs_final_bound
+            rel_range_here = if abs_final_bound == 0.0
+                (range_from_here == 0.0 ? 0.0 : Inf)
+            else
+                range_from_here / abs_final_bound
+            end
             if rel_range_here >= threshold
                 break
             end
@@ -238,16 +259,19 @@ end
 Generate a comprehensive convergence report from a completed SDDP training run.
 
 Combines all convergence analysis functions into a single report dict with keys:
-- `"status"`: Terminal status string (e.g., `"iteration_limit"`).
-- `"convergence_rate"`: Output of [`compute_convergence_rate`](@ref).
-- `"bound_stationarity"`: Output of [`detect_bound_stationarity`](@ref).
-- `"had_numerical_issues"`: `true` if any iteration flagged a numerical issue.
-- `"numerical_issue_iterations"`: List of iterations with numerical issues.
+
+  - `"status"`: Terminal status string (e.g., `"iteration_limit"`).
+  - `"convergence_rate"`: Output of [`compute_convergence_rate`](@ref).
+  - `"bound_stationarity"`: Output of [`detect_bound_stationarity`](@ref).
+  - `"had_numerical_issues"`: `true` if any iteration flagged a numerical issue.
+  - `"numerical_issue_iterations"`: List of iterations with numerical issues.
 
 # Arguments
-- `training_log`: A [`TrainingLog`](@ref) from a completed training run.
+
+  - `training_log`: A [`TrainingLog`](@ref) from a completed training run.
 
 # Example
+
 ```julia
 report = generate_convergence_report(artifact.training_log)
 report["had_numerical_issues"] && @warn "Numerical issues detected"
@@ -260,7 +284,8 @@ function generate_convergence_report(training_log::TrainingLog)::Dict{String,Any
     report = Dict{String,Any}()
 
     numerical_iters = [
-        entry.iteration for entry in training_log.iterations if entry.serious_numerical_issue
+        entry.iteration for
+        entry in training_log.iterations if entry.serious_numerical_issue
     ]
     report["status"] = String(training_log.status)
     report["convergence_rate"] = compute_convergence_rate(training_log)

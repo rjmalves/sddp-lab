@@ -19,7 +19,9 @@ function _make_naive_dict()
                 "id" => 1,
                 "distributions" => [
                     Dict{String,Any}(
-                        "season" => 1, "kind" => "Normal", "parameters" => [70.0, 7.0]
+                        "season" => 1,
+                        "kind" => "Normal",
+                        "parameters" => [70.0, 7.0],
                     ),
                 ],
             ),
@@ -64,24 +66,30 @@ end
 function _make_graph_dict(num_stages::Int)
     nodes = []
     for i in 1:num_stages
-        push!(nodes, Dict{String,Any}(
-            "id" => i,
-            "stage" => i,
-            "start_datetime" => "2024-0$(i)-01",
-            "end_datetime" => "2024-0$(i + 1)-01",
-        ))
+        push!(
+            nodes,
+            Dict{String,Any}(
+                "id" => i,
+                "stage" => i,
+                "start_datetime" => "2024-0$(i)-01",
+                "end_datetime" => "2024-0$(i + 1)-01",
+            ),
+        )
     end
     edges = []
     for i in 1:(num_stages - 1)
-        push!(edges, Dict{String,Any}(
-            "source" => i,
-            "target" => i + 1,
-            "probability" => 1.0,
-            "discount_rate" => 0.0,
-        ))
+        push!(
+            edges,
+            Dict{String,Any}(
+                "source" => i,
+                "target" => i + 1,
+                "probability" => 1.0,
+                "discount_rate" => 0.0,
+            ),
+        )
     end
     return Dict{String,Any}(
-        "params" => Dict{String,Any}("nodes" => nodes, "edges" => edges),
+        "params" => Dict{String,Any}("nodes" => nodes, "edges" => edges)
     )
 end
 
@@ -91,8 +99,7 @@ function _make_load_dict(num_stages::Int)
         push!(values, Dict{String,Any}("bus_id" => 1, "node_id" => i, "value" => 100.0))
     end
     return Dict{String,Any}(
-        "kind" => "DeterministicLoad",
-        "params" => Dict{String,Any}("values" => values),
+        "kind" => "DeterministicLoad", "params" => Dict{String,Any}("values" => values)
     )
 end
 
@@ -115,8 +122,7 @@ function _make_scenarios_dict_with_markov()
         "markov_chain" => _make_markov_chain_dict_2states(),
         "inflow" => Dict{String,Any}(
             "stochastic_process" => Dict{String,Any}(
-                "1" => _make_ar_dict(40.0, 10.0),
-                "2" => _make_ar_dict(80.0, 20.0),
+                "1" => _make_ar_dict(40.0, 10.0), "2" => _make_ar_dict(80.0, 20.0)
             ),
         ),
         "load" => _make_load_dict(3),
@@ -130,10 +136,8 @@ function _make_scenarios_dict_without_markov()
         "branchings" => 10,
         "graph" => _make_graph_dict(2),
         "inflow" => Dict{String,Any}(
-            "stochastic_process" => Dict{String,Any}(
-                "kind" => "Naive",
-                "params" => _make_naive_dict(),
-            ),
+            "stochastic_process" =>
+                Dict{String,Any}("kind" => "Naive", "params" => _make_naive_dict()),
         ),
         "load" => _make_load_dict(2),
     )
@@ -181,7 +185,7 @@ end
             "transition_matrices" => [
                 [[0.5, 0.5], [0.3, 0.7]],  # 2 rows, should be 1
                 [[0.8, 0.2], [0.3, 0.7]],
-            ],
+            ]
         )
         e = CompositeException()
         mc = Scenarios.MarkovChainConfig(d, e)
@@ -207,7 +211,7 @@ end
             "transition_matrices" => [
                 [[0.4, 0.4]],               # sums to 0.8, not 1.0
                 [[0.8, 0.2], [0.3, 0.7]],
-            ],
+            ]
         )
         e = CompositeException()
         mc = Scenarios.MarkovChainConfig(d, e)
@@ -217,10 +221,7 @@ end
 
     @testset "markov-config-invalid-negative-entry" begin
         d = Dict{String,Any}(
-            "transition_matrices" => [
-                [[0.5, 0.5]],
-                [[1.2, -0.2], [0.3, 0.7]],
-            ],
+            "transition_matrices" => [[[0.5, 0.5]], [[1.2, -0.2], [0.3, 0.7]]]
         )
         e = CompositeException()
         mc = Scenarios.MarkovChainConfig(d, e)
@@ -259,8 +260,7 @@ end
     @testset "inflow-multi-process-dict-of-dicts" begin
         d = Dict{String,Any}(
             "stochastic_process" => Dict{String,Any}(
-                "1" => _make_ar_dict(40.0, 10.0),
-                "2" => _make_ar_dict(80.0, 20.0),
+                "1" => _make_ar_dict(40.0, 10.0), "2" => _make_ar_dict(80.0, 20.0)
             ),
         )
         e = CompositeException()
@@ -270,16 +270,16 @@ end
         @test length(inflow.stochastic_process) == 2
         @test haskey(inflow.stochastic_process, 1)
         @test haskey(inflow.stochastic_process, 2)
-        @test Scenarios.get_stochastic_process(inflow, 1) isa StochasticProcess.AutoRegressive
-        @test Scenarios.get_stochastic_process(inflow, 2) isa StochasticProcess.AutoRegressive
+        @test Scenarios.get_stochastic_process(inflow, 1) isa
+            StochasticProcess.AutoRegressive
+        @test Scenarios.get_stochastic_process(inflow, 2) isa
+            StochasticProcess.AutoRegressive
     end
 
     @testset "inflow-single-process-legacy-format" begin
         d = Dict{String,Any}(
-            "stochastic_process" => Dict{String,Any}(
-                "kind" => "Naive",
-                "params" => _make_naive_dict(),
-            ),
+            "stochastic_process" =>
+                Dict{String,Any}("kind" => "Naive", "params" => _make_naive_dict()),
         )
         e = CompositeException()
         inflow = Scenarios.InflowScenarios(d, e)
@@ -293,8 +293,7 @@ end
     @testset "inflow-multi-process-invalid-key" begin
         d = Dict{String,Any}(
             "stochastic_process" => Dict{String,Any}(
-                "dry" => _make_ar_dict(40.0, 10.0),
-                "wet" => _make_ar_dict(80.0, 20.0),
+                "dry" => _make_ar_dict(40.0, 10.0), "wet" => _make_ar_dict(80.0, 20.0)
             ),
         )
         e = CompositeException()
@@ -418,32 +417,37 @@ end
         @test s !== nothing
 
         # Build a minimal system using the same pattern as test-systemdata.jl
-        system_d = convert(Dict{String,Any}, Dict(
-            "buses" => Dict{String,Any}(
-                "entities" => [
-                    Dict{String,Any}("id" => 1, "name" => "bus1", "deficit_cost" => 1000.0),
-                ],
+        system_d = convert(
+            Dict{String,Any},
+            Dict(
+                "buses" => Dict{String,Any}(
+                    "entities" => [
+                        Dict{String,Any}(
+                            "id" => 1, "name" => "bus1", "deficit_cost" => 1000.0
+                        ),
+                    ],
+                ),
+                "lines" => Dict{String,Any}("entities" => Any[]),
+                "thermals" => Dict{String,Any}("entities" => Any[]),
+                "hydros" => Dict{String,Any}(
+                    "entities" => [
+                        Dict{String,Any}(
+                            "id" => 1,
+                            "name" => "hydro1",
+                            "bus_id" => 1,
+                            "downstream_id" => 0,
+                            "productivity" => 1.0,
+                            "initial_storage" => 50.0,
+                            "min_storage" => 0.0,
+                            "max_storage" => 100.0,
+                            "min_generation" => 0.0,
+                            "max_generation" => 50.0,
+                            "spillage_penalty" => 0.001,
+                        ),
+                    ],
+                ),
             ),
-            "lines" => Dict{String,Any}("entities" => Any[]),
-            "thermals" => Dict{String,Any}("entities" => Any[]),
-            "hydros" => Dict{String,Any}(
-                "entities" => [
-                    Dict{String,Any}(
-                        "id" => 1,
-                        "name" => "hydro1",
-                        "bus_id" => 1,
-                        "downstream_id" => 0,
-                        "productivity" => 1.0,
-                        "initial_storage" => 50.0,
-                        "min_storage" => 0.0,
-                        "max_storage" => 100.0,
-                        "min_generation" => 0.0,
-                        "max_generation" => 50.0,
-                        "spillage_penalty" => 0.001,
-                    ),
-                ],
-            ),
-        ))
+        )
 
         system_e = CompositeException()
         system = SDDPlab.System.SystemData(system_d, system_e)
@@ -451,7 +455,7 @@ end
 
         files = Lab.InputModule[s, system]
 
-        import HiGHS
+        using HiGHS: HiGHS
         scaling = Engines.ScalingConfig(Dict{Symbol,Float64}())
         method = Engines.InflowNone()
 
@@ -546,11 +550,7 @@ end
                         ),
                     ],
                     "coefficient_matrices" => [
-                        Dict{String,Any}(
-                            "season" => 1,
-                            "lag" => 1,
-                            "matrix" => [[0.5]],
-                        ),
+                        Dict{String,Any}("season" => 1, "lag" => 1, "matrix" => [[0.5]]),
                     ],
                     "copulas" => [
                         Dict{String,Any}(
@@ -565,16 +565,17 @@ end
 
         d = Dict{String,Any}(
             "stochastic_process" => Dict{String,Any}(
-                "1" => _make_var_dict(40.0, 10.0),
-                "2" => _make_var_dict(80.0, 20.0),
+                "1" => _make_var_dict(40.0, 10.0), "2" => _make_var_dict(80.0, 20.0)
             ),
         )
         e = CompositeException()
         inflow = Scenarios.InflowScenarios(d, e)
         @test inflow !== nothing
         @test length(e) == 0
-        @test Scenarios.get_stochastic_process(inflow, 1) isa StochasticProcess.VectorAutoRegressive
-        @test Scenarios.get_stochastic_process(inflow, 2) isa StochasticProcess.VectorAutoRegressive
+        @test Scenarios.get_stochastic_process(inflow, 1) isa
+            StochasticProcess.VectorAutoRegressive
+        @test Scenarios.get_stochastic_process(inflow, 2) isa
+            StochasticProcess.VectorAutoRegressive
 
         # Verify different regime parameters
         p1 = Scenarios.get_stochastic_process(inflow, 1)
@@ -582,5 +583,4 @@ end
         @test StochasticProcess.get_var_scales(p1, 1)[1][1] == 40.0
         @test StochasticProcess.get_var_scales(p2, 1)[1][1] == 80.0
     end
-
 end

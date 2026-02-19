@@ -13,10 +13,11 @@ engine. A `Study` is produced by [`read_study`](@ref) and is the required first
 argument for all pipeline functions.
 
 # Fields
-- `inputs`: Validated `InputsData` object containing all input modules
-  (system, scenarios, stochastic process, etc.) read from the study directory.
-- `engine`: Configured [`Engine`](@ref) (e.g., [`SDDPEngine`](@ref)) that
-  defines how the optimization problem is built, trained, and simulated.
+
+  - `inputs`: Validated `InputsData` object containing all input modules
+    (system, scenarios, stochastic process, etc.) read from the study directory.
+  - `engine`: Configured [`Engine`](@ref) (e.g., [`SDDPEngine`](@ref)) that
+    defines how the optimization problem is built, trained, and simulated.
 
 See also: [`read_study`](@ref), [`build`](@ref), [`train`](@ref),
 [`simulate`](@ref)
@@ -69,9 +70,11 @@ Validation errors are accumulated and logged via `@error` before the function
 returns. If validation fails the returned value is `nothing`.
 
 # Arguments
-- `path`: Absolute or relative path to a directory containing `main.jsonc`.
+
+  - `path`: Absolute or relative path to a directory containing `main.jsonc`.
 
 # Example
+
 ```julia
 study = read_study("/path/to/my_study")
 isnothing(study) && error("Study validation failed")
@@ -99,9 +102,11 @@ engine's `ScalingMode`. Returns a concrete [`Model`](@ref) subtype (e.g.,
 `SDDPModel`) ready to be passed to [`train`](@ref).
 
 # Arguments
-- `study`: A [`Study`](@ref) returned by [`read_study`](@ref).
+
+  - `study`: A [`Study`](@ref) returned by [`read_study`](@ref).
 
 # Example
+
 ```julia
 study = read_study("/path/to/my_study")
 model = build(study)
@@ -137,10 +142,12 @@ Executes the cut-generation loop until the stopping criteria defined in
 the trained policy graph and training log.
 
 # Arguments
-- `study`: A [`Study`](@ref) with a configured engine.
-- `model`: A [`Model`](@ref) produced by [`build`](@ref).
+
+  - `study`: A [`Study`](@ref) with a configured engine.
+  - `model`: A [`Model`](@ref) produced by [`build`](@ref).
 
 # Example
+
 ```julia
 study = read_study("/path/to/my_study")
 model = build(study)
@@ -163,14 +170,16 @@ the cut coefficients into the policy graph of `model`. This allows resuming
 simulation from a pre-trained policy without re-running the training loop.
 
 # Arguments
-- `study`: The [`Study`](@ref) associated with the model.
-- `model`: A [`Model`](@ref) produced by [`build`](@ref) with the same
-  configuration as the original training run.
-- `path`: Absolute path to the directory containing the cuts file.
-- `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)) matching
-  the format used by [`save_policy`](@ref).
+
+  - `study`: The [`Study`](@ref) associated with the model.
+  - `model`: A [`Model`](@ref) produced by [`build`](@ref) with the same
+    configuration as the original training run.
+  - `path`: Absolute path to the directory containing the cuts file.
+  - `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)) matching
+    the format used by [`save_policy`](@ref).
 
 # Example
+
 ```julia
 study = read_study("/path/to/my_study")
 model = build(study)
@@ -180,9 +189,7 @@ artifact_sim = simulate(study, model)
 
 See also: [`save_policy`](@ref), [`train`](@ref)
 """
-function load_policy(
-    study::Study, model::Model, path::String, format::TaskResultsFormat
-)
+function load_policy(study::Study, model::Model, path::String, format::TaskResultsFormat)
     return Lab.load_policy(model, path, format)
 end
 
@@ -195,12 +202,14 @@ Saves the SDDP cut coefficients and convergence trajectory. The output
 directory is created if it does not exist. Existing files are overwritten.
 
 # Arguments
-- `study`: The [`Study`](@ref) that produced the artifact.
-- `artifact`: A [`PolicyTaskArtifact`](@ref) from [`train`](@ref).
-- `path`: Absolute path to the output directory.
-- `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
+
+  - `study`: The [`Study`](@ref) that produced the artifact.
+  - `artifact`: A [`PolicyTaskArtifact`](@ref) from [`train`](@ref).
+  - `path`: Absolute path to the output directory.
+  - `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
 
 # Example
+
 ```julia
 save_policy(study, artifact, "/path/to/output", CSVFormat())
 ```
@@ -225,10 +234,12 @@ the trained policy at each stage/node, and returns a
 have been trained with [`train`](@ref) before calling this function.
 
 # Arguments
-- `study`: A [`Study`](@ref) with a configured engine.
-- `model`: A trained [`Model`](@ref).
+
+  - `study`: A [`Study`](@ref) with a configured engine.
+  - `model`: A trained [`Model`](@ref).
 
 # Example
+
 ```julia
 artifact_policy = train(study, model)
 artifact_sim = simulate(study, model)
@@ -250,12 +261,14 @@ Produces one output file per monitored variable (e.g., `thermal_generation.csv`,
 created if it does not exist.
 
 # Arguments
-- `study`: The [`Study`](@ref) that produced the artifact.
-- `artifact`: A [`SimulationTaskArtifact`](@ref) from [`simulate`](@ref).
-- `path`: Absolute path to the output directory.
-- `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
+
+  - `study`: The [`Study`](@ref) that produced the artifact.
+  - `artifact`: A [`SimulationTaskArtifact`](@ref) from [`simulate`](@ref).
+  - `path`: Absolute path to the output directory.
+  - `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
 
 # Example
+
 ```julia
 artifact_sim = simulate(study, model)
 save_simulation(study, artifact_sim, "/path/to/output", CSVFormat())
@@ -280,9 +293,10 @@ perform any training or simulation. Useful for verifying the mathematical
 formulation of individual subproblems before running the full pipeline.
 
 # Arguments
-- `study`: A [`Study`](@ref) with a configured [`DebugConfig`](@ref).
-- `model`: A [`Model`](@ref) produced by [`build`](@ref).
-- `path`: Absolute path to the output directory.
+
+  - `study`: A [`Study`](@ref) with a configured [`DebugConfig`](@ref).
+  - `model`: A [`Model`](@ref) produced by [`build`](@ref).
+  - `path`: Absolute path to the output directory.
 
 See also: [`DebugConfig`](@ref), [`build`](@ref)
 """
@@ -303,8 +317,9 @@ trained policy, and returns an artifact with validation statistics. Throws an
 error if no validation configuration is present in the engine.
 
 # Arguments
-- `study`: A [`Study`](@ref) with a configured [`OutOfSampleValidation`](@ref).
-- `model`: A trained [`Model`](@ref).
+
+  - `study`: A [`Study`](@ref) with a configured [`OutOfSampleValidation`](@ref).
+  - `model`: A trained [`Model`](@ref).
 
 See also: [`save_validation`](@ref), [`OutOfSampleValidation`](@ref)
 """
@@ -323,15 +338,14 @@ Output files are written to the same structure as [`save_simulation`](@ref),
 allowing direct comparison between in-sample and out-of-sample results.
 
 # Arguments
-- `study`: The [`Study`](@ref) that produced the artifact.
-- `artifact`: A validation artifact from [`validate`](@ref).
-- `path`: Absolute path to the output directory.
-- `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
+
+  - `study`: The [`Study`](@ref) that produced the artifact.
+  - `artifact`: A validation artifact from [`validate`](@ref).
+  - `path`: Absolute path to the output directory.
+  - `format`: A [`TaskResultsFormat`](@ref) (e.g., [`CSVFormat`](@ref)).
 
 See also: [`validate`](@ref), [`OutOfSampleValidation`](@ref)
 """
-function save_validation(
-    study::Study, artifact, path::String, format::TaskResultsFormat
-)
+function save_validation(study::Study, artifact, path::String, format::TaskResultsFormat)
     return Lab.save_validation(artifact, path, format, study.inputs.files)
 end

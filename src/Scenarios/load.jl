@@ -52,7 +52,9 @@ function __get_load_by_block_name(
     bus_id::Integer, node_id::Integer, block_name::String, load::DeterministicLoad
 )::Real
     for value in load.values
-        if value.bus_id == bus_id && value.node_id == node_id && value.block_name == block_name
+        if value.bus_id == bus_id &&
+            value.node_id == node_id &&
+            value.block_name == block_name
             return value.value
         end
     end

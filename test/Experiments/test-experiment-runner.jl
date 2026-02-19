@@ -48,12 +48,8 @@ end
     end
 
     @testset "nested dicts are merged recursively" begin
-        base = Dict{String,Any}(
-            "policy" => Dict{String,Any}("alpha" => 0.5, "beta" => 1.0),
-        )
-        over = Dict{String,Any}(
-            "policy" => Dict{String,Any}("alpha" => 0.1),
-        )
+        base = Dict{String,Any}("policy" => Dict{String,Any}("alpha" => 0.5, "beta" => 1.0))
+        over = Dict{String,Any}("policy" => Dict{String,Any}("alpha" => 0.1))
         r = SDDPlab.deep_merge(base, over)
         @test r["policy"]["alpha"] == 0.1   # overridden
         @test r["policy"]["beta"] == 1.0    # inherited from base
@@ -338,10 +334,10 @@ end
             @test length(results) == 2
 
             good = findfirst(r -> r.config_name == "good_config", results)
-            bad  = findfirst(r -> r.config_name == "bad_config",  results)
+            bad = findfirst(r -> r.config_name == "bad_config", results)
 
             @test good !== nothing
-            @test bad  !== nothing
+            @test bad !== nothing
 
             @test results[good].success == true
             @test results[good].error_message === nothing
@@ -359,7 +355,7 @@ end
 
             by_name = Dict(row.config_name => row.success for row in import_csv)
             @test by_name["good_config"] == true
-            @test by_name["bad_config"]  == false
+            @test by_name["bad_config"] == false
         end
     end
 

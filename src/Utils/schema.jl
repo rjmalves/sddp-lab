@@ -6,8 +6,9 @@
 A named predicate that validates a field value after type conversion.
 
 # Fields
-- `name::String`: Human-readable description used in error messages (e.g., "positive", "in [0, 1]").
-- `predicate::Function`: A function `(value) -> Bool` that returns `true` when the value is valid.
+
+  - `name::String`: Human-readable description used in error messages (e.g., "positive", "in [0, 1]").
+  - `predicate::Function`: A function `(value) -> Bool` that returns `true` when the value is valid.
 """
 struct FieldConstraint
     name::String
@@ -20,10 +21,11 @@ end
 Declares the expected key name, type, optionality, and constraints for a single dictionary field.
 
 # Fields
-- `key::String`: The dictionary key name.
-- `type::DataType`: The expected Julia type (conversion is attempted via `__parse_as_type!`).
-- `required::Bool`: Whether the key must be present in the dictionary.
-- `constraints::Vector{FieldConstraint}`: Predicates evaluated after successful type conversion.
+
+  - `key::String`: The dictionary key name.
+  - `type::DataType`: The expected Julia type (conversion is attempted via `__parse_as_type!`).
+  - `required::Bool`: Whether the key must be present in the dictionary.
+  - `constraints::Vector{FieldConstraint}`: Predicates evaluated after successful type conversion.
 """
 struct FieldRule
     key::String
@@ -38,21 +40,23 @@ end
 Convenience constructor for `FieldRule` with keyword arguments for `required` and `constraints`.
 
 # Examples
+
 ```julia
 rule = FieldRule("alpha", Float64; required = true, constraints = [in_range(0, 1)])
 ```
 """
 function FieldRule(
-    key::String,
-    type::DataType;
-    required::Bool = true,
-    constraints = FieldConstraint[],
+    key::String, type::DataType; required::Bool = true, constraints = FieldConstraint[]
 )
     return FieldRule(
         key,
         type,
         required,
-        constraints isa Vector{FieldConstraint} ? constraints : Vector{FieldConstraint}(constraints),
+        if constraints isa Vector{FieldConstraint}
+            constraints
+        else
+            Vector{FieldConstraint}(constraints)
+        end,
     )
 end
 
@@ -64,6 +68,7 @@ end
 Returns a `FieldConstraint` that checks `v > 0`.
 
 # Examples
+
 ```julia
 c = positive()
 c.predicate(1)   # true
@@ -79,6 +84,7 @@ positive() = FieldConstraint("positive", v -> v > 0)
 Returns a `FieldConstraint` that checks `v >= 0`.
 
 # Examples
+
 ```julia
 c = non_negative()
 c.predicate(0)   # true
@@ -94,6 +100,7 @@ non_negative() = FieldConstraint("non-negative", v -> v >= 0)
 Returns a `FieldConstraint` that checks `lo <= v <= hi`.
 
 # Examples
+
 ```julia
 c = in_range(0, 1)
 c.predicate(0.5)  # true
@@ -109,6 +116,7 @@ in_range(lo, hi) = FieldConstraint("in [$lo, $hi]", v -> lo <= v <= hi)
 Returns a `FieldConstraint` that checks `lo < v < hi`.
 
 # Examples
+
 ```julia
 c = in_range_exclusive(0, 1)
 c.predicate(0.5)  # true
@@ -124,6 +132,7 @@ in_range_exclusive(lo, hi) = FieldConstraint("in ($lo, $hi)", v -> lo < v < hi)
 Returns a `FieldConstraint` that checks `v > n`.
 
 # Examples
+
 ```julia
 c = greater_than(5)
 c.predicate(6)  # true
@@ -138,6 +147,7 @@ greater_than(n) = FieldConstraint("greater than $n", v -> v > n)
 Returns a `FieldConstraint` that checks `v < n`.
 
 # Examples
+
 ```julia
 c = less_than(5)
 c.predicate(4)  # true
@@ -152,6 +162,7 @@ less_than(n) = FieldConstraint("less than $n", v -> v < n)
 Returns a `FieldConstraint` that checks `length(v) > 0`.
 
 # Examples
+
 ```julia
 c = non_empty()
 c.predicate("abc")  # true
@@ -166,6 +177,7 @@ non_empty() = FieldConstraint("non-empty", v -> length(v) > 0)
 Returns a `FieldConstraint` that checks the value fully matches the given regex.
 
 # Examples
+
 ```julia
 c = matches(r"^[a-z]+\$")
 c.predicate("abc")  # true
@@ -175,11 +187,10 @@ c.predicate("")     # false
 """
 function matches(regex::Regex)
     return FieldConstraint(
-        "matching $(regex.pattern)",
-        v -> begin
+        "matching $(regex.pattern)", v -> begin
             m = match(regex, v)
             return m !== nothing && m.match == v
-        end,
+        end
     )
 end
 
@@ -191,6 +202,7 @@ for the given key. Actual uniqueness enforcement is performed at the collection 
 during per-element schema validation. This constraint always returns `true` at the field level.
 
 # Examples
+
 ```julia
 schema = [FieldRule("id", Integer; constraints = [positive(), unique_in("id")])]
 ```
@@ -204,9 +216,9 @@ unique_in(key::String) = FieldConstraint("unique in $key", _ -> true)
 
 Validate a dictionary against a schema of `FieldRule` declarations. For each rule:
 
-1. **Required check**: if the key is required but missing, pushes an `ErrorException`.
-2. **Type conversion**: attempts `__parse_as_type!(d, key, type)`; on failure pushes the returned exception.
-3. **Constraints**: evaluates each `FieldConstraint` predicate; on failure pushes an `AssertionError`.
+ 1. **Required check**: if the key is required but missing, pushes an `ErrorException`.
+ 2. **Type conversion**: attempts `__parse_as_type!(d, key, type)`; on failure pushes the returned exception.
+ 3. **Constraints**: evaluates each `FieldConstraint` predicate; on failure pushes an `AssertionError`.
 
 Per-field validation short-circuits (missing key skips type check, failed type check skips
 constraints), but validation does NOT short-circuit across fields — all rules are always checked.
@@ -214,6 +226,7 @@ constraints), but validation does NOT short-circuit across fields — all rules 
 Returns `true` only if every rule passes all checks.
 
 # Examples
+
 ```julia
 schema = [
     FieldRule("id", Integer; constraints = [positive()]),
@@ -260,7 +273,7 @@ function validate_schema!(
                 push!(
                     e,
                     AssertionError(
-                        "$(label_prefix)$(rule.key) ($value) must be $(constraint.name)",
+                        "$(label_prefix)$(rule.key) ($value) must be $(constraint.name)"
                     ),
                 )
                 all_valid = false
@@ -280,6 +293,7 @@ This is intended for the "before build" phase where only structural validity mat
 Returns `true` only if every required key is present and all present keys convert successfully.
 
 # Examples
+
 ```julia
 schema = [
     FieldRule("id", Integer; constraints = [positive()]),

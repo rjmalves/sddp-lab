@@ -10,18 +10,15 @@ LAGRANGIAN_DICT = convert(Dict{String,Any}, Dict())
 BANDIT_DICT = Dict{String,Any}(
     "handlers" => [
         Dict{String,Any}(
-            "kind" => "ContinuousConicDualityHandler",
-            "params" => Dict{String,Any}(),
+            "kind" => "ContinuousConicDualityHandler", "params" => Dict{String,Any}()
         ),
         Dict{String,Any}(
-            "kind" => "StrengthenedConicDualityHandler",
-            "params" => Dict{String,Any}(),
+            "kind" => "StrengthenedConicDualityHandler", "params" => Dict{String,Any}()
         ),
     ],
 )
 
 @testset "engines-sddp-duality-handlers" begin
-
     @testset "default-duality-valid" begin
         d, e = __renew(DEFAULT_DUALITY_DICT)
         result = Engines.DefaultDuality(d, e)
@@ -100,8 +97,7 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}(),
                 ),
                 Dict{String,Any}(
-                    "kind" => "NonExistentHandler",
-                    "params" => Dict{String,Any}(),
+                    "kind" => "NonExistentHandler", "params" => Dict{String,Any}()
                 ),
             ],
         )
@@ -118,10 +114,7 @@ BANDIT_DICT = Dict{String,Any}(
                     "kind" => "ContinuousConicDualityHandler",
                     "params" => Dict{String,Any}(),
                 ),
-                Dict{String,Any}(
-                    "kind" => "Serial",
-                    "params" => Dict{String,Any}(),
-                ),
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             ],
         )
         e = CompositeException()
@@ -131,9 +124,7 @@ BANDIT_DICT = Dict{String,Any}(
     end
 
     @testset "generate-duality-handler-continuous-conic" begin
-        handler = Engines.generate_duality_handler(
-            Engines.ContinuousConicDualityHandler()
-        )
+        handler = Engines.generate_duality_handler(Engines.ContinuousConicDualityHandler())
         @test handler isa SDDP.AbstractDualityHandler
         @test typeof(handler) <: SDDP.ContinuousConicDuality
     end
@@ -147,9 +138,7 @@ BANDIT_DICT = Dict{String,Any}(
     end
 
     @testset "generate-duality-handler-lagrangian" begin
-        handler = Engines.generate_duality_handler(
-            Engines.LagrangianDualityHandler()
-        )
+        handler = Engines.generate_duality_handler(Engines.LagrangianDualityHandler())
         @test handler isa SDDP.AbstractDualityHandler
         @test typeof(handler) <: SDDP.LagrangianDuality
     end
@@ -176,12 +165,10 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
                 "kind" => "ContinuousConicDualityHandler",
                 "params" => Dict{String,Any}(),
@@ -204,12 +191,10 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
                 "kind" => "StrengthenedConicDualityHandler",
                 "params" => Dict{String,Any}(),
@@ -231,15 +216,12 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
-                "kind" => "LagrangianDualityHandler",
-                "params" => Dict{String,Any}(),
+                "kind" => "LagrangianDualityHandler", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()
@@ -258,12 +240,10 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
                 "kind" => "BanditDualityHandler",
                 "params" => Dict{String,Any}(
@@ -297,15 +277,12 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
-                "kind" => "DefaultDuality",
-                "params" => Dict{String,Any}(),
+                "kind" => "DefaultDuality", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()
@@ -324,12 +301,10 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         e = CompositeException()
         result = Engines.SDDPPolicyTaskDefinition(d, e)
@@ -348,15 +323,12 @@ BANDIT_DICT = Dict{String,Any}(
                     "params" => Dict{String,Any}("num_iterations" => 128),
                 ),
             ),
-            "risk_measure" => Dict{String,Any}(
-                "kind" => "Expectation", "params" => Dict{String,Any}()
-            ),
-            "parallel_scheme" => Dict{String,Any}(
-                "kind" => "Serial", "params" => Dict{String,Any}()
-            ),
+            "risk_measure" =>
+                Dict{String,Any}("kind" => "Expectation", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
             "duality_handler" => Dict{String,Any}(
-                "kind" => "NonExistentDuality",
-                "params" => Dict{String,Any}(),
+                "kind" => "NonExistentDuality", "params" => Dict{String,Any}()
             ),
         )
         e = CompositeException()

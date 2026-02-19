@@ -183,7 +183,8 @@ end
             write_run_metadata(tmpdir, "exists", config, env)
             # dir_b has no metadata.json
 
-            @test_logs (:warn,) match_mode = :any verify_reproducibility(dir_a, dir_b) == false
+            @test_logs (:warn,) match_mode = :any verify_reproducibility(dir_a, dir_b) ==
+                false
         end
     end
 
@@ -398,7 +399,8 @@ end
                 succ2 = filter(r -> r.success, results2)
                 @test !isempty(succ1) && !isempty(succ2)
 
-                @test verify_reproducibility(succ1[1].output_path, succ2[1].output_path) == true
+                @test verify_reproducibility(succ1[1].output_path, succ2[1].output_path) ==
+                    true
             end
         end
     end

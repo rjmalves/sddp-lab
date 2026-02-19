@@ -43,8 +43,6 @@ function create_optimizer(config::SolverConfig)
             return opt
         end
     else
-        error(
-            "Unsupported solver: $(name). Supported solvers: HiGHS, GLPK",
-        )
+        error("Unsupported solver: $(name). Supported solvers: HiGHS, GLPK")
     end
 end

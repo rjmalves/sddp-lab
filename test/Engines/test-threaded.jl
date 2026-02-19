@@ -18,16 +18,19 @@ RISK_MEASURE_DICT_T = Dict{String,Any}(
         policy_d = Dict{String,Any}(
             "convergence" => deepcopy(CONVERGENCE_DICT_T),
             "risk_measure" => deepcopy(RISK_MEASURE_DICT_T),
-            "parallel_scheme" => Dict{String,Any}("kind" => "Threaded", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Threaded", "params" => Dict{String,Any}()),
         )
         sim_d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         d = Dict{String,Any}(
             "engine" => Dict{String,Any}(
                 "kind" => "SDDPEngine",
-                "params" => Dict{String,Any}("policy" => policy_d, "simulation" => sim_d),
+                "params" =>
+                    Dict{String,Any}("policy" => policy_d, "simulation" => sim_d),
             ),
         )
         e = CompositeException()
@@ -41,16 +44,19 @@ RISK_MEASURE_DICT_T = Dict{String,Any}(
         policy_d = Dict{String,Any}(
             "convergence" => deepcopy(CONVERGENCE_DICT_T),
             "risk_measure" => deepcopy(RISK_MEASURE_DICT_T),
-            "parallel_scheme" => Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Serial", "params" => Dict{String,Any}()),
         )
         sim_d = Dict{String,Any}(
             "num_simulated_series" => 100,
-            "parallel_scheme" => Dict{String,Any}("kind" => "Threaded", "params" => Dict{String,Any}()),
+            "parallel_scheme" =>
+                Dict{String,Any}("kind" => "Threaded", "params" => Dict{String,Any}()),
         )
         d = Dict{String,Any}(
             "engine" => Dict{String,Any}(
                 "kind" => "SDDPEngine",
-                "params" => Dict{String,Any}("policy" => policy_d, "simulation" => sim_d),
+                "params" =>
+                    Dict{String,Any}("policy" => policy_d, "simulation" => sim_d),
             ),
         )
         e = CompositeException()

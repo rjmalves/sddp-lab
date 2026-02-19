@@ -87,6 +87,7 @@ Output format that writes results as comma-separated values (`.csv`) files.
 This is the default recommended format for inspection and interoperability.
 
 # Example
+
 ```julia
 save_simulation(study, artifact, "/path/to/output", CSVFormat())
 ```
@@ -102,6 +103,7 @@ Output format that writes results as Apache Parquet (`.parquet`) columnar binary
 files. Preferred for large result sets where CSV I/O is a bottleneck.
 
 # Example
+
 ```julia
 save_simulation(study, artifact, "/path/to/output", ParquetFormat())
 ```

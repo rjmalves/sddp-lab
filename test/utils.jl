@@ -1,6 +1,5 @@
 
 function __list_test_files(test_dir)
-
     test_files = Vector{String}()
 
     for (root, dirs, files) in walkdir(test_dir)
@@ -16,7 +15,7 @@ end
 
 function __remove_key(d, k)
     out = copy(d)
-    delete!(out, k)
+    return delete!(out, k)
 end
 
 function __modif_key(d, k, v)

@@ -77,8 +77,9 @@ Return a view of the upstream [`Hydro`](@ref) plants for the plant with the
 given `id`, or `nothing` if the plant has no upstream neighbors.
 
 # Arguments
-- `id`: Integer ID of the hydro plant.
-- `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+  - `id`: Integer ID of the hydro plant.
+  - `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
 
 See also: [`downstream`](@ref), [`Hydros`](@ref)
 """
@@ -94,8 +95,9 @@ Return a view of the immediately downstream [`Hydro`](@ref) plant for the plant
 with the given `id`, or `nothing` if the plant has no downstream neighbor.
 
 # Arguments
-- `id`: Integer ID of the hydro plant.
-- `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+  - `id`: Integer ID of the hydro plant.
+  - `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
 
 See also: [`upstream`](@ref), [`Hydros`](@ref)
 """

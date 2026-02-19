@@ -134,9 +134,8 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
     @testset "systemdata-without-energycontracts" begin
         d = Dict{String,Any}(
             "buses" => Dict{String,Any}(
-                "entities" => [
-                    Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
-                ],
+                "entities" =>
+                    [Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0)],
             ),
             "lines" => Dict{String,Any}("entities" => Dict{String,Any}[]),
             "hydros" => Dict{String,Any}("entities" => Dict{String,Any}[]),
@@ -151,9 +150,8 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
     @testset "systemdata-with-energycontracts" begin
         d = Dict{String,Any}(
             "buses" => Dict{String,Any}(
-                "entities" => [
-                    Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0),
-                ],
+                "entities" =>
+                    [Dict("id" => 1, "name" => "SE", "deficit_cost" => 1000.0)],
             ),
             "lines" => Dict{String,Any}("entities" => Dict{String,Any}[]),
             "hydros" => Dict{String,Any}("entities" => Dict{String,Any}[]),
@@ -166,7 +164,8 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
                         "bus_id" => 1,
                         "type" => "import",
                         "price_per_mwh" => 50.0,
-                        "limits" => Dict{String,Any}("min_mw" => 0.0, "max_mw" => 1000.0),
+                        "limits" =>
+                            Dict{String,Any}("min_mw" => 0.0, "max_mw" => 1000.0),
                     ),
                 ],
             ),

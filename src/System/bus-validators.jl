@@ -2,11 +2,7 @@
 
 const BUS_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("deficit_cost", Real; constraints = [positive()]),
 ]
 

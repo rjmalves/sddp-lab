@@ -22,9 +22,12 @@ function __validate_inflow_scenarios_keys_types!(
     sp = d["stochastic_process"]
     valid = sp isa Dict{Int,<:AbstractStochasticProcess}
     if !valid
-        push!(e, ErrorException(
-            "Key 'stochastic_process' ($(typeof(sp))) can't be converted to Dict{Int, AbstractStochasticProcess}"
-        ))
+        push!(
+            e,
+            ErrorException(
+                "Key 'stochastic_process' ($(typeof(sp))) can't be converted to Dict{Int, AbstractStochasticProcess}",
+            ),
+        )
     end
     return valid
 end
@@ -40,9 +43,9 @@ function __validate_inflow_scenarios_before_build_keys_types!(
     sp = d["stochastic_process"]
     valid = sp isa Dict{String,Any}
     if !valid
-        push!(e, ErrorException(
-            "Key 'stochastic_process' must be a Dict, got $(typeof(sp))"
-        ))
+        push!(
+            e, ErrorException("Key 'stochastic_process' must be a Dict, got $(typeof(sp))")
+        )
     end
     return valid
 end
@@ -64,9 +67,12 @@ function __validate_stochastic_process_keys_types!(
     sp = d["stochastic_process"]
     valid = sp isa Dict{String,Any}
     if !valid
-        push!(e, ErrorException(
-            "Key 'stochastic_process' must be a Dict{String,Any}, got $(typeof(sp))"
-        ))
+        push!(
+            e,
+            ErrorException(
+                "Key 'stochastic_process' must be a Dict{String,Any}, got $(typeof(sp))"
+            ),
+        )
     end
     return valid
 end
@@ -112,18 +118,24 @@ function __build_multi_stochastic_process!(
     for key in keys(sp_dict)
         parsed_key = tryparse(Int, key)
         if parsed_key === nothing
-            push!(e, AssertionError(
-                "Markov stochastic_process key '$key' must be a string integer (e.g. \"1\", \"2\")"
-            ))
+            push!(
+                e,
+                AssertionError(
+                    "Markov stochastic_process key '$key' must be a string integer (e.g. \"1\", \"2\")",
+                ),
+            )
             valid = false
             continue
         end
 
         state_dict = sp_dict[key]
         if !(state_dict isa Dict{String,Any})
-            push!(e, AssertionError(
-                "Markov stochastic_process[$key] must be a Dict with 'kind' and 'params', got $(typeof(state_dict))"
-            ))
+            push!(
+                e,
+                AssertionError(
+                    "Markov stochastic_process[$key] must be a Dict with 'kind' and 'params', got $(typeof(state_dict))",
+                ),
+            )
             valid = false
             continue
         end

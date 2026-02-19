@@ -20,7 +20,7 @@ function _minimal_oat_jsonc(
     overwrite::Bool = true,
 )
     example_escaped = replace(example_path, "\\" => "/")
-    output_escaped  = replace(output_dir,   "\\" => "/")
+    output_escaped = replace(output_dir, "\\" => "/")
     return """
     {
         "base_study": "$example_escaped",
@@ -64,7 +64,7 @@ function _minimal_factorial_jsonc(
     overwrite::Bool = true,
 )
     example_escaped = replace(example_path, "\\" => "/")
-    output_escaped  = replace(output_dir,   "\\" => "/")
+    output_escaped = replace(output_dir, "\\" => "/")
     return """
     {
         "base_study": "$example_escaped",
@@ -108,10 +108,7 @@ end
 
 @testset "_resolve_path" begin
     d = Dict{String,Any}(
-        "a" => Dict{String,Any}(
-            "b" => Dict{String,Any}("c" => 42),
-            "flat" => "hello",
-        ),
+        "a" => Dict{String,Any}("b" => Dict{String,Any}("c" => 42), "flat" => "hello"),
         "top" => 99,
     )
 
@@ -235,7 +232,7 @@ end
     @testset "2 params (3 and 2 values) produces 5 configs" begin
         params = [
             SensitivityParameter("alpha", "policy.alpha", Any[0.1, 0.2, 0.5]),
-            SensitivityParameter("beta",  "policy.beta",  Any[1, 2]),
+            SensitivityParameter("beta", "policy.beta", Any[1, 2]),
         ]
         configs = SDDPlab._generate_oat_configs(Dict{String,Any}(), params)
         @test length(configs) == 5
@@ -244,7 +241,7 @@ end
     @testset "each config has a unique name" begin
         params = [
             SensitivityParameter("alpha", "policy.alpha", Any[0.1, 0.2, 0.5]),
-            SensitivityParameter("beta",  "policy.beta",  Any[1, 2]),
+            SensitivityParameter("beta", "policy.beta", Any[1, 2]),
         ]
         configs = SDDPlab._generate_oat_configs(Dict{String,Any}(), params)
         names = [c[1] for c in configs]
@@ -253,9 +250,7 @@ end
 
     @testset "base_overrides applied to every config" begin
         base = Dict{String,Any}("solver" => Dict{String,Any}("name" => "HiGHS"))
-        params = [
-            SensitivityParameter("x", "policy.x", Any[1, 2]),
-        ]
+        params = [SensitivityParameter("x", "policy.x", Any[1, 2])]
         configs = SDDPlab._generate_oat_configs(base, params)
         for (_, overrides) in configs
             @test get(overrides, "solver", nothing) isa Dict
@@ -264,9 +259,7 @@ end
     end
 
     @testset "parameter value is set at the correct path" begin
-        params = [
-            SensitivityParameter("alpha", "policy.risk.alpha", Any[0.9]),
-        ]
+        params = [SensitivityParameter("alpha", "policy.risk.alpha", Any[0.9])]
         configs = SDDPlab._generate_oat_configs(Dict{String,Any}(), params)
         @test length(configs) == 1
         _, overrides = configs[1]
@@ -274,9 +267,7 @@ end
     end
 
     @testset "configs are independent (mutating one does not affect others)" begin
-        params = [
-            SensitivityParameter("x", "a.b", Any[1, 2]),
-        ]
+        params = [SensitivityParameter("x", "a.b", Any[1, 2])]
         configs = SDDPlab._generate_oat_configs(Dict{String,Any}(), params)
         _, o1 = configs[1]
         _, o2 = configs[2]
@@ -295,7 +286,7 @@ end
     @testset "2 params (3 and 2 values) produces 6 configs" begin
         params = [
             SensitivityParameter("alpha", "policy.alpha", Any[0.1, 0.2, 0.5]),
-            SensitivityParameter("beta",  "policy.beta",  Any[1, 2]),
+            SensitivityParameter("beta", "policy.beta", Any[1, 2]),
         ]
         configs = SDDPlab._generate_factorial_configs(Dict{String,Any}(), params)
         @test length(configs) == 6
@@ -313,7 +304,7 @@ end
     @testset "each config has a unique name" begin
         params = [
             SensitivityParameter("alpha", "policy.alpha", Any[0.1, 0.2, 0.5]),
-            SensitivityParameter("beta",  "policy.beta",  Any[1, 2]),
+            SensitivityParameter("beta", "policy.beta", Any[1, 2]),
         ]
         configs = SDDPlab._generate_factorial_configs(Dict{String,Any}(), params)
         names = [c[1] for c in configs]
@@ -538,7 +529,9 @@ end
     @testset "1 parameter with 2 values produces 2 output dirs and summary CSV" begin
         mktempdir() do tmpdir
             out_dir = joinpath(tmpdir, "results")
-            content = _minimal_oat_jsonc(example, out_dir; max_iterations = 3, num_simulations = 2)
+            content = _minimal_oat_jsonc(
+                example, out_dir; max_iterations = 3, num_simulations = 2
+            )
             path = _write_sensitivity_jsonc(tmpdir, content)
 
             result = run_sensitivity(path)
@@ -561,13 +554,13 @@ end
             csv_data = CSV.File(result.summary_path)
             @test length(csv_data) == 2
             col_names = propertynames(csv_data)
-            @test :config_name       in col_names
-            @test :parameter_label   in col_names
-            @test :parameter_value   in col_names
-            @test :success           in col_names
-            @test :train_time_s      in col_names
-            @test :simulate_time_s   in col_names
-            @test :error             in col_names
+            @test :config_name in col_names
+            @test :parameter_label in col_names
+            @test :parameter_value in col_names
+            @test :success in col_names
+            @test :train_time_s in col_names
+            @test :simulate_time_s in col_names
+            @test :error in col_names
 
             for row in csv_data
                 @test row.parameter_label == "risk_measure"
@@ -580,7 +573,9 @@ end
     @testset "base_overrides are applied: max_iterations respected" begin
         mktempdir() do tmpdir
             out_dir = joinpath(tmpdir, "results")
-            content = _minimal_oat_jsonc(example, out_dir; max_iterations = 3, num_simulations = 2)
+            content = _minimal_oat_jsonc(
+                example, out_dir; max_iterations = 3, num_simulations = 2
+            )
             path = _write_sensitivity_jsonc(tmpdir, content)
 
             t_start = time()
@@ -596,7 +591,9 @@ end
         mktempdir() do tmpdir
             out_dir = joinpath(tmpdir, "results")
             mkpath(out_dir)
-            open(joinpath(out_dir, "existing.txt"), "w") do io; write(io, "x"); end
+            open(joinpath(out_dir, "existing.txt"), "w") do io
+                write(io, "x")
+            end
 
             content = _minimal_oat_jsonc(example, out_dir; overwrite = false)
             path = _write_sensitivity_jsonc(tmpdir, content)

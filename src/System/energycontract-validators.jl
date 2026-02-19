@@ -2,11 +2,7 @@
 
 const ENERGY_CONTRACT_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
-    FieldRule(
-        "name",
-        String;
-        constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")],
-    ),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
     FieldRule("bus_id", Integer),
     FieldRule("type", String),
     FieldRule("price_per_mwh", Real),
@@ -58,24 +54,20 @@ function __validate_energycontract_bus_id(
     return bus_index
 end
 
-function __validate_energycontract_type!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_energycontract_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     id = d["id"]
     contract_type = d["type"]
     valid = contract_type in ["import", "export"]
     valid || push!(
         e,
         AssertionError(
-            "EnergyContract $id - type must be \"import\" or \"export\", got \"$contract_type\""
+            "EnergyContract $id - type must be \"import\" or \"export\", got \"$contract_type\"",
         ),
     )
     return valid
 end
 
-function __validate_energycontract_limits!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
+function __validate_energycontract_limits!(d::Dict{String,Any}, e::CompositeException)::Bool
     id = d["id"]
     if !haskey(d, "limits")
         push!(e, AssertionError("EnergyContract $id - missing required key: limits"))
@@ -109,18 +101,28 @@ function __validate_energycontract_limits!(
         return false
     end
     if min_mw < 0
-        push!(e, AssertionError("EnergyContract $id - limits.min_mw must be non-negative, got $min_mw"))
+        push!(
+            e,
+            AssertionError(
+                "EnergyContract $id - limits.min_mw must be non-negative, got $min_mw"
+            ),
+        )
         valid = false
     end
     if max_mw < 0
-        push!(e, AssertionError("EnergyContract $id - limits.max_mw must be non-negative, got $max_mw"))
+        push!(
+            e,
+            AssertionError(
+                "EnergyContract $id - limits.max_mw must be non-negative, got $max_mw"
+            ),
+        )
         valid = false
     end
     if valid && min_mw > max_mw
         push!(
             e,
             AssertionError(
-                "EnergyContract $id - limits.min_mw ($min_mw) must be <= limits.max_mw ($max_mw)"
+                "EnergyContract $id - limits.min_mw ($min_mw) must be <= limits.max_mw ($max_mw)",
             ),
         )
         valid = false
