@@ -10,6 +10,8 @@ include("sddp/load_policy.jl")
 include("sddp/simulate.jl")
 include("sddp/save_simulation.jl")
 include("sddp/validate.jl")
+include("sddp/convergence_analysis.jl")
+include("sddp/debug.jl")
 
 function get_policy_definition(e::SDDPEngine)::SDDPPolicyTaskDefinition
     return e.policy

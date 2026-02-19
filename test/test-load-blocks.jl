@@ -671,6 +671,7 @@ end
             Engines.DefaultForwardPassStrategy(),
             Engines.SingleCut(),
             Engines.NoScaling(),
+            Engines.TrainingLogConfig("", 1, false, 1),
         )
         sim_def = Engines.SDDPSimulationTaskDefinition(
             10, Engines.Serial(), Engines.DefaultSampling()
@@ -681,6 +682,8 @@ end
             Engines.DiagnosticsConfig(false, 1e6, 1e10),
             Engines.SolverConfig("HiGHS", Dict{String,Any}()),
             Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
         )
 
         study = SDDPlab.Study(new_inputs, engine)
@@ -746,6 +749,7 @@ end
             Engines.DefaultForwardPassStrategy(),
             Engines.SingleCut(),
             Engines.NoScaling(),
+            Engines.TrainingLogConfig("", 1, false, 1),
         )
         sim_def = Engines.SDDPSimulationTaskDefinition(
             10, Engines.Serial(), Engines.DefaultSampling()
@@ -756,6 +760,8 @@ end
             Engines.DiagnosticsConfig(false, 1e6, 1e10),
             Engines.SolverConfig("HiGHS", Dict{String,Any}()),
             Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
         )
 
         study = SDDPlab.Study(new_inputs, engine)

@@ -214,13 +214,14 @@ import MathOptInterface as MOI
             Engines.DefaultForwardPassStrategy(),
             Engines.SingleCut(),
             Engines.NoScaling(),
+            Engines.TrainingLogConfig("", 1, false, 1),
         )
         simulation = Engines.SDDPSimulationTaskDefinition(
             100, Engines.Serial(), Engines.DefaultSampling()
         )
         diag = Engines.DiagnosticsConfig(false, 1e6, 1e10)
         solver = Engines.SolverConfig("HiGHS", Dict{String,Any}("output_flag" => false))
-        engine = Engines.SDDPEngine(policy, simulation, diag, solver, Engines.InflowNone())
+        engine = Engines.SDDPEngine(policy, simulation, diag, solver, Engines.InflowNone(), nothing, Engines.DebugConfig(false, Any[], "mof", false, 60.0))
         @test engine.solver.solver_name == "HiGHS"
         @test engine.solver.attributes == Dict{String,Any}("output_flag" => false)
     end

@@ -10,6 +10,7 @@ function SDDPEngine(d::Dict{String,Any}, e::CompositeException)
             d["solver"],
             d["inflow_non_negativity"],
             d["validation"],
+            d["debug"],
         )
     else
         nothing

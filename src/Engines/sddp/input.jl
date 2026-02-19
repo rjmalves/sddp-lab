@@ -40,6 +40,76 @@ function __build_diagnostics!(d::Dict{String,Any}, e::CompositeException)::Bool
     return true
 end
 
+const VALID_SUBPROBLEM_FORMATS = ["mof", "lp", "mps"]
+
+function DebugConfig(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, DEBUG_CONFIG_SCHEMA, e)
+    if !valid
+        return nothing
+    end
+
+    write_subproblems = get(d, "write_subproblems", false)
+    subproblem_nodes_raw = get(d, "subproblem_nodes", Any[])
+    subproblem_format = get(d, "subproblem_format", "mof")
+    deterministic_equivalent = get(d, "deterministic_equivalent", false)
+    det_equiv_time_limit = get(d, "det_equiv_time_limit", 60.0)
+
+    if !(subproblem_nodes_raw isa Vector)
+        push!(
+            e,
+            ErrorException(
+                "Key 'subproblem_nodes' must be a Vector, got $(typeof(subproblem_nodes_raw))",
+            ),
+        )
+        return nothing
+    end
+
+    if !(subproblem_format in VALID_SUBPROBLEM_FORMATS)
+        push!(
+            e,
+            AssertionError(
+                "subproblem_format ($subproblem_format) must be one of: $(join(VALID_SUBPROBLEM_FORMATS, ", "))",
+            ),
+        )
+        return nothing
+    end
+
+    return DebugConfig(
+        write_subproblems,
+        Vector{Any}(subproblem_nodes_raw),
+        subproblem_format,
+        deterministic_equivalent,
+        Float64(det_equiv_time_limit),
+    )
+end
+
+function __build_debug!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "debug")
+        d["debug"] = DebugConfig(false, Any[], "mof", false, 60.0)
+        return true
+    end
+
+    dbg = d["debug"]
+    if !(dbg isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'debug' must be a Dict{String,Any}, got $(typeof(dbg))",
+            ),
+        )
+        return false
+    end
+
+    dbg_d = convert(Dict{String,Any}, dbg)
+    result = DebugConfig(dbg_d, e)
+    if result === nothing
+        return false
+    end
+
+    d["debug"] = result
+    return true
+end
+
 function SolverConfig(d::Dict{String,Any}, e::CompositeException)
     valid = validate_schema!(d, SOLVER_CONFIG_SCHEMA, e)
     if !valid
@@ -289,6 +359,48 @@ function AutoScaling(::Dict{String,Any}, ::CompositeException)
     return AutoScaling()
 end
 
+function TrainingLogConfig(d::Dict{String,Any}, e::CompositeException)
+    valid = validate_schema!(d, TRAINING_LOG_CONFIG_SCHEMA, e)
+
+    return if valid
+        TrainingLogConfig(
+            get(d, "log_file", ""),
+            get(d, "log_frequency", 1),
+            get(d, "log_every_iteration", false),
+            get(d, "print_level", 1),
+        )
+    else
+        nothing
+    end
+end
+
+function __build_logging!(d::Dict{String,Any}, e::CompositeException)::Bool
+    if !haskey(d, "logging")
+        d["logging"] = TrainingLogConfig("", 1, false, 1)
+        return true
+    end
+
+    logging = d["logging"]
+    if !(logging isa Dict)
+        push!(
+            e,
+            ErrorException(
+                "Key 'logging' must be a Dict{String,Any}, got $(typeof(logging))",
+            ),
+        )
+        return false
+    end
+
+    logging_d = convert(Dict{String,Any}, logging)
+    result = TrainingLogConfig(logging_d, e)
+    if result === nothing
+        return false
+    end
+
+    d["logging"] = result
+    return true
+end
+
 function SDDPPolicyTaskDefinition(d::Dict{String,Any}, e::CompositeException)
     valid_internals = __build_sddp_policy_task_definition_internals_from_dicts!(d, e)
     valid_keys_types =
@@ -304,6 +416,7 @@ function SDDPPolicyTaskDefinition(d::Dict{String,Any}, e::CompositeException)
             d["forward_pass"],
             d["cut_type"],
             d["scaling"],
+            d["logging"],
         )
     else
         nothing
@@ -368,22 +481,6 @@ function generate_parallel_scheme(::Serial)::SDDP.AbstractParallelScheme
     return SDDP.Serial()
 end
 
-"""
-    generate_parallel_scheme(::Asynchronous) -> SDDP.Asynchronous
-
-Generate the SDDP.jl `Asynchronous()` parallel scheme for distributed training.
-
-# Worker Setup Requirements
-
-The user is responsible for setting up distributed workers before calling
-`train` or `simulate` with the `Asynchronous` scheme:
-
-1. Start Julia with `julia -p N` or call `Distributed.addprocs(N)`.
-2. Load SDDPlab and the solver on all workers:
-   `@everywhere using SDDPlab, HiGHS`
-3. Ensure all workers have access to the input data files (shared filesystem
-   or distributed storage).
-"""
 function generate_parallel_scheme(::Asynchronous)::SDDP.AbstractParallelScheme
     if Distributed.nprocs() == 1
         @warn(
@@ -427,12 +524,6 @@ function generate_risk_measure(r::WassersteinRM)::SDDP.AbstractRiskMeasure
     return SDDP.Wasserstein(x -> sum(abs, x), optimizer; alpha = r.alpha)
 end
 
-"""
-    _find_available_optimizer() -> optimizer_constructor
-
-Discover an available LP solver for internal use (e.g., Wasserstein risk measure).
-Tries HiGHS first, then GLPK. Errors if neither is installed.
-"""
 function _find_available_optimizer()
     for mod_name in (:HiGHS, :GLPK)
         try

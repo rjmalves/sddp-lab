@@ -69,6 +69,7 @@ export
     build,
     train,
     diagnose,
+    debug,
     save_policy,
     load_policy,
     simulate,
@@ -78,6 +79,9 @@ export
     # Global constants
     POLICY_CUTS_OUTPUT_FILENAME,
     POLICY_CUTS_OUTPUT_INTERCEPT_NAME,
-    POLICY_CONVERGENCE_OUTPUT_FILENAME
+    POLICY_CONVERGENCE_OUTPUT_FILENAME,
+    POLICY_TRAINING_LOG_OUTPUT_FILENAME,
+    POLICY_CONVERGENCE_ANALYSIS_OUTPUT_FILENAME,
+    POLICY_CONVERGENCE_REPORT_OUTPUT_FILENAME
 
 end

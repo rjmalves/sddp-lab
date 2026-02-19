@@ -9,7 +9,11 @@ function Lab.save_policy(
     cd(path)
     __write_model_cuts(cuts, writer, extension)
     __write_model_convergence(convergence, writer, extension)
-    return cd(curdir)
+    __write_training_log(artifact.training_log, writer, extension)
+    __write_convergence_analysis(artifact.training_log, writer, extension)
+    __write_convergence_report(artifact.training_log)
+    cd(curdir)
+    return nothing
 end
 
 function __get_node_cutdata(nodecuts::Any)::Vector{Any}
@@ -128,4 +132,72 @@ function __write_model_convergence(
     PROCESSED_CUTS_PATH = POLICY_CONVERGENCE_OUTPUT_FILENAME * extension
     @info "Writing convergence data to $(PROCESSED_CUTS_PATH)"
     return writer(PROCESSED_CUTS_PATH, convergence)
+end
+
+function __training_log_to_dataframe(training_log::TrainingLog)::DataFrame
+    iters = training_log.iterations
+    n = length(iters)
+    return DataFrame(
+        "iteration" => [e.iteration for e in iters],
+        "bound" => [e.bound for e in iters],
+        "simulation_value" => [e.simulation_value for e in iters],
+        "time" => [e.time for e in iters],
+        "total_solves" => [e.total_solves for e in iters],
+        "serious_numerical_issue" => [e.serious_numerical_issue for e in iters],
+        "status" => fill(String(training_log.status), n),
+    )
+end
+
+function __write_training_log(
+    training_log::Union{TrainingLog,Nothing}, writer::Function, extension::String
+)
+    if training_log === nothing
+        return nothing
+    end
+    filepath = POLICY_TRAINING_LOG_OUTPUT_FILENAME * extension
+    @info "Writing training log to $(filepath)"
+    df = __training_log_to_dataframe(training_log)
+    return writer(filepath, df)
+end
+
+function __write_convergence_analysis(
+    training_log::Union{TrainingLog,Nothing}, writer::Function, extension::String
+)
+    if training_log === nothing
+        return nothing
+    end
+    filepath = POLICY_CONVERGENCE_ANALYSIS_OUTPUT_FILENAME * extension
+    @info "Writing convergence analysis to $(filepath)"
+    df = compute_gap_trajectory(training_log)
+    return writer(filepath, df)
+end
+
+function __write_convergence_report(training_log::Union{TrainingLog,Nothing})
+    if training_log === nothing
+        return nothing
+    end
+    filepath = POLICY_CONVERGENCE_REPORT_OUTPUT_FILENAME * ".json"
+    @info "Writing convergence report to $(filepath)"
+    report = generate_convergence_report(training_log)
+    sanitized = __sanitize_for_json(report)
+    open(filepath, "w") do io
+        JSON.print(io, sanitized, 2)
+    end
+    return nothing
+end
+
+function __sanitize_for_json(x::Dict)
+    return Dict(k => __sanitize_for_json(v) for (k, v) in x)
+end
+
+function __sanitize_for_json(x::Vector)
+    return [__sanitize_for_json(v) for v in x]
+end
+
+function __sanitize_for_json(x::Float64)
+    return (isnan(x) || isinf(x)) ? nothing : x
+end
+
+function __sanitize_for_json(x)
+    return x
 end

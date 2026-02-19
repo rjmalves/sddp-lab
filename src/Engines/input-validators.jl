@@ -9,19 +9,20 @@ function __validate_sddp_engine_keys_types!(
 )::Bool
     valid_keys = __validate_keys!(
         d,
-        ["policy", "simulation", "diagnostics", "solver", "inflow_non_negativity"],
+        ["policy", "simulation", "diagnostics", "solver", "inflow_non_negativity", "debug"],
         e,
     )
     valid_types =
         valid_keys && __validate_key_types!(
             d,
-            ["policy", "simulation", "diagnostics", "solver", "inflow_non_negativity"],
+            ["policy", "simulation", "diagnostics", "solver", "inflow_non_negativity", "debug"],
             [
                 SDDPPolicyTaskDefinition,
                 SDDPSimulationTaskDefinition,
                 DiagnosticsConfig,
                 SolverConfig,
                 T where {T<:InflowNonNegativity},
+                DebugConfig,
             ],
             e,
         )
@@ -49,10 +50,12 @@ function __build_sddp_engine_internals_from_dicts!(
     valid_solver = __build_solver!(d, e)
     valid_inflow = __build_inflow_non_negativity!(d, e)
     valid_validation = __build_validation!(d, e)
+    valid_debug = __build_debug!(d, e)
     return valid_policy &&
            valid_simulation &&
            valid_diagnostics &&
            valid_solver &&
            valid_inflow &&
-           valid_validation
+           valid_validation &&
+           valid_debug
 end

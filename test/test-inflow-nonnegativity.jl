@@ -171,6 +171,7 @@ import Copulas
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
@@ -181,6 +182,8 @@ import Copulas
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
             @test engine.inflow_non_negativity isa Engines.InflowNone
         end
@@ -196,6 +199,7 @@ import Copulas
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim = Engines.SDDPSimulationTaskDefinition(
                 10, Engines.Serial(), Engines.DefaultSampling()
@@ -206,6 +210,8 @@ import Copulas
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowPenalty(1000.0),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
             @test engine.inflow_non_negativity isa Engines.InflowPenalty
             @test engine.inflow_non_negativity.penalty_cost == 1000.0
@@ -233,6 +239,7 @@ import Copulas
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 5, Engines.Serial(), Engines.DefaultSampling()
@@ -243,6 +250,8 @@ import Copulas
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowNone(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
             study = SDDPlab.Study(original.inputs, engine)
 
@@ -283,6 +292,7 @@ import Copulas
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 5, Engines.Serial(), Engines.DefaultSampling()
@@ -294,6 +304,8 @@ import Copulas
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowPenalty(1000.0),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
             study = SDDPlab.Study(original.inputs, engine)
 
@@ -328,6 +340,7 @@ import Copulas
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 5, Engines.Serial(), Engines.DefaultSampling()
@@ -338,6 +351,8 @@ import Copulas
                 Engines.DiagnosticsConfig(false, 1e6, 1e10),
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowTruncation(),
+                nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
             study = SDDPlab.Study(original.inputs, engine)
 

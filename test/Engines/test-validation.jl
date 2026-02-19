@@ -670,6 +670,7 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
                 Engines.DefaultForwardPassStrategy(),
                 Engines.SingleCut(),
                 Engines.NoScaling(),
+                Engines.TrainingLogConfig("", 1, false, 1),
             )
             sim_def = Engines.SDDPSimulationTaskDefinition(
                 5, Engines.Serial(), Engines.DefaultSampling()
@@ -681,6 +682,7 @@ ENGINE_DICT_WITHOUT_VALIDATION = Dict{String,Any}(
                 Engines.SolverConfig("HiGHS", Dict{String,Any}()),
                 Engines.InflowNone(),
                 nothing,
+                Engines.DebugConfig(false, Any[], "mof", false, 60.0),
             )
 
             @suppress begin

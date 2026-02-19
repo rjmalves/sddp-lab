@@ -22,3 +22,4 @@ function save_validation(
 ) end
 
 function diagnose(model::Model, engine::Engine)::Bool end
+function debug(model::Model, engine::Engine, path::String) end

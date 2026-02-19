@@ -95,6 +95,20 @@ const VALIDATION_SCHEMA = [
     FieldRule("branchings", Integer; constraints = [positive()]),
 ]
 
+const DEBUG_CONFIG_SCHEMA = [
+    FieldRule("write_subproblems", Bool; required = false),
+    FieldRule("subproblem_format", String; required = false),
+    FieldRule("deterministic_equivalent", Bool; required = false),
+    FieldRule("det_equiv_time_limit", Real; required = false, constraints = [positive()]),
+]
+
+const TRAINING_LOG_CONFIG_SCHEMA = [
+    FieldRule("log_file", String; required = false),
+    FieldRule("log_frequency", Integer; required = false, constraints = [positive()]),
+    FieldRule("log_every_iteration", Bool; required = false),
+    FieldRule("print_level", Integer; required = false, constraints = [in_range(0, 2)]),
+]
+
 function __validate_diagnostics_halt_ge_warn!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
@@ -276,6 +290,11 @@ function __validate_sddp_policy_task_definition_keys_types_before_build!(
             d, ["scaling"], [Dict{String,Any}], e
         )
     end
+    if valid_types && haskey(d, "logging")
+        valid_types = __validate_key_types!(
+            d, ["logging"], [Dict{String,Any}], e
+        )
+    end
     return valid_types
 end
 
@@ -293,6 +312,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
             "forward_pass",
             "cut_type",
             "scaling",
+            "logging",
         ],
         e,
     )
@@ -308,6 +328,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
                 "forward_pass",
                 "cut_type",
                 "scaling",
+                "logging",
             ],
             [
                 Convergence,
@@ -318,6 +339,7 @@ function __validate_sddp_policy_task_definition_keys_types!(
                 T where {T<:ForwardPassStrategy},
                 T where {T<:CutType},
                 T where {T<:ScalingMode},
+                TrainingLogConfig,
             ],
             e,
         )
@@ -526,6 +548,7 @@ function __build_sddp_policy_task_definition_internals_from_dicts!(
     valid_forward_pass = __build_forward_pass!(d, e)
     valid_cut_type = __build_cut_type!(d, e)
     valid_scaling = __build_scaling!(d, e)
+    valid_logging = __build_logging!(d, e)
     return valid_stopping_criteria &&
            valid_risk_measure &&
            valid_parallel_schema &&
@@ -533,7 +556,8 @@ function __build_sddp_policy_task_definition_internals_from_dicts!(
            valid_duality_handler &&
            valid_forward_pass &&
            valid_cut_type &&
-           valid_scaling
+           valid_scaling &&
+           valid_logging
 end
 
 function __build_sddp_simulation_task_definition_internals_from_dicts!(

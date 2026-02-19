@@ -159,6 +159,27 @@ struct NoScaling <: ScalingMode end
 
 struct AutoScaling <: ScalingMode end
 
+struct TrainingLogConfig
+    log_file::String
+    log_frequency::Int
+    log_every_iteration::Bool
+    print_level::Int
+end
+
+struct TrainingLogEntry
+    iteration::Int
+    bound::Float64
+    simulation_value::Float64
+    time::Float64
+    total_solves::Int
+    serious_numerical_issue::Bool
+end
+
+struct TrainingLog
+    status::Symbol
+    iterations::Vector{TrainingLogEntry}
+end
+
 struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     convergence::Convergence
     risk_measure::RiskMeasure
@@ -168,10 +189,12 @@ struct SDDPPolicyTaskDefinition <: PolicyTaskDefinition
     forward_pass::ForwardPassStrategy
     cut_type::CutType
     scaling::ScalingMode
+    logging::TrainingLogConfig
 end
 
 struct SDDPPolicyTaskArtifact <: PolicyTaskArtifact
     policy::SDDP.PolicyGraph
+    training_log::Union{TrainingLog,Nothing}
 end
 
 struct SDDPSimulationTaskDefinition <: SimulationTaskDefinition
@@ -224,6 +247,14 @@ struct SDDPValidationTaskArtifact
     statistics::Dict{String,Float64}
 end
 
+struct DebugConfig
+    write_subproblems::Bool
+    subproblem_nodes::Vector{Any}
+    subproblem_format::String
+    deterministic_equivalent::Bool
+    det_equiv_time_limit::Float64
+end
+
 struct SDDPEngine <: Engine
     policy::SDDPPolicyTaskDefinition
     simulation::SDDPSimulationTaskDefinition
@@ -231,6 +262,7 @@ struct SDDPEngine <: Engine
     solver::SolverConfig
     inflow_non_negativity::InflowNonNegativity
     validation::Union{OutOfSampleValidation,Nothing}
+    debug::DebugConfig
 end
 
 function get_policy_definition(e::Engine)::PolicyTaskDefinition end
@@ -243,6 +275,9 @@ include("input-validators.jl")
 export SDDPEngine,
     DiagnosticsConfig,
     SolverConfig,
+    TrainingLogConfig,
+    TrainingLogEntry,
+    TrainingLog,
     InflowNonNegativity,
     InflowNone,
     InflowPenalty,
@@ -250,6 +285,7 @@ export SDDPEngine,
     InflowTruncationWithPenalty,
     OutOfSampleValidation,
     SDDPValidationTaskArtifact,
+    DebugConfig,
     __build_engine!,
     build,
     train,
@@ -259,6 +295,7 @@ export SDDPEngine,
     save_simulation,
     validate,
     save_validation,
+    debug,
     get_policy_definition,
     get_simulation_definition,
     get_validation_definition,
