@@ -214,6 +214,279 @@ end
         @test graph === nothing
     end
 
+    # --- Same-stage datetime consistency ---
+
+    @testset "same-stage-consistent-datetimes" begin
+        d = Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 3,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 2,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        )
+        e = CompositeException()
+        graph = Scenarios.Graph(d, e)
+        @test typeof(graph) === Scenarios.Graph
+        @test length(e) == 0
+    end
+
+    @testset "same-stage-inconsistent-start-datetime" begin
+        d = Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 3,
+                    "stage" => 2,
+                    "start_datetime" => "2024-04-01",
+                    "end_datetime" => "2024-05-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 2,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        )
+        e = CompositeException()
+        graph = Scenarios.Graph(d, e)
+        @test graph === nothing
+        @test any(
+            ex -> occursin("stage 2", ex.msg) && occursin("inconsistent datetimes", ex.msg),
+            e.exceptions,
+        )
+    end
+
+    @testset "same-stage-inconsistent-end-datetime" begin
+        d = Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 3,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-04-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 2,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        )
+        e = CompositeException()
+        graph = Scenarios.Graph(d, e)
+        @test graph === nothing
+        @test any(
+            ex -> occursin("stage 2", ex.msg) && occursin("inconsistent datetimes", ex.msg),
+            e.exceptions,
+        )
+    end
+
+    @testset "multiple-stages-one-inconsistent" begin
+        d = Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 3,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 4,
+                    "stage" => 2,
+                    "start_datetime" => "2024-05-01",
+                    "end_datetime" => "2024-06-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 4,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 2,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 2,
+                    "target" => 4,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        )
+        e = CompositeException()
+        graph = Scenarios.Graph(d, e)
+        @test graph === nothing
+        @test any(
+            ex -> occursin("stage 2", ex.msg) && occursin("inconsistent datetimes", ex.msg),
+            e.exceptions,
+        )
+        @test !any(
+            ex ->
+                isa(ex, AssertionError) &&
+                    occursin("stage 1", ex.msg) &&
+                    occursin("inconsistent datetimes", ex.msg),
+            e.exceptions,
+        )
+    end
+
+    @testset "multiple-stages-both-inconsistent" begin
+        d = Dict{String,Any}(
+            "nodes" => [
+                Dict{String,Any}(
+                    "id" => 1,
+                    "stage" => 1,
+                    "start_datetime" => "2024-01-01",
+                    "end_datetime" => "2024-02-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 2,
+                    "stage" => 1,
+                    "start_datetime" => "2024-03-01",
+                    "end_datetime" => "2024-04-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 3,
+                    "stage" => 2,
+                    "start_datetime" => "2024-02-01",
+                    "end_datetime" => "2024-03-01",
+                ),
+                Dict{String,Any}(
+                    "id" => 4,
+                    "stage" => 2,
+                    "start_datetime" => "2024-05-01",
+                    "end_datetime" => "2024-06-01",
+                ),
+            ],
+            "edges" => [
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 1,
+                    "target" => 4,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 2,
+                    "target" => 3,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+                Dict{String,Any}(
+                    "source" => 2,
+                    "target" => 4,
+                    "probability" => 0.5,
+                    "discount_rate" => 0.0,
+                ),
+            ],
+        )
+        e = CompositeException()
+        graph = Scenarios.Graph(d, e)
+        @test graph === nothing
+        datetime_errors = filter(
+            ex -> isa(ex, AssertionError) && occursin("inconsistent datetimes", ex.msg),
+            e.exceptions,
+        )
+        @test length(datetime_errors) >= 2
+    end
+
     @testset "graph-probabilities-not-summing-to-one" begin
         d = Dict{String,Any}(
             "nodes" => [

@@ -235,10 +235,52 @@ end
             @test observed_value == ref_value
         end
 
-        @testset "set-seed-emits-deprecation-warning" begin
-            @test_logs (:warn, r"set_seed! mutates the global RNG") Scenarios.set_seed!(
-                scenarios
+        @testset "xoshiro-reproducibility" begin
+            saa1 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
             )
+            saa2 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            @test saa1 == saa2
+        end
+
+        @testset "xoshiro-different-seeds" begin
+            saa1 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            saa2 = StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 43
+            )
+            @test saa1 != saa2
+        end
+
+        @testset "composed-seed-distinct-states" begin
+            seed = 42
+            s1 = hash(seed, hash(1))
+            s2 = hash(seed, hash(2))
+            @test s1 != s2
+        end
+
+        @testset "composed-seed-reproducible" begin
+            seed = 42
+            state = 3
+            @test hash(seed, hash(state)) == hash(seed, hash(state))
+        end
+
+        @testset "global-rng-isolation" begin
+            Random.seed!(999)
+            ref = rand()
+            Random.seed!(999)
+            StochasticProcess.generate_saa(
+                process, initial_season, num_stages, branchings, 42
+            )
+            observed = rand()
+            @test ref == observed
+        end
+
+        @testset "set-seed-removed" begin
+            @test !isdefined(Scenarios, :set_seed!)
         end
     end
 end

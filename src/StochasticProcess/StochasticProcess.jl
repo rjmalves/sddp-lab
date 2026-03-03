@@ -68,8 +68,8 @@ end
 
 Generate a reproducible SAA of size `N × B` using the given `seed`.
 
-Creates a fresh `MersenneTwister` RNG from `seed`, ensuring deterministic
-output independent of global RNG state.
+Creates a fresh `Xoshiro` RNG from `seed`, ensuring deterministic output
+independent of global RNG state.
 
 # Arguments
 
@@ -77,7 +77,7 @@ output independent of global RNG state.
   - `initial_season`: Season index (1-based) for the first stage.
   - `N`: Number of stages.
   - `B`: Number of scenario branchings per stage.
-  - `seed`: Integer random seed for the `MersenneTwister` RNG.
+  - `seed`: Integer random seed for the `Xoshiro` RNG.
 
 # Example
 
@@ -96,7 +96,7 @@ function generate_saa(
     B::Integer,
     seed::Integer,
 )::Vector{Vector{Vector{Float64}}}
-    rng = Random.MersenneTwister(seed)
+    rng = Random.Xoshiro(seed)
     return __generate_saa(rng, s, initial_season, N, B)
 end
 

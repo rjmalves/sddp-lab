@@ -6,6 +6,7 @@ using Parquet: Parquet
 using DataFrames
 using Dates
 using JuMP: JuMP
+using SDDP: SDDP
 
 using ..Lab
 
@@ -70,5 +71,6 @@ export __validate_keys!,
     VariableUnitInfo,
     VARIABLE_UNITS_REGISTRY,
     get_variable_unit,
-    get_coefficient_magnitude_report
+    get_coefficient_magnitude_report,
+    compute_model_magnitudes
 end

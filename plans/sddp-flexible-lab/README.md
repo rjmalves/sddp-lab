@@ -33,8 +33,8 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | 08   | Experiment Management             | 4       | Completed | hpc-julia-developer         |
 | 09   | Observability & Diagnostics       | 3       | Completed | sddp-specialist             |
 | 10   | Documentation & Examples          | 3       | Completed | both                        |
-| 11   | Per-Stage Block Architecture      | 4       | Pending   | hpc-julia + sddp-specialist |
-| 12   | Robustness & Reproducibility      | 3       | Pending   | sddp-specialist + hpc-julia |
+| 11   | Per-Stage Block Architecture      | 4       | Completed | hpc-julia + sddp-specialist |
+| 12   | Robustness & Reproducibility      | 3       | Completed | sddp-specialist + hpc-julia |
 
 ## Dependency Graph
 
@@ -215,6 +215,6 @@ Epic 12: Robustness & Reproducibility (independent of Epic 11)
 | ticket-045 | Update subproblem builder for per-stage blocks              | epic-11 | completed | Detailed     | 0.90      | --      | sddp-specialist     |
 | ticket-046 | Reform output Parquet format with block columns             | epic-11 | completed | Detailed     | 0.89      | --      | hpc-julia-developer |
 | ticket-047 | Update tests and example cases for per-stage blocks         | epic-11 | completed | Detailed     | 0.88      | --      | hpc-julia-developer |
-| ticket-048 | Validate same-stage node datetimes in graph validators      | epic-12 | pending   | Detailed     | 0.95      | --      | sddp-specialist     |
-| ticket-049 | Adaptive model-derived variable magnitudes                  | epic-12 | pending   | Detailed     | 0.89      | --      | sddp-specialist     |
-| ticket-050 | Deterministic thread-safe RNG with Xoshiro                  | epic-12 | pending   | Detailed     | 0.93      | --      | hpc-julia-developer |
+| ticket-048 | Validate same-stage node datetimes in graph validators      | epic-12 | completed | Detailed     | 0.95      | 0.85    | sddp-specialist     |
+| ticket-049 | Adaptive model-derived variable magnitudes                  | epic-12 | completed | Detailed     | 0.89      | 0.88    | sddp-specialist     |
+| ticket-050 | Deterministic thread-safe RNG with Xoshiro                  | epic-12 | completed | Detailed     | 0.93      | 0.90    | hpc-julia-developer |

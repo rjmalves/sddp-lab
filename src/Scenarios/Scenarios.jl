@@ -223,25 +223,6 @@ function get_block_config(scenarios::ScenariosData)::BlockConfig
 end
 
 """
-    set_seed!(scenarios)
-
-Seed Julia's global RNG with the seed stored in `scenarios`.
-
-!!! warning
-
-    Deprecated. This function mutates the global RNG and is not thread-safe.
-    Pass the seed directly to [`generate_saa`](@ref) instead.
-"""
-function set_seed!(scenarios::ScenariosData)
-    Base.depwarn(
-        "set_seed! mutates the global RNG and is not thread-safe. " *
-        "Pass seed to generate_saa instead.",
-        :set_seed!,
-    )
-    return Random.seed!(scenarios.seed)
-end
-
-"""
     get_graph(scenarios) -> Graph
 
 Return the scenario [`Graph`](@ref) from a [`ScenariosData`](@ref) object.
@@ -260,9 +241,7 @@ Return the number of distinct stages in a scenario [`Graph`](@ref).
 See also: [`Graph`](@ref), [`get_root_node_id`](@ref)
 """
 function get_number_of_stages(g::Graph)::Integer
-    node_stages = [n.stage for n in g.nodes]
-    unique!(node_stages)
-    return length(node_stages)
+    return length(unique(n.stage for n in g.nodes))
 end
 
 """
@@ -274,12 +253,9 @@ Return the ID of the root node (stage 1, no incoming edges) in a scenario
 See also: [`Graph`](@ref), [`Node`](@ref)
 """
 function get_root_node_id(g::Graph)::Integer
-    node_ids = [n.id for n in g.nodes]
-    nodes_with_targets = [e.target[].id for e in g.edges]
-    unique!(node_ids)
-    unique!(nodes_with_targets)
-    node_ids = setdiff(node_ids, nodes_with_targets)
-    return node_ids[1]
+    node_ids = Set(n.id for n in g.nodes)
+    target_ids = Set(e.target[].id for e in g.edges)
+    return first(setdiff(node_ids, target_ids))
 end
 
 """
@@ -355,7 +331,6 @@ export ScenariosData,
     get_graph,
     get_number_of_stages,
     get_root_node_id,
-    set_seed!,
     has_blocks,
     num_blocks,
     get_block_names,

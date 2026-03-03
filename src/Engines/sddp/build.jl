@@ -714,7 +714,7 @@ function generate_saa(scenarios::ScenariosData, num_stages::Integer, seed::Integ
     branchings = scenarios.branchings
     result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
     for (state, process) in scenarios.inflow.stochastic_process
-        state_seed = seed + (state - 1) * 7919  # prime offset ensures per-state independence
+        state_seed = hash(seed, hash(state))  # composed hash ensures well-distributed per-state seeds
         result[state] = StochasticProcess.generate_saa(
             process, initial_season, num_stages, branchings, state_seed
         )

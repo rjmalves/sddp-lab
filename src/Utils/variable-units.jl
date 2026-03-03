@@ -23,11 +23,74 @@ function get_variable_unit(sym::Symbol)::Union{VariableUnitInfo,Nothing}
 end
 
 """
-    get_coefficient_magnitude_report(model) -> DataFrame
+    compute_model_magnitudes(policy_graph::SDDP.PolicyGraph) -> Dict{Symbol, VariableUnitInfo}
 
-Report actual vs. expected magnitude ranges for registered variables in a JuMP model.
+Extract variable bounds across all nodes and return magnitude information for each registered
+variable. Falls back to hardcoded registry values for variables with no finite bounds.
 """
-function get_coefficient_magnitude_report(model::JuMP.Model)::DataFrame
+function compute_model_magnitudes(
+    policy_graph::SDDP.PolicyGraph
+)::Dict{Symbol,VariableUnitInfo}
+    result = Dict{Symbol,VariableUnitInfo}()
+    global_bounds = Dict{Symbol,Tuple{Vector{Float64},Vector{Float64}}}()
+
+    for (node_key, node) in policy_graph.nodes
+        sp = node.subproblem
+        for (sym, info) in VARIABLE_UNITS_REGISTRY
+            vars = try
+                sp[sym]
+            catch
+                continue
+            end
+
+            lb_values, ub_values = _extract_bounds(vars)
+            if !haskey(global_bounds, sym)
+                global_bounds[sym] = (Float64[], Float64[])
+            end
+            append!(global_bounds[sym][1], lb_values)
+            append!(global_bounds[sym][2], ub_values)
+        end
+    end
+
+    for (sym, info) in VARIABLE_UNITS_REGISTRY
+        if haskey(global_bounds, sym)
+            lbs, ubs = global_bounds[sym]
+            finite_lbs = filter(isfinite, lbs)
+            finite_ubs = filter(isfinite, ubs)
+
+            if isempty(finite_lbs) && isempty(finite_ubs)
+                @warn "Variable $sym has no bounds in any subproblem"
+                result[sym] = info  # fallback to hardcoded
+            else
+                if isempty(finite_ubs)
+                    @warn "Variable $sym has no upper bound in any subproblem, using fallback max_magnitude"
+                end
+                min_mag = isempty(finite_lbs) ? 0.0 : minimum(abs.(finite_lbs))
+                max_mag = if isempty(finite_ubs)
+                    info.max_magnitude
+                else
+                    maximum(abs.(finite_ubs))
+                end
+                max_mag = max(
+                    max_mag, isempty(finite_lbs) ? 0.0 : maximum(abs.(finite_lbs))
+                )
+                result[sym] = VariableUnitInfo(sym, info.unit, min_mag, max_mag)
+            end
+        end
+    end
+
+    return result
+end
+
+"""
+    get_coefficient_magnitude_report(model; magnitudes) -> DataFrame
+
+Report actual vs. expected magnitude ranges for registered variables. Uses model-derived
+values when provided, otherwise defaults to hardcoded registry constants.
+"""
+function get_coefficient_magnitude_report(
+    model::JuMP.Model; magnitudes::Dict{Symbol,VariableUnitInfo} = VARIABLE_UNITS_REGISTRY
+)::DataFrame
     variable_col = String[]
     unit_col = String[]
     actual_lb_col = Float64[]
@@ -36,7 +99,7 @@ function get_coefficient_magnitude_report(model::JuMP.Model)::DataFrame
     expected_max_col = Float64[]
     ratio_col = Float64[]
 
-    for (sym, info) in VARIABLE_UNITS_REGISTRY
+    for (sym, info) in magnitudes
         vars = try
             model[sym]
         catch
@@ -48,6 +111,10 @@ function get_coefficient_magnitude_report(model::JuMP.Model)::DataFrame
         actual_ub = isempty(ub_values) ? NaN : maximum(ub_values)
 
         ratio = _compute_magnitude_ratio(actual_lb, actual_ub, info.max_magnitude)
+
+        if ratio > 10.0 || (isfinite(ratio) && ratio < 0.01)
+            @warn "Variable $sym magnitude ratio is $ratio (threshold: 0.01 - 10.0)"
+        end
 
         push!(variable_col, String(sym))
         push!(unit_col, info.unit.symbol)
@@ -72,16 +139,10 @@ end
 function _extract_bounds(vars)::Tuple{Vector{Float64},Vector{Float64}}
     lb_values = Float64[]
     ub_values = Float64[]
-
-    var_list = _collect_variables(vars)
-
-    for v in var_list
-        lb = _safe_lower_bound(v)
-        ub = _safe_upper_bound(v)
-        push!(lb_values, lb)
-        push!(ub_values, ub)
+    for v in _collect_variables(vars)
+        push!(lb_values, _safe_lower_bound(v))
+        push!(ub_values, _safe_upper_bound(v))
     end
-
     return lb_values, ub_values
 end
 

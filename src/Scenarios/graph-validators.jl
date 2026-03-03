@@ -1,5 +1,3 @@
-# SCHEMAS ----------------------------------------------------------------------------------
-
 const NODE_SCHEMA = [
     FieldRule("id", Integer; constraints = [positive()]),
     FieldRule("stage", Integer; constraints = [positive()]),
@@ -13,8 +11,6 @@ const EDGE_SCHEMA = [
     FieldRule("probability", Real; constraints = [in_range(0.0, 1.0)]),
     FieldRule("discount_rate", Real; constraints = [non_negative()]),
 ]
-
-# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_graph_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = ["nodes", "edges"]
@@ -30,8 +26,6 @@ function __validate_graph_keys_types!(d::Dict{String,Any}, e::CompositeException
         push!(e, ErrorException("Key 'edges' ($(d["edges"])) can't be converted to Vector"))
     return valid_nodes_type && valid_edges_type
 end
-
-# CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_node_datetimes!(d::Dict{String,Any}, e::CompositeException)::Bool
     id = d["id"]
@@ -85,12 +79,32 @@ function __validate_graph_content!(d::Dict{String,Any}, e::CompositeException)::
     return valid
 end
 
-# CONSISTENCY VALIDATORS -------------------------------------------------------------------
-
 function __validate_graph_unique_node_ids!(nodes::Vector{Node}, e::CompositeException)::Bool
     node_ids = [n.id for n in nodes]
     valid = length(unique(node_ids)) == length(node_ids)
     valid || push!(e, AssertionError("Graph - node ids must be unique"))
+    return valid
+end
+
+function __validate_graph_stage_datetimes!(nodes::Vector{Node}, e::CompositeException)::Bool
+    stage_datetimes = Dict{Integer,Tuple{DateTime,DateTime}}()
+    valid = true
+    for node in nodes
+        expected = get(stage_datetimes, node.stage, nothing)
+        actual = (node.start_datetime, node.end_datetime)
+        if expected === nothing
+            stage_datetimes[node.stage] = actual
+        elseif expected != actual
+            push!(
+                e,
+                AssertionError(
+                    "Graph - nodes at stage $(node.stage) have inconsistent datetimes: " *
+                    "found $(expected[1]) to $(expected[2]) and $(actual[1]) to $(actual[2])",
+                ),
+            )
+            valid = false
+        end
+    end
     return valid
 end
 
@@ -173,10 +187,12 @@ function __validate_graph_consistency!(
     nodes::Vector{Node}, edges::Vector{Edge}, e::CompositeException
 )::Bool
     valid_unique_ids = __validate_graph_unique_node_ids!(nodes, e)
+    valid_stage_datetimes = __validate_graph_stage_datetimes!(nodes, e)
     valid_single_root = __validate_graph_single_root!(nodes, edges, e)
     valid_probability_sums = __validate_graph_probability_sums!(nodes, edges, e)
     valid_reachability = __validate_graph_reachability!(nodes, edges, e)
     return valid_unique_ids &&
+           valid_stage_datetimes &&
            valid_single_root &&
            valid_probability_sums &&
            valid_reachability
