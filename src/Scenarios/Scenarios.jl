@@ -119,7 +119,8 @@ Root container for all scenario-related configuration. Produced by parsing the
   - `graph`: [`Graph`](@ref) defining the SDDP scenario tree topology.
   - `inflow`: [`InflowScenarios`](@ref) container with stochastic process(es).
   - `load`: `LoadScenarios` with deterministic or block load profiles.
-  - `block_config`: [`BlockConfig`](@ref) for inner load blocks (if any).
+  - `block_configs`: `Dict{Int, BlockConfig}` mapping stage index to per-stage
+    [`BlockConfig`](@ref). Stages absent from the dict use `default_block_config()`.
   - `markov_chain`: [`AbstractMarkovChain`](@ref) for Markov state transitions.
 
 See also: [`get_scenarios`](@ref), [`get_graph`](@ref), [`get_block_config`](@ref)
@@ -131,7 +132,7 @@ struct ScenariosData <: InputModule
     graph::Graph
     inflow::InflowScenarios
     load::LoadScenarios
-    block_config::BlockConfig
+    block_configs::Dict{Int,BlockConfig}
     markov_chain::AbstractMarkovChain
 end
 
@@ -161,12 +162,17 @@ Return the load demand (MW) for bus `bus_id` at node `node_id` and block
 `block_idx`. When inner load blocks are active, returns the block-specific load;
 otherwise returns the stage-level load.
 
+!!! note
+
+    This overload uses `get_block_config(scenarios)` (stage-1 config) for
+    backward compatibility. Ticket-045 will add per-stage dispatch.
+
 See also: [`has_blocks`](@ref), [`BlockConfig`](@ref)
 """
 function get_load(
     bus_id::Integer, node_id::Integer, block_idx::Integer, scenarios::ScenariosData
 )::Real
-    bc = scenarios.block_config
+    bc = get_block_config(scenarios)
     if has_blocks(bc)
         block_name = bc.blocks[block_idx].name
         return __get_load_by_block_name(bus_id, node_id, block_name, scenarios.load)
@@ -176,14 +182,44 @@ function get_load(
 end
 
 """
+    get_block_config(scenarios, stage) -> BlockConfig
+
+Return the [`BlockConfig`](@ref) for stage `stage` from a [`ScenariosData`](@ref)
+object. Falls back to `default_block_config()` when the stage has no explicit entry.
+
+# Example
+
+```julia
+bc = get_block_config(scenarios, 2)
+has_blocks(bc)  # true if stage 2 has explicit blocks defined
+```
+
+See also: [`BlockConfig`](@ref), [`has_blocks`](@ref), [`default_block_config`](@ref)
+"""
+function get_block_config(scenarios::ScenariosData, stage::Int)::BlockConfig
+    return get(scenarios.block_configs, stage, default_block_config())
+end
+
+"""
     get_block_config(scenarios) -> BlockConfig
 
-Return the [`BlockConfig`](@ref) from a [`ScenariosData`](@ref) object.
+Return the [`BlockConfig`](@ref) for stage 1 from a [`ScenariosData`](@ref) object.
 
-See also: [`BlockConfig`](@ref), [`has_blocks`](@ref)
+!!! warning
+
+    Deprecated. Use `get_block_config(scenarios, stage)` to retrieve the per-stage
+    config explicitly. This single-argument form emits a deprecation warning and
+    returns the stage-1 config (or an error if configs differ across stages).
+
+See also: [`BlockConfig`](@ref), [`get_block_config(::ScenariosData, ::Int)`](@ref)
 """
 function get_block_config(scenarios::ScenariosData)::BlockConfig
-    return scenarios.block_config
+    Base.depwarn(
+        "get_block_config(scenarios) is deprecated. " *
+        "Use get_block_config(scenarios, stage) to retrieve the per-stage BlockConfig.",
+        :get_block_config,
+    )
+    return get(scenarios.block_configs, 1, default_block_config())
 end
 
 """

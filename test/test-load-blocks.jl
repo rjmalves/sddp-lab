@@ -7,6 +7,8 @@ using Graphs
 using Dates
 using Suppressor
 using Test
+using DataFrames: DataFrames
+using CSV: CSV
 
 # =====================================================================================
 # Helper: build a minimal SystemData for unit tests
@@ -642,11 +644,11 @@ end
         study = SDDPlab.read_study(example_dir; e = e)
         @test length(e) == 0
 
-        # Verify that the loaded study has default block config (no blocks)
+        # Verify that the loaded study has default block config (no blocks) for all stages
         scenarios = Lab.get_input_module(
             Inputs.get_files(study.inputs), Scenarios.ScenariosData
         )
-        bc = Scenarios.get_block_config(scenarios)
+        bc = Scenarios.get_block_config(scenarios, 1)
         @test Scenarios.has_blocks(bc) == false
         @test Scenarios.num_blocks(bc) == 1
 
@@ -678,9 +680,13 @@ end
             ],
         )
 
-        # Reconstruct ScenariosData with the new block_config
+        # Reconstruct ScenariosData with the new block_configs (per-stage dict)
         old_files = Inputs.get_files(original.inputs)
         old_scenarios = Lab.get_input_module(old_files, Scenarios.ScenariosData)
+        num_stages = Scenarios.get_number_of_stages(Scenarios.get_graph(old_scenarios))
+        block_configs = Dict{Int,Scenarios.BlockConfig}(
+            s => block_config for s in 1:num_stages
+        )
         new_scenarios = Scenarios.ScenariosData(
             old_scenarios.seed,
             old_scenarios.initial_season,
@@ -688,7 +694,7 @@ end
             Scenarios.get_graph(old_scenarios),
             old_scenarios.inflow,
             old_scenarios.load,
-            block_config,
+            block_configs,
             old_scenarios.markov_chain,
         )
 
@@ -758,6 +764,10 @@ end
 
         old_files = Inputs.get_files(original.inputs)
         old_scenarios = Lab.get_input_module(old_files, Scenarios.ScenariosData)
+        num_stages = Scenarios.get_number_of_stages(Scenarios.get_graph(old_scenarios))
+        block_configs = Dict{Int,Scenarios.BlockConfig}(
+            s => block_config for s in 1:num_stages
+        )
         new_scenarios = Scenarios.ScenariosData(
             old_scenarios.seed,
             old_scenarios.initial_season,
@@ -765,7 +775,7 @@ end
             Scenarios.get_graph(old_scenarios),
             old_scenarios.inflow,
             old_scenarios.load,
-            block_config,
+            block_configs,
             old_scenarios.markov_chain,
         )
 
@@ -817,6 +827,298 @@ end
 
             simulation = SDDPlab.simulate(study, model)
             @test simulation !== nothing
+        end
+    end
+
+    # ---------------------------------------------------------------------------------
+    # 11. Output DataFrame: block_index and block_duration_hours columns
+    # ---------------------------------------------------------------------------------
+
+    # Helper: build a minimal simulations structure for DataFrame tests.
+    # Returns Vector{Vector{Dict{Symbol,Any}}} with `num_scenarios` scenarios,
+    # each with `num_stages` stages. Each stage dict has `variable => values`
+    # where values is a Matrix (num_entities x num_blocks) for 2D or a Vector for 1D.
+    function _make_sim_2d(
+        variable::Symbol,
+        num_scenarios::Int,
+        num_stages::Int,
+        num_entities::Int,
+        num_blocks::Int;
+        value::Float64 = 1.0,
+    )
+        return [
+            [
+                Dict{Symbol,Any}(variable => fill(value, num_entities, num_blocks)) for
+                _ in 1:num_stages
+            ] for _ in 1:num_scenarios
+        ]
+    end
+
+    function _make_sim_1d(
+        variable::Symbol,
+        num_scenarios::Int,
+        num_stages::Int,
+        num_entities::Int;
+        value::Float64 = 5.0,
+    )
+        return [
+            [Dict{Symbol,Any}(variable => fill(value, num_entities)) for _ in 1:num_stages]
+            for _ in 1:num_scenarios
+        ]
+    end
+
+    @testset "output-df-2d-variable-no-block-mangling" begin
+        # 2 scenarios, 2 stages, 1 entity, 2 blocks
+        sims = _make_sim_2d(Lab.THERMAL_GENERATION, 2, 2, 1, 2; value = 42.0)
+        stage_block_durations = Dict{Int,Vector{Float64}}(
+            1 => [6.0, 18.0], 2 => [6.0, 18.0]
+        )
+
+        df = DataFrames.DataFrame()
+        Engines.__increase_dataframe!(
+            df,
+            Lab.THERMAL_GENERATION,
+            "THERMAL_GENERATION",
+            Int64[1],
+            "entity_id",
+            sims,
+            stage_block_durations,
+        )
+
+        # variable_name must be clean -- no _B suffix
+        @test all(df[!, "variable_name"] .== "THERMAL_GENERATION")
+
+        # block_index should be 1 or 2 (Int), never missing
+        @test all(!ismissing, df[!, "block_index"])
+        block_indices = sort(unique(skipmissing(df[!, "block_index"])))
+        @test block_indices == [1, 2]
+
+        # block_duration_hours matches the configured durations
+        rows_blk1 = filter(r -> !ismissing(r.block_index) && r.block_index == 1, df)
+        rows_blk2 = filter(r -> !ismissing(r.block_index) && r.block_index == 2, df)
+        @test all(rows_blk1[!, "block_duration_hours"] .== 6.0)
+        @test all(rows_blk2[!, "block_duration_hours"] .== 18.0)
+    end
+
+    @testset "output-df-1d-variable-missing-block-index" begin
+        # 1D variable (INFLOW): 2 scenarios, 3 stages, 2 entities
+        # No explicit blocks: stage_block_durations has [tau] per stage
+        tau = 730.0
+        sims = _make_sim_1d(Lab.INFLOW, 2, 3, 2; value = 50.0)
+        stage_block_durations = Dict{Int,Vector{Float64}}(
+            1 => [tau], 2 => [tau], 3 => [tau]
+        )
+
+        df = DataFrames.DataFrame()
+        Engines.__increase_dataframe!(
+            df, Lab.INFLOW, "INFLOW", Int64[1, 2], "entity_id", sims, stage_block_durations
+        )
+
+        # block_index must be missing for all 1D rows (num_blk == 1)
+        @test all(ismissing, df[!, "block_index"])
+
+        # block_duration_hours equals total stage duration (sum of [tau]) = tau
+        @test all(df[!, "block_duration_hours"] .== tau)
+
+        # variable_name is the clean name passed in
+        @test all(df[!, "variable_name"] .== "INFLOW")
+    end
+
+    @testset "output-df-block-duration-per-stage" begin
+        # 2D variable, 2 stages with different block durations per stage
+        sims = _make_sim_2d(Lab.THERMAL_GENERATION, 1, 2, 1, 2; value = 10.0)
+        stage_block_durations = Dict{Int,Vector{Float64}}(
+            1 => [6.0, 18.0], 2 => [8.0, 16.0]
+        )
+
+        df = DataFrames.DataFrame()
+        Engines.__increase_dataframe!(
+            df,
+            Lab.THERMAL_GENERATION,
+            "THERMAL_GENERATION",
+            Int64[1],
+            "entity_id",
+            sims,
+            stage_block_durations,
+        )
+
+        # Stage 1, block 1 -> 6.0 hours; Stage 1, block 2 -> 18.0 hours
+        # Stage 2, block 1 -> 8.0 hours; Stage 2, block 2 -> 16.0 hours
+        rows_s1_b1 = filter(
+            r -> r.stage == 1 && !ismissing(r.block_index) && r.block_index == 1, df
+        )
+        rows_s1_b2 = filter(
+            r -> r.stage == 1 && !ismissing(r.block_index) && r.block_index == 2, df
+        )
+        rows_s2_b1 = filter(
+            r -> r.stage == 2 && !ismissing(r.block_index) && r.block_index == 1, df
+        )
+        rows_s2_b2 = filter(
+            r -> r.stage == 2 && !ismissing(r.block_index) && r.block_index == 2, df
+        )
+
+        @test all(rows_s1_b1[!, "block_duration_hours"] .== 6.0)
+        @test all(rows_s1_b2[!, "block_duration_hours"] .== 18.0)
+        @test all(rows_s2_b1[!, "block_duration_hours"] .== 8.0)
+        @test all(rows_s2_b2[!, "block_duration_hours"] .== 16.0)
+    end
+
+    @testset "output-df-single-block-no-blocks-config" begin
+        # Default (K=1): 1D behaviour even if the variable happens to be 1D
+        # Simulate the no-blocks case: stage_block_durations has [tau] vectors
+        tau = 730.0
+        sims = _make_sim_1d(Lab.INFLOW, 3, 4, 1; value = 100.0)
+        stage_block_durations = Dict{Int,Vector{Float64}}(s => [tau] for s in 1:4)
+
+        df = DataFrames.DataFrame()
+        Engines.__increase_dataframe!(
+            df, Lab.INFLOW, "INFLOW", Int64[1], "entity_id", sims, stage_block_durations
+        )
+
+        @test all(ismissing, df[!, "block_index"])
+        @test all(df[!, "block_duration_hours"] .== tau)
+        @test all(df[!, "variable_name"] .== "INFLOW")
+    end
+
+    @testset "e2e-save-simulation-output-schema-no-blocks" begin
+        # Full pipeline e2e: 1dtoy (no blocks) -> save -> read back -> check schema
+        e = CompositeException()
+        study = SDDPlab.read_study(example_dir; e = e)
+        @test length(e) == 0
+
+        @suppress begin
+            model = SDDPlab.build(study, HiGHS.Optimizer)
+            SDDPlab.train(study, model)
+            artifact = SDDPlab.simulate(study, model)
+
+            mktempdir() do tmpdir
+                SDDPlab.save_simulation(study, artifact, tmpdir, Lab.CSVFormat())
+
+                thermal_path = joinpath(tmpdir, "operation_thermals.csv")
+                @test isfile(thermal_path)
+
+                df = CSV.read(thermal_path, DataFrames.DataFrame)
+
+                # Schema check: required columns exist
+                @test "variable_name" in names(df)
+                @test "block_index" in names(df)
+                @test "block_duration_hours" in names(df)
+                @test "stage" in names(df)
+                @test "entity_id" in names(df)
+                @test "scenario" in names(df)
+                @test "value" in names(df)
+
+                # No _B suffix in variable names
+                @test all(!contains(vn, "_B") for vn in df[!, "variable_name"])
+
+                # No-blocks case: block_index is missing for all rows
+                @test all(ismissing, df[!, "block_index"])
+            end
+        end
+    end
+
+    @testset "e2e-save-simulation-output-schema-with-blocks" begin
+        # Full pipeline e2e: 1dtoy with 2 parallel blocks -> save -> read back -> check schema
+        e = CompositeException()
+        original = SDDPlab.read_study(example_dir; e = e)
+        @test length(e) == 0
+
+        block_config = Scenarios.BlockConfig(
+            :parallel, [Scenarios.Block("peak", 248.0), Scenarios.Block("offpeak", 496.0)]
+        )
+
+        old_files = Inputs.get_files(original.inputs)
+        old_scenarios = Lab.get_input_module(old_files, Scenarios.ScenariosData)
+        num_stages = Scenarios.get_number_of_stages(Scenarios.get_graph(old_scenarios))
+        block_configs = Dict{Int,Scenarios.BlockConfig}(
+            s => block_config for s in 1:num_stages
+        )
+        new_scenarios = Scenarios.ScenariosData(
+            old_scenarios.seed,
+            old_scenarios.initial_season,
+            old_scenarios.branchings,
+            Scenarios.get_graph(old_scenarios),
+            old_scenarios.inflow,
+            old_scenarios.load,
+            block_configs,
+            old_scenarios.markov_chain,
+        )
+        new_files = Lab.InputModule[
+            f isa Scenarios.ScenariosData ? new_scenarios : f for f in old_files
+        ]
+        new_inputs = Inputs.InputsData(Inputs.get_path(original.inputs), new_files)
+
+        convergence = Engines.Convergence(1, 3, [Engines.IterationLimit(3)])
+        policy_def = Engines.SDDPPolicyTaskDefinition(
+            convergence,
+            original.engine.policy.risk_measure,
+            Engines.Serial(),
+            Engines.DefaultSampling(),
+            Engines.DefaultDuality(),
+            Engines.DefaultForwardPassStrategy(),
+            Engines.SingleCut(),
+            Engines.NoScaling(),
+            Engines.TrainingLogConfig("", 1, false, 1),
+        )
+        sim_def = Engines.SDDPSimulationTaskDefinition(
+            5, Engines.Serial(), Engines.DefaultSampling()
+        )
+        engine = Engines.SDDPEngine(
+            policy_def,
+            sim_def,
+            Engines.DiagnosticsConfig(false, 1e6, 1e10),
+            Engines.SolverConfig("HiGHS", Dict{String,Any}()),
+            Engines.InflowNone(),
+            nothing,
+            Engines.DebugConfig(false, Any[], "mof", false, 60.0),
+        )
+        study = SDDPlab.Study(new_inputs, engine)
+
+        @suppress begin
+            model = SDDPlab.build(study, HiGHS.Optimizer)
+            SDDPlab.train(study, model)
+            artifact = SDDPlab.simulate(study, model)
+
+            mktempdir() do tmpdir
+                SDDPlab.save_simulation(study, artifact, tmpdir, Lab.CSVFormat())
+
+                thermal_path = joinpath(tmpdir, "operation_thermals.csv")
+                @test isfile(thermal_path)
+
+                df = CSV.read(thermal_path, DataFrames.DataFrame)
+
+                # Schema: required columns present
+                @test "block_index" in names(df)
+                @test "block_duration_hours" in names(df)
+
+                # No _B suffix in variable names
+                @test all(!contains(vn, "_B") for vn in df[!, "variable_name"])
+
+                # With 2 blocks: block_index is 1 or 2, never missing
+                thermal_rows = filter(r -> r.variable_name == "THERMAL_GENERATION", df)
+                @test !isempty(thermal_rows)
+                @test all(!ismissing, thermal_rows[!, "block_index"])
+                block_idx_vals = sort(unique(skipmissing(thermal_rows[!, "block_index"])))
+                @test block_idx_vals == [1, 2]
+
+                # block_duration_hours matches configured durations
+                rows_b1 = filter(
+                    r ->
+                        r.variable_name == "THERMAL_GENERATION" &&
+                            !ismissing(r.block_index) &&
+                            r.block_index == 1,
+                    df,
+                )
+                rows_b2 = filter(
+                    r ->
+                        r.variable_name == "THERMAL_GENERATION" &&
+                            !ismissing(r.block_index) &&
+                            r.block_index == 2,
+                    df,
+                )
+                @test all(rows_b1[!, "block_duration_hours"] .== 248.0)
+                @test all(rows_b2[!, "block_duration_hours"] .== 496.0)
+            end
         end
     end
 end

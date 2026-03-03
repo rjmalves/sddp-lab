@@ -162,7 +162,7 @@ function Lab.save_validation(
         cd(path)
         simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
         __write_validation_simulation_results(
-            simulations, get_system(files), writer, extension
+            simulations, get_system(files), files, writer, extension
         )
         __write_validation_statistics(artifact.statistics, writer, extension)
     finally
@@ -174,6 +174,7 @@ end
 function __write_validation_simulation_results(
     simulations::Vector{Vector{Dict{Symbol,Any}}},
     system::SystemData,
+    files::Vector{InputModule},
     writer::Function,
     extension::String,
 )
@@ -181,6 +182,9 @@ function __write_validation_simulation_results(
 
     entity_column = "entity_id"
     num_simulations = size(simulations)[1]
+
+    # Build per-stage block duration lookup from ScenariosData
+    stage_block_durations = __build_stage_block_durations(files)
 
     map_variable_output = Dict(
         "validation_operation_buses" => [DEFICIT, MARGINAL_COST],
@@ -250,13 +254,20 @@ function __write_validation_simulation_results(
                         entities_ids,
                         entity_column,
                         simulations,
+                        stage_block_durations,
                         in_state,
                         out_state,
                     )
                 end
             else
                 __increase_dataframe!(
-                    df, variable, string(variable), entities_ids, entity_column, simulations
+                    df,
+                    variable,
+                    string(variable),
+                    entities_ids,
+                    entity_column,
+                    simulations,
+                    stage_block_durations,
                 )
             end
         end
@@ -275,7 +286,11 @@ function __write_validation_simulation_results(
                 df[!, "variable_name"],
                 "bellman_vertex_coverage_distance" => "VERTEX_COVERAGE_DISTANCE",
             )
-        sort!(df, ["stage", "variable_name", entity_column, "scenario"])
+        sort!(
+            df,
+            ["stage", "variable_name", entity_column, "block_index", "scenario"];
+            lt = isless,
+        )
 
         @info "Writing $(key * extension)"
         writer(key * extension, df)

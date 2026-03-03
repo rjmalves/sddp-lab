@@ -21,12 +21,32 @@
             "file": "load.csv"
         }
     },
-    "blocks": {
-        "mode": "parallel",
-        "definitions": [
-            { "name": "peak",     "duration_hours": 4.0 },
-            { "name": "shoulder", "duration_hours": 8.0 },
-            { "name": "offpeak",  "duration_hours": 12.0 }
-        ]
+    // Per-stage parallel blocks with peak:shoulder:offpeak = 1:2:3 proportions.
+    // Block durations must sum to the stage duration derived from graph datetimes:
+    //   Stage  1 (Jan 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage  2 (Feb 2024): 696 h  -- peak=116 h, shoulder=232 h, offpeak=348 h
+    //   Stage  3 (Mar 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage  4 (Apr 2024): 720 h  -- peak=120 h, shoulder=240 h, offpeak=360 h
+    //   Stage  5 (May 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage  6 (Jun 2024): 720 h  -- peak=120 h, shoulder=240 h, offpeak=360 h
+    //   Stage  7 (Jul 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage  8 (Aug 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage  9 (Sep 2024): 720 h  -- peak=120 h, shoulder=240 h, offpeak=360 h
+    //   Stage 10 (Oct 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    //   Stage 11 (Nov 2024): 720 h  -- peak=120 h, shoulder=240 h, offpeak=360 h
+    //   Stage 12 (Dec 2024): 744 h  -- peak=124 h, shoulder=248 h, offpeak=372 h
+    "stage_blocks": {
+        "1":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "2":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 116.0 }, { "name": "shoulder", "duration_hours": 232.0 }, { "name": "offpeak", "duration_hours": 348.0 } ] },
+        "3":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "4":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 120.0 }, { "name": "shoulder", "duration_hours": 240.0 }, { "name": "offpeak", "duration_hours": 360.0 } ] },
+        "5":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "6":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 120.0 }, { "name": "shoulder", "duration_hours": 240.0 }, { "name": "offpeak", "duration_hours": 360.0 } ] },
+        "7":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "8":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "9":  { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 120.0 }, { "name": "shoulder", "duration_hours": 240.0 }, { "name": "offpeak", "duration_hours": 360.0 } ] },
+        "10": { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] },
+        "11": { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 120.0 }, { "name": "shoulder", "duration_hours": 240.0 }, { "name": "offpeak", "duration_hours": 360.0 } ] },
+        "12": { "mode": "parallel", "definitions": [ { "name": "peak", "duration_hours": 124.0 }, { "name": "shoulder", "duration_hours": 248.0 }, { "name": "offpeak", "duration_hours": 372.0 } ] }
     }
 }

@@ -10,7 +10,7 @@ function Lab.save_simulation(
     try
         cd(path)
         simulations = _unscale_simulations(artifact.simulations, artifact.scaling)
-        __write_simulation_results(simulations, get_system(files), writer, extension)
+        __write_simulation_results(simulations, get_system(files), files, writer, extension)
     finally
         cd(curdir)
     end
@@ -168,6 +168,69 @@ function __get_num_blocks_from_sim(
     return 1
 end
 
+function __get_num_blocks_at_stage(
+    simulations::Vector{Vector{Dict{Symbol,Any}}}, variable::Symbol, stage_idx::Int
+)::Int
+    for sim in simulations
+        if stage_idx <= length(sim)
+            stage_dict = sim[stage_idx]
+            if haskey(stage_dict, variable)
+                val = stage_dict[variable]
+                if val isa AbstractMatrix
+                    return size(val, 2)
+                else
+                    return 1
+                end
+            end
+        end
+    end
+    return 1
+end
+
+# Build a per-stage lookup of block durations from ScenariosData.
+#
+# Returns a Dict{Int, Vector{Float64}} mapping stage index -> per-block duration
+# vector. For stages with no explicit block config, this is [tau] where tau is
+# the full stage duration in hours.
+function __build_stage_block_durations(
+    files::Vector{InputModule}
+)::Dict{Int,Vector{Float64}}
+    scenarios = get_scenarios(files)
+    graph = get_graph(scenarios)
+    stage_block_durations = Dict{Int,Vector{Float64}}()
+
+    for node in graph.nodes
+        stage = Int(node.stage)
+        if !haskey(stage_block_durations, stage)
+            tau =
+                Float64(Dates.value(node.end_datetime - node.start_datetime)) / 3_600_000.0
+            bc = get_block_config(scenarios, stage)
+            tau_k = get_block_durations(bc, tau)
+            stage_block_durations[stage] = tau_k
+        end
+    end
+
+    return stage_block_durations
+end
+
+# Append rows to `df` for one variable and one entity, across all scenarios and stages.
+#
+# Parameters:
+#   df               - DataFrame to append to (mutated in place)
+#   variable         - Symbol key in the simulation Dict
+#   name             - Clean variable name for the `variable_name` column (never mangled)
+#   indexes          - Entity index vector (one entry per entity)
+#   index_name       - Column name for the entity id column
+#   simulations      - Nested simulation results [scenario][stage]
+#   stage_block_durations - Dict{Int, Vector{Float64}} from __build_stage_block_durations
+#   in_state         - Extract `.in` from a state variable
+#   out_state        - Extract `.out` from a state variable
+#
+# The `block_index` column is `missing` when `num_blk == 1` (covers both truly 1D
+# variables and K=1 stages with no explicit blocks) and `k::Int` when `num_blk > 1`.
+# The `block_duration_hours` column is:
+#   - `tau_k[k]` when `num_blk > 1` (per-block duration from BlockConfig)
+#   - total stage tau (`sum(tau_k)`) when `num_blk == 1`
 function __increase_dataframe!(
     df::DataFrame,
     variable::Symbol,
@@ -175,42 +238,128 @@ function __increase_dataframe!(
     indexes::Vector{Int64},
     index_name::String,
     simulations::Vector{Vector{Dict{Symbol,Any}}},
+    stage_block_durations::Dict{Int,Vector{Float64}},
     in_state::Bool = false,
     out_state::Bool = false,
 )
     is_2d = __is_2d_variable(simulations, variable)
-    num_blk = is_2d ? __get_num_blocks_from_sim(simulations, variable) : 1
+    num_stages = length(simulations[1])
+    num_simulations = length(simulations)
+
+    # Build a mapping from simulation step index (1-based) to graph stage number.
+    # SDDP.jl records the node_index in each stage dict as :node_index. The graph
+    # stage number equals __extract_stage(node_index) = Int(node_index) for integer nodes.
+    # For non-Markov graphs this is just the node ID.
+    # This mapping is needed because stage_block_durations is keyed by graph stage number,
+    # not by the 1-based simulation step index.
+    step_to_graph_stage = Dict{Int,Int}()
+    for step_idx in 1:num_stages
+        for sim in simulations
+            if step_idx <= length(sim)
+                sd = sim[step_idx]
+                if haskey(sd, :node_index)
+                    node_idx = sd[:node_index]
+                    # For Markov (Tuple{Int,Int}) extract first element as stage
+                    graph_stage = if node_idx isa Tuple
+                        node_idx[1]
+                    else
+                        Int(node_idx)
+                    end
+                    step_to_graph_stage[step_idx] = graph_stage
+                    break
+                end
+            end
+        end
+        # Fallback: if no :node_index found, assume step == graph stage
+        if !haskey(step_to_graph_stage, step_idx)
+            step_to_graph_stage[step_idx] = step_idx
+        end
+    end
 
     for j in eachindex(indexes)
         index = indexes[j]
-        for k in 1:num_blk
-            internal_df = DataFrame()
-            internal_df.stage = 1:length(simulations[1])
-            var_name = num_blk > 1 ? "$(name)_B$(k)" : name
-            internal_df[!, "variable_name"] = fill(var_name, length(simulations[1]))
-            internal_df[!, index_name] = fill(index, length(simulations[1]))
-            for i in eachindex(simulations)
-                if is_2d
-                    internal_df[!, string(i)] = [
-                        __extract_variable(s[variable][j, k], in_state, out_state) for
-                        s in simulations[i]
-                    ]
-                else
-                    internal_df[!, string(i)] = [
-                        __extract_variable(s[variable][j], in_state, out_state) for
-                        s in simulations[i]
-                    ]
-                end
-                internal_df[!, string(i)] = round.(internal_df[!, string(i)]; digits = 2)
-            end
-            append!(df, internal_df)
+        # Collect all (stage, block_index) rows into flat vectors, then build the DataFrame
+        # once. This handles per-stage variable K correctly when K varies across stages.
+        n_rows = 0
+        for stage_idx in 1:num_stages
+            k_s = is_2d ? __get_num_blocks_at_stage(simulations, variable, stage_idx) : 1
+            n_rows += k_s
         end
+
+        stage_col = Vector{Int}(undef, n_rows)
+        var_col = Vector{String}(undef, n_rows)
+        idx_col = Vector{Int}(undef, n_rows)
+        block_index_col = Vector{Union{Int,Missing}}(undef, n_rows)
+        block_duration_col = Vector{Float64}(undef, n_rows)
+        sim_cols = [Vector{Float64}(undef, n_rows) for _ in 1:num_simulations]
+
+        row = 1
+        for stage_idx in 1:num_stages
+            k_s = is_2d ? __get_num_blocks_at_stage(simulations, variable, stage_idx) : 1
+            has_explicit_blocks_at_stage = k_s > 1
+
+            # Look up block durations using the graph stage number (not the sim step index)
+            graph_stage = get(step_to_graph_stage, stage_idx, stage_idx)
+            tau_k = if haskey(stage_block_durations, graph_stage)
+                stage_block_durations[graph_stage]
+            elseif haskey(stage_block_durations, stage_idx)
+                # Fallback to step index if graph stage not found
+                stage_block_durations[stage_idx]
+            else
+                @warn "Stage $stage_idx (graph stage $graph_stage): no BlockConfig found " *
+                    "in ScenariosData; setting block_duration_hours = NaN"
+                Float64[NaN]
+            end
+
+            for k in 1:k_s
+                stage_col[row] = stage_idx
+                var_col[row] = name
+                idx_col[row] = index
+                block_index_col[row] = has_explicit_blocks_at_stage ? k : missing
+
+                block_duration_col[row] = if has_explicit_blocks_at_stage
+                    if k <= length(tau_k)
+                        tau_k[k]
+                    else
+                        @warn "Stage $stage_idx: block_index $k exceeds configured block " *
+                            "count $(length(tau_k))"
+                        NaN
+                    end
+                else
+                    sum(tau_k)
+                end
+
+                for i in 1:num_simulations
+                    val = if is_2d
+                        simulations[i][stage_idx][variable][j, k]
+                    else
+                        simulations[i][stage_idx][variable][j]
+                    end
+                    sim_cols[i][row] = round(
+                        Float64(__extract_variable(val, in_state, out_state)); digits = 2
+                    )
+                end
+                row += 1
+            end
+        end
+
+        internal_df = DataFrame()
+        internal_df[!, "stage"] = stage_col
+        internal_df[!, "variable_name"] = var_col
+        internal_df[!, index_name] = idx_col
+        internal_df[!, "block_index"] = block_index_col
+        internal_df[!, "block_duration_hours"] = block_duration_col
+        for i in 1:num_simulations
+            internal_df[!, string(i)] = sim_cols[i]
+        end
+        append!(df, internal_df)
     end
 end
 
 function __write_simulation_results(
     simulations::Vector{Vector{Dict{Symbol,Any}}},
     system::SystemData,
+    files::Vector{InputModule},
     writer::Function,
     extension::String,
 )
@@ -218,6 +367,9 @@ function __write_simulation_results(
 
     entity_column = "entity_id"
     num_simulations = size(simulations)[1]
+
+    # Build per-stage block duration lookup from ScenariosData
+    stage_block_durations = __build_stage_block_durations(files)
 
     map_variable_output = Dict(
         "operation_buses" => [DEFICIT, MARGINAL_COST],
@@ -287,13 +439,20 @@ function __write_simulation_results(
                         entities_ids,
                         entity_column,
                         simulations,
+                        stage_block_durations,
                         in_state,
                         out_state,
                     )
                 end
             else
                 __increase_dataframe!(
-                    df, variable, string(variable), entities_ids, entity_column, simulations
+                    df,
+                    variable,
+                    string(variable),
+                    entities_ids,
+                    entity_column,
+                    simulations,
+                    stage_block_durations,
                 )
             end
         end
@@ -312,7 +471,11 @@ function __write_simulation_results(
                 df[!, "variable_name"],
                 "bellman_vertex_coverage_distance" => "VERTEX_COVERAGE_DISTANCE",
             )
-        sort!(df, ["stage", "variable_name", entity_column, "scenario"])
+        sort!(
+            df,
+            ["stage", "variable_name", entity_column, "block_index", "scenario"];
+            lt = isless,
+        )
 
         @info "Writing $(key * extension)"
         writer(key * extension, df)

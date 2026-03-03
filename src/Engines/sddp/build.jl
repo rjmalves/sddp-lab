@@ -796,7 +796,6 @@ function __generate_subproblem_builder(
     scenarios = get_scenarios(files)
     graph = get_graph(scenarios)
     num_stages = get_number_of_stages(graph)
-    block_config = get_block_config(scenarios)
     mc = get_markov_chain(scenarios)
     uses_markov = has_markov_chain(mc)
 
@@ -855,9 +854,6 @@ function __generate_subproblem_builder(
     line_target_map = _build_bus_index_map(lines_entities, bus_ids, :target_bus_id)
     line_source_map = _build_bus_index_map(lines_entities, bus_ids, :source_bus_id)
 
-    block_mode = block_config.mode
-    K = num_blocks(block_config)
-
     initial_season = scenarios.initial_season
 
     function fun_sp_build(m::JuMP.Model, node)
@@ -873,7 +869,11 @@ function __generate_subproblem_builder(
         end
 
         tau = Float64(Dates.value(end_dt - start_dt)) / 3_600_000.0
-        tau_k = get_block_durations(block_config, tau)
+
+        stage_block_config = get_block_config(scenarios, stage)
+        block_mode = stage_block_config.mode
+        K = num_blocks(stage_block_config)
+        tau_k = get_block_durations(stage_block_config, tau)
 
         add_system_elements!(m, system, K)
         add_hydro_balance!(

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-SDDPlab.jl is a Julia package for experimenting with Stochastic Dual Dynamic Programming (SDDP) algorithm variations in the hydrothermal dispatch problem. The project has a partially-completed refactoring on the `abstract-engine` branch that introduces an Engine abstraction layer separating algorithm implementation from system modeling. This plan completes that refactoring and systematically extends the package to expose the full breadth of SDDP.jl capabilities -- risk measures, stopping rules, sampling schemes, duality handlers, forward passes, and cut types -- while adding units tracking, LP conditioning, parallelization, new system elements, subproblem structure enhancements, advanced stochastic modeling, experiment management, and observability tooling.
+SDDPlab.jl is a Julia package for experimenting with Stochastic Dual Dynamic Programming (SDDP) algorithm variations in the hydrothermal dispatch problem. The project has a partially-completed refactoring on the `abstract-engine` branch that introduces an Engine abstraction layer separating algorithm implementation from system modeling. This plan completes that refactoring and systematically extends the package to expose the full breadth of SDDP.jl capabilities -- risk measures, stopping rules, sampling schemes, duality handlers, forward passes, and cut types -- while adding units tracking, LP conditioning, parallelization, new system elements, subproblem structure enhancements, advanced stochastic modeling, experiment management, observability tooling, per-stage block architecture, and robustness/reproducibility improvements.
 
 ## Agent Strategy
 
@@ -36,6 +36,8 @@ This plan leverages two specialist agents for implementation:
 10. **Support experiment management** -- multi-config comparison, sensitivity analysis, reproducibility
 11. **Add observability and diagnostics** -- training visualization, convergence analysis, debugging tools
 12. **Comprehensive documentation** -- API docs, tutorials, example cases
+13. **Per-stage block architecture** -- migrate BlockConfig from global to per-stage, reform output format
+14. **Robustness and reproducibility** -- datetime validation, adaptive magnitudes, deterministic RNG
 
 ## Non-Goals
 
@@ -236,18 +238,18 @@ SDDPlab.jl
 
 ### Component/Module Breakdown
 
-| Module            | Responsibility                                                                     | Epics      | Primary Agent       |
-| ----------------- | ---------------------------------------------------------------------------------- | ---------- | ------------------- |
-| Lab               | Abstract types, interface contracts                                                | 1          | hpc-julia-developer |
-| Utils/schema      | Declarative field schemas and generic validation                                   | 1          | hpc-julia-developer |
-| Engines/sddp      | Concrete SDDP engine (build/train/simulate)                                        | 1, 2, 3, 4 | both                |
-| System            | Power system entities (Bus, Line, Hydro, Thermal, NonControllable, Contract, Pump) | 1, 5       | both                |
-| Scenarios         | Graph topology, inflow/load/availability scenarios                                 | 1, 5, 6    | sddp-specialist     |
-| StochasticProcess | Stochastic models (Naive, AR, Markov, Multivariate)                                | 7          | sddp-specialist     |
-| Inputs            | JSONC/CSV config parsing                                                           | 1, 2, 5, 6 | hpc-julia-developer |
-| Utils             | Validation, reading, units                                                         | 1, 3       | hpc-julia-developer |
-| Experiments       | Multi-config comparison, sensitivity analysis                                      | 8          | hpc-julia-developer |
-| Diagnostics       | Training visualization, convergence analysis                                       | 9          | sddp-specialist     |
+| Module            | Responsibility                                                                     | Epics           | Primary Agent       |
+| ----------------- | ---------------------------------------------------------------------------------- | --------------- | ------------------- |
+| Lab               | Abstract types, interface contracts                                                | 1               | hpc-julia-developer |
+| Utils/schema      | Declarative field schemas and generic validation                                   | 1               | hpc-julia-developer |
+| Engines/sddp      | Concrete SDDP engine (build/train/simulate)                                        | 1, 2, 3, 4, 11  | both                |
+| System            | Power system entities (Bus, Line, Hydro, Thermal, NonControllable, Contract, Pump) | 1, 5            | both                |
+| Scenarios         | Graph topology, inflow/load/availability scenarios                                 | 1, 5, 6, 11, 12 | sddp-specialist     |
+| StochasticProcess | Stochastic models (Naive, AR, Markov, Multivariate)                                | 7, 12           | sddp-specialist     |
+| Inputs            | JSONC/CSV config parsing                                                           | 1, 2, 5, 6      | hpc-julia-developer |
+| Utils             | Validation, reading, units                                                         | 1, 3, 12        | hpc-julia-developer |
+| Experiments       | Multi-config comparison, sensitivity analysis                                      | 8               | hpc-julia-developer |
+| Diagnostics       | Training visualization, convergence analysis                                       | 9               | sddp-specialist     |
 
 ### Data Flow
 
@@ -292,7 +294,7 @@ export TEST_FILTER="test-engines" && julia --project -e 'using Pkg; Pkg.test()'
 # Run tests for a specific new test file
 export TEST_FILTER="test-threaded" && julia --project -e 'using Pkg; Pkg.test()'
 
-# Run multiple related patterns (comma NOT supported — use broader substring)
+# Run multiple related patterns (comma NOT supported -- use broader substring)
 export TEST_FILTER="test-sddp" && julia --project -e 'using Pkg; Pkg.test()'
 ```
 
@@ -302,15 +304,15 @@ export TEST_FILTER="test-sddp" && julia --project -e 'using Pkg; Pkg.test()'
 
 All test commands MUST use the Bash tool's `timeout` parameter (in milliseconds). Recommended values:
 
-| Scope                 | Timeout (ms) | Notes                                    |
-| --------------------- | ------------ | ---------------------------------------- |
-| Filtered unit tests   | 120000       | 2 minutes — sufficient for any unit test |
-| Filtered integration  | 180000       | 3 minutes — includes SDDP train/simulate |
-| Full suite (if asked) | 360000       | 6 minutes — only when user requests it   |
+| Scope                 | Timeout (ms) | Notes                                     |
+| --------------------- | ------------ | ----------------------------------------- |
+| Filtered unit tests   | 120000       | 2 minutes -- sufficient for any unit test |
+| Filtered integration  | 180000       | 3 minutes -- includes SDDP train/simulate |
+| Full suite (if asked) | 360000       | 6 minutes -- only when user requests it   |
 
 #### 3. Solver thread safety
 
-- **GLPK is NOT thread-safe** — tests using `SDDP.Threaded()` MUST use HiGHS as the solver
+- **GLPK is NOT thread-safe** -- tests using `SDDP.Threaded()` MUST use HiGHS as the solver
 - Standard (non-threaded) tests use GLPK
 - If a test SIGABRTs, the first thing to check is whether GLPK is being used with threading
 
@@ -334,6 +336,8 @@ All test commands MUST use the Bash tool's `timeout` parameter (in milliseconds)
 | 8     | Experiment Management             | 3-4 weeks | Multi-config comparison, sensitivity analysis                       | hpc-julia-developer                              |
 | 9     | Observability & Diagnostics       | 2-3 weeks | Training visualization, convergence analysis                        | sddp-specialist                                  |
 | 10    | Documentation & Examples          | 2-3 weeks | Comprehensive docs, tutorials, examples                             | both                                             |
+| 11    | Per-Stage Block Architecture      | 3-4 weeks | Per-stage blocks, reformed output format, full test coverage        | hpc-julia-developer + sddp-specialist            |
+| 12    | Robustness & Reproducibility      | 2-3 weeks | Datetime validation, model-derived magnitudes, Xoshiro RNG          | sddp-specialist + hpc-julia-developer            |
 
 ### Parallelization Opportunities
 
@@ -344,6 +348,8 @@ Within Epic 02, tickets 010-015 are mutually independent (each adds a different 
 - Ticket 016 (wiring) waits for all 010-015 to complete, then either agent can handle it
 
 Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on independent epics concurrently once dependencies allow (e.g., ticket-030 inflow non-negativity is independent of ticket-029 load blocks within Epic 06, enabling parallel work).
+
+Epic 11 and Epic 12 are independent of each other and can be worked on in parallel. Within Epic 12, all three tickets (048, 049, 050) are mutually independent and can be parallelized across agents.
 
 ## Risk Analysis
 
@@ -359,6 +365,9 @@ Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on 
 | Schema infrastructure adds compilation overhead                   | Low    | Low        | FieldRule is a concrete struct; no generated functions or closures |
 | Block decomposition enlarges LP and slows training                | Medium | Medium     | Benchmark parallel vs chronological; provide single-block default  |
 | Time duration conversion breaks existing example cases            | Medium | Medium     | Backward-compatible default (implicit unit time when no blocks)    |
+| Per-stage blocks break existing test positional constructors      | Low    | High       | Systematic update of all ScenariosData constructor calls in tests  |
+| Xoshiro RNG change produces different SAA than MersenneTwister    | Low    | Certain    | Document as known breaking change; existing policies need retrain  |
+| SDDP.PolicyGraph internal API for node iteration may change       | Medium | Low        | Use documented API; add defensive try-catch in magnitude scan      |
 
 ## Success Metrics
 
@@ -370,3 +379,6 @@ Within later epics, the `sddp-specialist` and `hpc-julia-developer` can work on 
 6. Documentation covers every user-facing type and function
 7. Validation pipeline code reduced by at least 40% in line count after schema migration
 8. Adding a new simple entity (no cross-entity dependencies) requires only a schema table and struct definition
+9. Per-stage blocks: different block counts per stage produce correct LP formulations and output
+10. Output Parquet files use explicit block columns instead of name mangling
+11. SAA generation produces identical results for identical composed seeds across thread counts

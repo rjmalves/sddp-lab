@@ -12,7 +12,7 @@ function ScenariosData(d::Dict{String,Any}, e::CompositeException)
             d["graph"],
             d["inflow"],
             d["load"],
-            d["block_config"],
+            d["block_configs"],
             d["markov_chain"],
         )
     else

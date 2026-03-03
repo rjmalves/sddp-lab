@@ -1,6 +1,6 @@
 {
   "plan": "sddp-flexible-lab",
-  "last_updated": "2026-02-19T22:45:00Z",
+  "last_updated": "2026-03-03T18:30:19Z",
   "progressive": true,
   "tickets": {
     "ticket-001-merge-abstract-engine-branch.md": {
@@ -311,6 +311,131 @@
       "assigned_agent": "sddp-specialist",
       "agent": "sddp-specialist",
       "last_updated": "2026-02-19T21:00:00Z"
+    },
+    "ticket-044-restructure-blockconfig-per-stage.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T15:16:38Z",
+      "scores": {
+        "readiness": 0.91,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        },
+        "quality": 0.68,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.0,
+          "lint_cleanliness": 1.0,
+          "type_safety": 0.5,
+          "test_delta": 1.0
+        }
+      },
+      "workflow_step": null
+    },
+    "ticket-045-update-subproblem-builder-per-stage-blocks.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.9,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.85,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "sddp-specialist",
+      "last_updated": "2026-03-03T15:28:54Z"
+    },
+    "ticket-046-reform-output-parquet-block-columns.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "readiness": 0.89,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.8,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T17:03:30Z"
+    },
+    "ticket-047-update-tests-examples-per-stage-blocks.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T18:30:19Z",
+      "scores": {
+        "readiness": 0.88,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.8,
+          "boundary": 0.85,
+          "dependency_clarity": 0.9,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null
+    },
+    "ticket-048-validate-same-stage-node-datetimes.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.95,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.95,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      }
+    },
+    "ticket-049-adaptive-model-derived-magnitudes.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.89,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.85,
+          "dependency_clarity": 0.9,
+          "atomicity": 0.85
+        }
+      }
+    },
+    "ticket-050-deterministic-threadsafe-rng-xoshiro.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "readiness": 0.93,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.9,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.9
+        }
+      }
     }
   },
   "epics": {
@@ -353,6 +478,14 @@
     "epic-10-documentation-examples": {
       "phase": "completed",
       "learning_extracted": true
+    },
+    "epic-11-per-stage-blocks": {
+      "phase": "executing",
+      "learning_extracted": false
+    },
+    "epic-12-robustness-reproducibility": {
+      "phase": "executing",
+      "learning_extracted": false
     }
   }
 }

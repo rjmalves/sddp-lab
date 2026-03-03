@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation laboratory. It completes the Engine abstraction refactoring, simplifies the validation pipeline with a declarative schema system, exposes all SDDP.jl algorithm knobs, adds units tracking, LP conditioning, parallelization, new system elements (non-controllable generation, energy contracts, pumping stations), subproblem structure enhancements (time duration, load blocks, inflow non-negativity), advanced stochastic modeling, experiment management, and observability tooling.
+This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation laboratory. It completes the Engine abstraction refactoring, simplifies the validation pipeline with a declarative schema system, exposes all SDDP.jl algorithm knobs, adds units tracking, LP conditioning, parallelization, new system elements (non-controllable generation, energy contracts, pumping stations), subproblem structure enhancements (time duration, load blocks, inflow non-negativity), advanced stochastic modeling, experiment management, observability tooling, per-stage block architecture, and robustness/reproducibility improvements.
 
 ## Tech Stack
 
@@ -14,10 +14,10 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 
 ## Specialist Agents
 
-| Agent                 | Domain                                          | Epics                      |
-| --------------------- | ----------------------------------------------- | -------------------------- |
-| `hpc-julia-developer` | Julia HPC, JuMP, type stability, threading, MPI | 01, 02, 03, 04, 08, 10     |
-| `sddp-specialist`     | SDDP theory, risk, duality, cuts, stochastic    | 02, 03, 05, 06, 07, 09, 10 |
+| Agent                 | Domain                                          | Epics                              |
+| --------------------- | ----------------------------------------------- | ---------------------------------- |
+| `hpc-julia-developer` | Julia HPC, JuMP, type stability, threading, MPI | 01, 02, 03, 04, 08, 10, 11, 12     |
+| `sddp-specialist`     | SDDP theory, risk, duality, cuts, stochastic    | 02, 03, 05, 06, 07, 09, 10, 11, 12 |
 
 ## Epics
 
@@ -33,6 +33,8 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | 08   | Experiment Management             | 4       | Completed | hpc-julia-developer         |
 | 09   | Observability & Diagnostics       | 3       | Completed | sddp-specialist             |
 | 10   | Documentation & Examples          | 3       | Completed | both                        |
+| 11   | Per-Stage Block Architecture      | 4       | Pending   | hpc-julia + sddp-specialist |
+| 12   | Robustness & Reproducibility      | 3       | Pending   | sddp-specialist + hpc-julia |
 
 ## Dependency Graph
 
@@ -142,53 +144,77 @@ Epic 10 (Documentation & Examples)
   ticket-041 (API reference docs)     \
   ticket-042 (config format reference) |-- ALL PARALLEL
   ticket-043 (tutorial examples)      /
+
+Epic 11: Per-Stage Block Architecture (depends on Epic 06)
+  ticket-044 (restructure BlockConfig per-stage)
+       |
+       v
+  ticket-045 (update subproblem builder)
+       |
+       v
+  ticket-046 (reform output Parquet format)
+       |
+       v
+  ticket-047 (update tests and examples) <--- ticket-044, ticket-045, ticket-046
+
+Epic 12: Robustness & Reproducibility (independent of Epic 11)
+  ticket-048 (validate same-stage datetimes)    \
+  ticket-049 (adaptive model magnitudes)         |-- ALL PARALLEL
+  ticket-050 (deterministic Xoshiro RNG)        /
 ```
 
 ## Progress Tracking
 
-| Ticket     | Title                                                       | Epic    | Status    | Detail Level | Agent               |
-| ---------- | ----------------------------------------------------------- | ------- | --------- | ------------ | ------------------- |
-| ticket-001 | Merge abstract-engine branch into main                      | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-002 | Implement graph validators                                  | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-003 | Implement FieldRule schema infrastructure                   | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-004 | Migrate System entities to schema validation                | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-005 | Migrate Engine and Scenarios entities to schema validation  | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-006 | Cleanup validation pipeline and remove dead code            | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-007 | Refactor load representation to node-based graph            | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-008 | Migrate example cases to new input format                   | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-009 | Add comprehensive test coverage for engine abstraction      | epic-01 | completed | Detailed     | hpc-julia-developer |
-| ticket-010 | Add remaining risk measures                                 | epic-02 | completed | Detailed     | sddp-specialist     |
-| ticket-011 | Add chained stopping rules                                  | epic-02 | completed | Detailed     | sddp-specialist     |
-| ticket-012 | Add sampling schemes                                        | epic-02 | completed | Detailed     | hpc-julia-developer |
-| ticket-013 | Add duality handlers                                        | epic-02 | completed | Detailed     | sddp-specialist     |
-| ticket-014 | Add forward pass strategies                                 | epic-02 | completed | Detailed     | sddp-specialist     |
-| ticket-015 | Add cut type selection                                      | epic-02 | completed | Detailed     | sddp-specialist     |
-| ticket-016 | Wire algorithm options through train and simulate pipelines | epic-02 | completed | Detailed     | hpc-julia-developer |
-| ticket-017 | Implement variable units registry and validation            | epic-03 | completed | Refined      | hpc-julia-developer |
-| ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | completed | Refined      | sddp-specialist     |
-| ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | completed | Refined      | sddp-specialist     |
-| ticket-020 | Add solver configuration options                            | epic-03 | completed | Refined      | hpc-julia-developer |
-| ticket-021 | Enable threaded parallel training and simulation            | epic-04 | completed | Refined      | hpc-julia-developer |
-| ticket-022 | Implement thread-safe SAA generation                        | epic-04 | completed | Refined      | hpc-julia-developer |
-| ticket-023 | Profile and optimize model building hot paths               | epic-04 | completed | Refined      | hpc-julia-developer |
-| ticket-024 | Add distributed computing support                           | epic-04 | completed | Refined      | hpc-julia-developer |
-| ticket-025 | Add non-controllable generation system element              | epic-05 | completed | Refined      | sddp-specialist     |
-| **025b**   | **EMERGENCY: Fix test-main hanging**                        | epic-05 | completed | Detailed     | hpc-julia-developer |
-| ticket-026 | Add energy contracts system element                         | epic-05 | completed | Refined      | sddp-specialist     |
-| ticket-027 | Add pumping stations system element                         | epic-05 | completed | Refined      | sddp-specialist     |
-| ticket-028 | Add stage time duration and MW-to-MWh conversion            | epic-06 | completed | Refined      | sddp-specialist     |
-| ticket-029 | Add inner load blocks (parallel and chronological)          | epic-06 | completed | Refined      | sddp-specialist     |
-| ticket-030 | Add inflow non-negativity methods                           | epic-06 | completed | Refined      | sddp-specialist     |
-| ticket-031 | Add multivariate stochastic process support                 | epic-07 | completed | Refined      | sddp-specialist     |
-| ticket-032 | Add Markov chain state transitions                          | epic-07 | completed | Refined      | sddp-specialist     |
-| ticket-033 | Add out-of-sample validation framework                      | epic-07 | completed | Refined      | sddp-specialist     |
-| ticket-034 | Implement multi-configuration experiment runner             | epic-08 | completed | Refined      | hpc-julia-developer |
-| ticket-035 | Add automated sensitivity analysis                          | epic-08 | completed | Refined      | hpc-julia-developer |
-| ticket-036 | Add result aggregation and comparison tools                 | epic-08 | completed | Refined      | hpc-julia-developer |
-| ticket-037 | Add reproducibility infrastructure                          | epic-08 | completed | Detailed     | hpc-julia-developer |
-| ticket-038 | Add training progress monitoring and logging config         | epic-09 | completed | Refined      | sddp-specialist     |
-| ticket-039 | Add convergence analysis tools                              | epic-09 | completed | Refined      | sddp-specialist     |
-| ticket-040 | Add subproblem debugging utilities                          | epic-09 | completed | Refined      | sddp-specialist     |
-| ticket-041 | Write API reference documentation                           | epic-10 | completed | Refined      | hpc-julia-developer |
-| ticket-042 | Write configuration format reference                        | epic-10 | completed | Refined      | sddp-specialist     |
-| ticket-043 | Create tutorial examples for advanced features              | epic-10 | completed | Refined      | sddp-specialist     |
+| Ticket     | Title                                                       | Epic    | Status    | Detail Level | Readiness | Quality | Agent               |
+| ---------- | ----------------------------------------------------------- | ------- | --------- | ------------ | --------- | ------- | ------------------- |
+| ticket-001 | Merge abstract-engine branch into main                      | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-002 | Implement graph validators                                  | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-003 | Implement FieldRule schema infrastructure                   | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-004 | Migrate System entities to schema validation                | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-005 | Migrate Engine and Scenarios entities to schema validation  | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-006 | Cleanup validation pipeline and remove dead code            | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-007 | Refactor load representation to node-based graph            | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-008 | Migrate example cases to new input format                   | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-009 | Add comprehensive test coverage for engine abstraction      | epic-01 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-010 | Add remaining risk measures                                 | epic-02 | completed | Detailed     | --        | --      | sddp-specialist     |
+| ticket-011 | Add chained stopping rules                                  | epic-02 | completed | Detailed     | --        | --      | sddp-specialist     |
+| ticket-012 | Add sampling schemes                                        | epic-02 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-013 | Add duality handlers                                        | epic-02 | completed | Detailed     | --        | --      | sddp-specialist     |
+| ticket-014 | Add forward pass strategies                                 | epic-02 | completed | Detailed     | --        | --      | sddp-specialist     |
+| ticket-015 | Add cut type selection                                      | epic-02 | completed | Detailed     | --        | --      | sddp-specialist     |
+| ticket-016 | Wire algorithm options through train and simulate pipelines | epic-02 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-017 | Implement variable units registry and validation            | epic-03 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-018 | Implement automatic LP coefficient scaling                  | epic-03 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-019 | Integrate numerical stability diagnostics                   | epic-03 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-020 | Add solver configuration options                            | epic-03 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-021 | Enable threaded parallel training and simulation            | epic-04 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-022 | Implement thread-safe SAA generation                        | epic-04 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-023 | Profile and optimize model building hot paths               | epic-04 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-024 | Add distributed computing support                           | epic-04 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-025 | Add non-controllable generation system element              | epic-05 | completed | Refined      | --        | --      | sddp-specialist     |
+| **025b**   | **EMERGENCY: Fix test-main hanging**                        | epic-05 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-026 | Add energy contracts system element                         | epic-05 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-027 | Add pumping stations system element                         | epic-05 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-028 | Add stage time duration and MW-to-MWh conversion            | epic-06 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-029 | Add inner load blocks (parallel and chronological)          | epic-06 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-030 | Add inflow non-negativity methods                           | epic-06 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-031 | Add multivariate stochastic process support                 | epic-07 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-032 | Add Markov chain state transitions                          | epic-07 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-033 | Add out-of-sample validation framework                      | epic-07 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-034 | Implement multi-configuration experiment runner             | epic-08 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-035 | Add automated sensitivity analysis                          | epic-08 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-036 | Add result aggregation and comparison tools                 | epic-08 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-037 | Add reproducibility infrastructure                          | epic-08 | completed | Detailed     | --        | --      | hpc-julia-developer |
+| ticket-038 | Add training progress monitoring and logging config         | epic-09 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-039 | Add convergence analysis tools                              | epic-09 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-040 | Add subproblem debugging utilities                          | epic-09 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-041 | Write API reference documentation                           | epic-10 | completed | Refined      | --        | --      | hpc-julia-developer |
+| ticket-042 | Write configuration format reference                        | epic-10 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-043 | Create tutorial examples for advanced features              | epic-10 | completed | Refined      | --        | --      | sddp-specialist     |
+| ticket-044 | Restructure BlockConfig from global to per-stage            | epic-11 | completed | Detailed     | 0.91      | 0.68    | hpc-julia-developer |
+| ticket-045 | Update subproblem builder for per-stage blocks              | epic-11 | completed | Detailed     | 0.90      | --      | sddp-specialist     |
+| ticket-046 | Reform output Parquet format with block columns             | epic-11 | completed | Detailed     | 0.89      | --      | hpc-julia-developer |
+| ticket-047 | Update tests and example cases for per-stage blocks         | epic-11 | completed | Detailed     | 0.88      | --      | hpc-julia-developer |
+| ticket-048 | Validate same-stage node datetimes in graph validators      | epic-12 | pending   | Detailed     | 0.95      | --      | sddp-specialist     |
+| ticket-049 | Adaptive model-derived variable magnitudes                  | epic-12 | pending   | Detailed     | 0.89      | --      | sddp-specialist     |
+| ticket-050 | Deterministic thread-safe RNG with Xoshiro                  | epic-12 | pending   | Detailed     | 0.93      | --      | hpc-julia-developer |
