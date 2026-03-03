@@ -86,10 +86,10 @@ This places 90% weight on the CVaR component at the 20th percentile, making the 
 ## Running the Example
 
 ```julia
-using SDDPlab, HiGHS
+using SDDPlab
 
 study = SDDPlab.read_study("example/markov_var")
-model = SDDPlab.build(study, HiGHS.Optimizer)
+model = SDDPlab.build(study)
 SDDPlab.train(study, model)
 artifact = SDDPlab.simulate(study, model)
 ```

@@ -21,30 +21,35 @@ The example models a single-bus system with 3 load blocks over 12 monthly stages
 | **UTE_BASE**   | Base-load thermal, 100 MW max, cost 10 \$/MWh   |
 | **UTE_PEAK**   | Peaking thermal, 150 MW max, cost 50 \$/MWh     |
 
-Load blocks within each stage:
+Load blocks within each stage (peak:shoulder:offpeak = 1:2:3 duration ratio):
 
-| Block    | Duration | Demand |
-| -------- | -------- | ------ |
-| peak     | 4 hours  | 200 MW |
-| shoulder | 8 hours  | 150 MW |
-| offpeak  | 12 hours | 80 MW  |
+| Block    | Demand | Duration (example: January, 744 h) |
+| -------- | ------ | ---------------------------------- |
+| peak     | 200 MW | 124 h                              |
+| shoulder | 150 MW | 248 h                              |
+| offpeak  | 80 MW  | 372 h                              |
 
-The total stage duration is 24 hours (4 + 8 + 12).
+Block durations vary per stage because they must sum to the stage duration
+derived from the graph node datetimes (e.g., January = 744 h, February = 696 h).
 
 ## Configuration Walkthrough
 
 ### Block Configuration (`data/scenarios.jsonc`)
 
-Blocks are defined in the `blocks` section of the scenarios configuration:
+Blocks are defined per-stage in the `stage_blocks` section of the scenarios configuration. Each stage key maps to a block configuration with `mode` and `definitions`. Block durations must sum to the stage duration from the graph:
 
 ```json
-"blocks": {
-    "mode": "parallel",
-    "definitions": [
-        { "name": "peak",     "duration_hours": 4.0 },
-        { "name": "shoulder", "duration_hours": 8.0 },
-        { "name": "offpeak",  "duration_hours": 12.0 }
-    ]
+"stage_blocks": {
+    "1":  { "mode": "parallel", "definitions": [
+        { "name": "peak", "duration_hours": 124.0 },
+        { "name": "shoulder", "duration_hours": 248.0 },
+        { "name": "offpeak", "duration_hours": 372.0 }
+    ]},
+    "2":  { "mode": "parallel", "definitions": [
+        { "name": "peak", "duration_hours": 116.0 },
+        { "name": "shoulder", "duration_hours": 232.0 },
+        { "name": "offpeak", "duration_hours": 348.0 }
+    ]}
 }
 ```
 
@@ -74,10 +79,10 @@ Risk-neutral optimization with 50 iterations and the Expectation risk measure.
 ## Running the Example
 
 ```julia
-using SDDPlab, HiGHS
+using SDDPlab
 
 study = SDDPlab.read_study("example/load_blocks")
-model = SDDPlab.build(study, HiGHS.Optimizer)
+model = SDDPlab.build(study)
 SDDPlab.train(study, model)
 artifact = SDDPlab.simulate(study, model)
 ```
@@ -86,7 +91,7 @@ artifact = SDDPlab.simulate(study, model)
 
 The simulation produces per-block dispatch results. Expected behavior:
 
-- **Peak block** (200 MW demand): Both thermals and hydro are dispatched; the expensive peaking thermal (UTE_PEAK) runs during these 4 hours
+- **Peak block** (200 MW demand): Both thermals and hydro are dispatched; the expensive peaking thermal (UTE_PEAK) runs during peak hours
 - **Shoulder block** (150 MW demand): Hydro and base thermal handle most demand; peaking thermal may run at partial capacity
 - **Off-peak block** (80 MW demand): Only hydro and the cheap base thermal are needed
 
@@ -95,6 +100,6 @@ The cost-to-go function accounts for the block-weighted water consumption, so th
 ## Variations
 
 - Switch to `"chronological"` mode and observe the creation of `BLOCK_STORAGE` intermediate variables
-- Add a 4th block ("night", 4 hours, 50 MW) and reduce off-peak to 8 hours
+- Add a 4th block ("night") and redistribute durations across the four blocks
 - Increase peak demand to 300 MW to force deficit in peak hours
 - Add a non-controllable (solar) that produces only during shoulder/peak blocks

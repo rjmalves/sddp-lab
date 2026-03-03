@@ -17,7 +17,7 @@ specified in `scenarios.jsonc` within the study's `data/` directory.
     "inflow": { ... },
     "load": { ... },
     // Optional keys
-    "blocks": { ... },
+    "stage_blocks": { ... },
     "markov_chain": { ... }
 }
 ```
@@ -32,7 +32,7 @@ specified in `scenarios.jsonc` within the study's `data/` directory.
 | `graph`          | Object  | Yes      | --          | Scenario graph definition (see below)                 |
 | `inflow`         | Object  | Yes      | --          | Inflow stochastic process (see below)                 |
 | `load`           | Object  | Yes      | --          | Load demand specification (see below)                 |
-| `blocks`         | Object  | No       | --          | Inner load block definitions (see below)              |
+| `stage_blocks`   | Object  | No       | --          | Per-stage inner load block definitions (see below)    |
 | `markov_chain`   | Object  | No       | --          | Markov chain transition matrices (see below)          |
 
 ## Graph
@@ -488,26 +488,42 @@ associates the value with a specific block name:
 
 Each `(bus_id, node_id, block)` triple must be unique.
 
-## Blocks (Optional)
+## Per-Stage Blocks (Optional)
 
-The `blocks` key defines inner load blocks within each stage. This allows
-modeling of load duration curves or chronological dispatch within a stage.
+The `stage_blocks` key defines inner load blocks on a per-stage basis. This
+allows modeling of load duration curves or chronological dispatch within each
+stage, with different block configurations per stage (e.g., different durations
+for months of varying length).
 
 ### Structure
 
+Each key in `stage_blocks` is a string-integer stage index. The value is a
+block configuration object with `mode` and `definitions`:
+
 ```jsonc
 {
-  "blocks": {
-    "mode": "parallel",
-    "definitions": [
-      { "name": "peak", "duration_hours": 6.0 },
-      { "name": "offpeak", "duration_hours": 18.0 },
-    ],
+  "stage_blocks": {
+    "1": {
+      "mode": "parallel",
+      "definitions": [
+        { "name": "peak", "duration_hours": 124.0 },
+        { "name": "shoulder", "duration_hours": 248.0 },
+        { "name": "offpeak", "duration_hours": 372.0 },
+      ],
+    },
+    "2": {
+      "mode": "parallel",
+      "definitions": [
+        { "name": "peak", "duration_hours": 116.0 },
+        { "name": "shoulder", "duration_hours": 232.0 },
+        { "name": "offpeak", "duration_hours": 348.0 },
+      ],
+    },
   },
 }
 ```
 
-### Keys
+### Per-Stage Block Configuration Keys
 
 | Key           | Type   | Required | Valid Values                      | Description            |
 | ------------- | ------ | -------- | --------------------------------- | ---------------------- |
@@ -521,6 +537,16 @@ Each block definition:
 | `name`           | String | Yes      | Unique      | Block identifier              |
 | `duration_hours` | Real   | Yes      | > 0         | Duration of the block (hours) |
 
+### Block Duration Validation
+
+The sum of `duration_hours` across all block definitions for a given stage must
+equal the stage duration derived from the graph node's `start_datetime` and
+`end_datetime`. For example, if a stage spans from `2024-01-01` to `2024-02-01`
+(744 hours), the block durations must sum to exactly 744.0.
+
+Stages not present in `stage_blocks` use a single implicit block spanning the
+full stage duration.
+
 ### Block Modes
 
 - **`parallel`**: A single water balance per hydro across all blocks. Block
@@ -532,9 +558,30 @@ Each block definition:
   increases problem size.
 
 !!! note
-When `blocks` is omitted, the study uses a single implicit block spanning
-the full stage duration (determined from the graph node's `start_datetime`
-and `end_datetime`).
+When `stage_blocks` is omitted entirely, each stage uses a single implicit
+block spanning the full stage duration (determined from the graph node's
+`start_datetime` and `end_datetime`).
+
+### Deprecated: Global `blocks` Key
+
+The legacy `blocks` key (a single block configuration applied uniformly to all
+stages) is still accepted but deprecated and will emit a warning. Use
+`stage_blocks` with per-stage keys instead.
+
+```jsonc
+// DEPRECATED -- use stage_blocks instead
+{
+  "blocks": {
+    "mode": "parallel",
+    "definitions": [
+      { "name": "peak", "duration_hours": 6.0 },
+      { "name": "offpeak", "duration_hours": 18.0 },
+    ],
+  },
+}
+```
+
+You cannot specify both `blocks` and `stage_blocks` simultaneously.
 
 ## Markov Chain (Optional)
 

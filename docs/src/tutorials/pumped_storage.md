@@ -75,10 +75,10 @@ This uses a 50/50 blend of expectation and CVaR at the 50% confidence level.
 ## Running the Example
 
 ```julia
-using SDDPlab, HiGHS
+using SDDPlab
 
 study = SDDPlab.read_study("example/pumped_storage")
-model = SDDPlab.build(study, HiGHS.Optimizer)
+model = SDDPlab.build(study)
 SDDPlab.train(study, model)
 artifact = SDDPlab.simulate(study, model)
 ```

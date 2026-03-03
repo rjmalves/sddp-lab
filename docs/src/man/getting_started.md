@@ -56,12 +56,17 @@ A minimal study looks like this:
 ```
 my_study/
 ├── main.jsonc            # entry point: wires all sub-configs
-├── system.jsonc          # power system topology and components
-├── buses.csv             # bus definitions
-├── thermals.csv          # thermal plant definitions
-├── hydros.csv            # hydro plant definitions
-├── scenarios.jsonc       # graph topology and inflow scenario config
-└── stochastic_process.jsonc  # AR/VAR/Naive inflow model parameters
+└── data/
+    ├── system.jsonc          # power system topology and components
+    ├── scenarios.jsonc       # graph topology, load, blocks, Markov chain
+    ├── constraints.jsonc     # reserved for future constraints
+    ├── graph.jsonc           # scenario graph (nodes and edges)
+    ├── inflow_scenarios.jsonc  # AR/VAR/Naive inflow model parameters
+    ├── load.csv              # deterministic load values
+    ├── buses.csv             # bus definitions
+    ├── lines.csv             # line definitions
+    ├── hydros.csv            # hydro plant definitions
+    └── thermals.csv          # thermal plant definitions
 ```
 
 ### The `main.jsonc` File
@@ -72,9 +77,10 @@ configures the engine:
 ```jsonc
 {
   "inputs": {
+    "path": "data",
     "files": {
-      "system": "system.jsonc",
       "scenarios": "scenarios.jsonc",
+      "system": "system.jsonc",
     },
   },
   "engine": {
@@ -102,6 +108,7 @@ configures the engine:
       },
       "simulation": {
         "num_simulated_series": 200,
+        "parallel_scheme": { "kind": "Serial", "params": {} },
       },
     },
   },

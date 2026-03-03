@@ -89,10 +89,10 @@ The engine uses risk-neutral optimization (Expectation) with 50 iterations:
 ## Running the Example
 
 ```julia
-using SDDPlab, HiGHS
+using SDDPlab
 
 study = SDDPlab.read_study("example/renewable_contracts")
-model = SDDPlab.build(study, HiGHS.Optimizer)
+model = SDDPlab.build(study)
 SDDPlab.train(study, model)
 artifact = SDDPlab.simulate(study, model)
 ```
