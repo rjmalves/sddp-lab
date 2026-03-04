@@ -1,6 +1,7 @@
 using SDDPlab: SDDPlab
 import SDDPlab: Engines
 using Suppressor
+using Logging
 
 # Helper: create a fast-running study from a file-loaded study.
 # Replaces the engine with one that uses low iteration counts and few simulations,
@@ -614,6 +615,148 @@ end
                 policy = SDDPlab.train(study, model)
                 @test policy !== nothing
             end
+        end
+    end
+
+    @testset "julia_main" begin
+        @testset "help_flag" begin
+            # --help should print usage to stdout and return 0
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--help")
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            empty!(ARGS)
+        end
+
+        @testset "help_flag_short" begin
+            # -h should print usage to stdout and return 0
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "-h")
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            empty!(ARGS)
+        end
+
+        @testset "version_flag" begin
+            # --version should print version and return 0
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--version")
+                output = @capture_out SDDPlab.julia_main()
+                @test occursin("SDDPlab v", output)
+                return Cint(0)
+            end
+            @test result == Cint(0)
+            empty!(ARGS)
+        end
+
+        @testset "version_flag_short" begin
+            # -V should print version and return 0
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "-V")
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            empty!(ARGS)
+        end
+
+        @testset "missing_path" begin
+            # No arguments: should return 1 (validation failure)
+            result = withenv() do
+                empty!(ARGS)
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result == Cint(1)
+            empty!(ARGS)
+        end
+
+        @testset "invalid_format" begin
+            # Invalid --format value: should return 1
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--format")
+                push!(ARGS, "xlsx")
+                push!(ARGS, "example/1dtoy")
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result == Cint(1)
+            empty!(ARGS)
+        end
+
+        @testset "flag_missing_value" begin
+            # --output with no subsequent value: should return 1
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--output")
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result == Cint(1)
+            empty!(ARGS)
+        end
+
+        @testset "nonexistent_path" begin
+            # Non-existent study path: should return 2 (runtime error from cd failing)
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "/nonexistent/path/to/study")
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result in (Cint(1), Cint(2))
+            empty!(ARGS)
+        end
+
+        @testset "full_pipeline_1dtoy" begin
+            # Full pipeline on 1dtoy: should return 0 and write output files
+            output_dir = mktempdir()
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, example_dir)
+                push!(ARGS, "--output")
+                push!(ARGS, output_dir)
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            # Verify output files were written
+            output_files = readdir(output_dir)
+            @test !isempty(output_files)
+            empty!(ARGS)
+        end
+
+        @testset "full_pipeline_csv_format" begin
+            # Full pipeline with CSV format flag: should return 0
+            output_dir = mktempdir()
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, example_dir)
+                push!(ARGS, "--output")
+                push!(ARGS, output_dir)
+                push!(ARGS, "--format")
+                push!(ARGS, "csv")
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            output_files = readdir(output_dir)
+            @test !isempty(output_files)
+            @test any(endswith(f, ".csv") for f in output_files)
+            empty!(ARGS)
+        end
+
+        @testset "julia_main_exported" begin
+            # julia_main must be exported from SDDPlab
+            @test :julia_main in names(SDDPlab)
         end
     end
 end

@@ -212,6 +212,7 @@ using .Engines:
 include("study.jl")
 include("study-validators.jl")
 include("Experiments/Experiments.jl")
+include("main.jl")
 
 export read_study,
     build,
@@ -223,7 +224,8 @@ export read_study,
     debug,
     validate,
     save_validation,
-    Study
+    Study,
+    julia_main
 
 export Engine,
     Model,

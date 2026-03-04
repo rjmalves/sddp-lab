@@ -41,3 +41,7 @@ test/*.mof.json
 subproblem_*.mof.json
 subproblem_*.lp
 subproblem_*.mps
+
+# Build artifacts (PackageCompiler app directory and release tarballs)
+build/SDDPLabApp/
+*.tar.gz
