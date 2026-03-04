@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation laboratory. It completes the Engine abstraction refactoring, simplifies the validation pipeline with a declarative schema system, exposes all SDDP.jl algorithm knobs, adds units tracking, LP conditioning, parallelization, new system elements (non-controllable generation, energy contracts, pumping stations), subproblem structure enhancements (time duration, load blocks, inflow non-negativity), advanced stochastic modeling, experiment management, observability tooling, per-stage block architecture, and robustness/reproducibility improvements.
+This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation laboratory. It completes the Engine abstraction refactoring, simplifies the validation pipeline with a declarative schema system, exposes all SDDP.jl algorithm knobs, adds units tracking, LP conditioning, parallelization, new system elements (non-controllable generation, energy contracts, pumping stations), subproblem structure enhancements (time duration, load blocks, inflow non-negativity), advanced stochastic modeling, experiment management, observability tooling, per-stage block architecture, robustness/reproducibility improvements, TTFX elimination via PrecompileTools, and distributable application packaging via PackageCompiler.
 
 ## Tech Stack
 
@@ -10,14 +10,15 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 - SDDP.jl, JuMP.jl, HiGHS/GLPK
 - CSV.jl, DataFrames.jl, Parquet.jl, JSON.jl
 - Distributions.jl, Copulas.jl, Graphs.jl
+- PrecompileTools.jl, PackageCompiler.jl (build-time)
 - Blue style formatting
 
 ## Specialist Agents
 
-| Agent                 | Domain                                          | Epics                              |
-| --------------------- | ----------------------------------------------- | ---------------------------------- |
-| `hpc-julia-developer` | Julia HPC, JuMP, type stability, threading, MPI | 01, 02, 03, 04, 08, 10, 11, 12     |
-| `sddp-specialist`     | SDDP theory, risk, duality, cuts, stochastic    | 02, 03, 05, 06, 07, 09, 10, 11, 12 |
+| Agent                 | Domain                                          | Epics                                          |
+| --------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| `hpc-julia-developer` | Julia HPC, JuMP, type stability, threading, MPI | 01, 02, 03, 04, 08, 10, 11, 12, 13, 14, 15, 16 |
+| `sddp-specialist`     | SDDP theory, risk, duality, cuts, stochastic    | 02, 03, 05, 06, 07, 09, 10, 11, 12, 13         |
 
 ## Epics
 
@@ -35,6 +36,10 @@ This plan transforms SDDPlab.jl into a fully flexible SDDP experimentation labor
 | 10   | Documentation & Examples          | 3       | Completed | both                        |
 | 11   | Per-Stage Block Architecture      | 4       | Completed | hpc-julia + sddp-specialist |
 | 12   | Robustness & Reproducibility      | 3       | Completed | sddp-specialist + hpc-julia |
+| 13   | Precompilation & Logging Control  | 3       | Pending   | sddp-specialist + hpc-julia |
+| 14   | Distribution & Packaging          | 2       | Pending   | hpc-julia-developer         |
+| 15   | CI Release Pipeline               | 1       | Pending   | hpc-julia-developer         |
+| 16   | Documentation (Distribution)      | 1       | Pending   | hpc-julia-developer         |
 
 ## Dependency Graph
 
@@ -161,6 +166,27 @@ Epic 12: Robustness & Reproducibility (independent of Epic 11)
   ticket-048 (validate same-stage datetimes)    \
   ticket-049 (adaptive model magnitudes)         |-- ALL PARALLEL
   ticket-050 (deterministic Xoshiro RNG)        /
+
+Epic 13: Precompilation & Logging Control (depends on Epics 01-12)
+  ticket-051 (PrecompileTools scaffold)
+       |
+       v
+  ticket-052 (smart precompile workload)
+       |
+       v
+  ticket-053 (suppress SDDP stdout)
+
+Epic 14: Distribution & Packaging (depends on Epic 13)
+  ticket-054 (julia_main entry point)
+       |
+       v
+  ticket-055 (create_app + tarball)
+
+Epic 15: CI Release Pipeline (depends on Epic 14)
+  ticket-056 (GitHub Actions release workflow)
+
+Epic 16: Documentation - Distribution (depends on Epics 13-15)
+  ticket-057 (README + docs distribution guide)
 ```
 
 ## Progress Tracking
@@ -218,3 +244,10 @@ Epic 12: Robustness & Reproducibility (independent of Epic 11)
 | ticket-048 | Validate same-stage node datetimes in graph validators      | epic-12 | completed | Detailed     | 0.95      | 0.85    | sddp-specialist     |
 | ticket-049 | Adaptive model-derived variable magnitudes                  | epic-12 | completed | Detailed     | 0.89      | 0.88    | sddp-specialist     |
 | ticket-050 | Deterministic thread-safe RNG with Xoshiro                  | epic-12 | completed | Detailed     | 0.93      | 0.90    | hpc-julia-developer |
+| ticket-051 | Add PrecompileTools dependency and scaffold                 | epic-13 | completed | Detailed     | 1.00      | --      | hpc-julia-developer |
+| ticket-052 | Implement smart precompile workload for SDDP training loop  | epic-13 | completed | Detailed     | 1.00      | 0.80    | sddp-specialist     |
+| ticket-053 | Suppress SDDP.jl stdout during precompilation               | epic-13 | completed | Detailed     | 0.97      | 0.85    | hpc-julia-developer |
+| ticket-054 | Add julia_main entry point with CLI argument parsing        | epic-14 | pending   | Detailed     | 1.00      | --      | hpc-julia-developer |
+| ticket-055 | Create build_app.jl script and tarball packaging            | epic-14 | pending   | Detailed     | 0.97      | --      | hpc-julia-developer |
+| ticket-056 | Add GitHub Actions release workflow for create_app builds   | epic-15 | pending   | Outline      | --        | --      | hpc-julia-developer |
+| ticket-057 | Update README and docs with distribution guide              | epic-16 | pending   | Outline      | --        | --      | hpc-julia-developer |

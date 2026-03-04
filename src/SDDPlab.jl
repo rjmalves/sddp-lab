@@ -439,4 +439,10 @@ export run_experiment,
     write_run_metadata,
     verify_reproducibility
 
+using PrecompileTools
+
+@compile_workload begin
+    include("precompile_workload.jl")
+end
+
 end
