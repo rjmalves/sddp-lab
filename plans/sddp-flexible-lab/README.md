@@ -250,4 +250,4 @@ Epic 16: Documentation - Distribution (depends on Epics 13-15)
 | ticket-054 | Add julia_main entry point with CLI argument parsing        | epic-14 | completed | Detailed     | 1.00      | 0.85    | hpc-julia-developer |
 | ticket-055 | Create build_app.jl script and tarball packaging            | epic-14 | completed | Detailed     | 0.97      | 0.88    | hpc-julia-developer |
 | ticket-056 | Add GitHub Actions release workflow for create_app builds   | epic-15 | completed | Refined      | --        | 0.95    | hpc-julia-developer |
-| ticket-057 | Update README and docs with distribution guide              | epic-16 | pending   | Outline      | --        | --      | hpc-julia-developer |
+| ticket-057 | Update README and docs with distribution guide              | epic-16 | completed | Refined      | --        | --      | open-source-documentation-writer |

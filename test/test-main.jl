@@ -758,5 +758,80 @@ end
             # julia_main must be exported from SDDPlab
             @test :julia_main in names(SDDPlab)
         end
+
+        @testset "conflicting_task_flags" begin
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--policy-only")
+                push!(ARGS, "--simulate-only")
+                push!(ARGS, example_dir)
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result == Cint(1)
+            empty!(ARGS)
+        end
+
+        @testset "policy_path_missing_value" begin
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--policy-path")
+                with_logger(NullLogger()) do
+                    SDDPlab.julia_main()
+                end
+            end
+            @test result == Cint(1)
+            empty!(ARGS)
+        end
+
+        @testset "policy_only_then_simulate_only" begin
+            # Train and save policy
+            policy_dir = mktempdir()
+            result_train = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--policy-only")
+                push!(ARGS, "--output")
+                push!(ARGS, policy_dir)
+                push!(ARGS, example_dir)
+                @suppress SDDPlab.julia_main()
+            end
+            @test result_train == Cint(0)
+            @test any(f -> occursin("cut", lowercase(f)), readdir(policy_dir))
+            empty!(ARGS)
+
+            # Load policy and simulate
+            sim_dir = mktempdir()
+            result_sim = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--simulate-only")
+                push!(ARGS, "--policy-path")
+                push!(ARGS, policy_dir)
+                push!(ARGS, "--output")
+                push!(ARGS, sim_dir)
+                push!(ARGS, example_dir)
+                @suppress SDDPlab.julia_main()
+            end
+            @test result_sim == Cint(0)
+            @test !isempty(readdir(sim_dir))
+            empty!(ARGS)
+        end
+
+        @testset "no_save_policy" begin
+            output_dir = mktempdir()
+            result = withenv() do
+                empty!(ARGS)
+                push!(ARGS, "--policy-only")
+                push!(ARGS, "--no-save-policy")
+                push!(ARGS, "--output")
+                push!(ARGS, output_dir)
+                push!(ARGS, example_dir)
+                @suppress SDDPlab.julia_main()
+            end
+            @test result == Cint(0)
+            # No files should be written when --no-save-policy is active
+            @test isempty(readdir(output_dir))
+            empty!(ARGS)
+        end
     end
 end
