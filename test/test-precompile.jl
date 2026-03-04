@@ -9,8 +9,8 @@ using Test
             first(DEPOT_PATH), "compiled", "v$(VERSION.major).$(VERSION.minor)", "SDDPlab"
         )
         if isdir(cache_dir)
-            for f in readdir(cache_dir; join=true)
-                rm(f; force=true)
+            for f in readdir(cache_dir; join = true)
+                rm(f; force = true)
             end
         end
 
@@ -19,7 +19,7 @@ using Test
 
         stdout_buf = IOBuffer()
         stderr_buf = IOBuffer()
-        run(pipeline(cmd; stdout=stdout_buf, stderr=stderr_buf); wait=true)
+        run(pipeline(cmd; stdout = stdout_buf, stderr = stderr_buf); wait = true)
 
         stdout_output = String(take!(stdout_buf))
         stderr_output = String(take!(stderr_buf))

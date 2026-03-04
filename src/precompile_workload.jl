@@ -1,9 +1,9 @@
 # JuMP and SDDP must be imported at file scope because macros (@variable,
 # @stageobjective) need them resolved at parse time, before try/catch.
-import JuMP
-import SDDP
-import HiGHS
-import Logging
+using JuMP: JuMP
+using SDDP: SDDP
+using HiGHS: HiGHS
+using Logging: Logging
 
 let
     try
