@@ -1,53 +1,18 @@
 # CLASS Bus -----------------------------------------------------------------------
 
 function Bus(d::Dict{String,Any}, e::CompositeException)
-
-    # Build internal objects
-    valid_internals = __build_bus_internals_from_dicts!(d, e)
-
-    # Keys and types validation
-    valid_keys_types = valid_internals && __validate_bus_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_bus_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_bus_consistency!(d, e)
-
-    return valid_consistency ? Bus(d["id"], d["name"], d["deficit_cost"]) : nothing
+    valid = validate_schema!(d, BUS_SCHEMA, e; entity_label = "Bus $(get(d, "id", "?"))")
+    return valid ? Bus(d["id"], d["name"], d["deficit_cost"]) : nothing
 end
 
 # CLASS Buses -----------------------------------------------------------------------
 
 function Buses(d::Dict{String,Any}, e::CompositeException)
-
-    # Build internal objects
     valid_internals = __build_buses_internals_from_dicts!(d, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_buses_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_buses_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_buses_consistency!(d, e)
+    valid_consistency = valid_keys_types && __validate_buses_consistency!(d, e)
 
     return valid_consistency ? Buses(d["entities"]) : nothing
-end
-
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Buses)
-    num_buses = length(ses)
-
-    # Adds variables registering internal names by symbols
-    m[LOAD] = @variable(m, [1:num_buses], base_name = String(LOAD))
-    m[DEFICIT] = @variable(m, [1:num_buses], base_name = String(DEFICIT))
-
-    set_lower_bound.(m[DEFICIT], 0)
-
-    return nothing
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------

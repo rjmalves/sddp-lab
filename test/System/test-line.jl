@@ -35,4 +35,45 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
         d = __remove_key(d, "name")
         @test System.Line(d, BUSES, e) === nothing
     end
+
+    # --- Schema boundary tests ---
+
+    @testset "line-boundary-id-one-passes" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "id", 1)
+        line = System.Line(d, BUSES, e)
+        @test typeof(line) === System.Line
+    end
+
+    @testset "line-boundary-id-negative-fails" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "id", -1)
+        line = System.Line(d, BUSES, e)
+        @test line === nothing
+        @test length(e) > 0
+    end
+
+    @testset "line-invalid-source-bus-id" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "source_bus_id", 99)
+        line = System.Line(d, BUSES, e)
+        @test line === nothing
+        @test length(e) > 0
+    end
+
+    @testset "line-invalid-target-bus-id" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "target_bus_id", 99)
+        line = System.Line(d, BUSES, e)
+        @test line === nothing
+        @test length(e) > 0
+    end
+
+    @testset "line-missing-capacity" begin
+        d, e = __renew(DICT)
+        d = __remove_key(d, "capacity")
+        line = System.Line(d, BUSES, e)
+        @test line === nothing
+        @test length(e) > 0
+    end
 end

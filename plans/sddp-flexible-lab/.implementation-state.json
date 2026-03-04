@@ -1,0 +1,690 @@
+{
+  "plan": "sddp-flexible-lab",
+  "last_updated": "2026-03-04T16:00:27Z",
+  "progressive": true,
+  "tickets": {
+    "ticket-001-merge-abstract-engine-branch.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-16T22:15:00Z"
+    },
+    "ticket-002-implement-graph-validators.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-16T22:35:00Z"
+    },
+    "ticket-003-implement-field-rule-schema-infrastructure.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-16T23:55:00Z"
+    },
+    "ticket-004-migrate-system-entities-to-schema-validation.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T00:10:00Z"
+    },
+    "ticket-005-migrate-engine-scenarios-to-schema-validation.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T00:30:00Z"
+    },
+    "ticket-006-cleanup-validation-pipeline-remove-dead-code.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T01:00:00Z"
+    },
+    "ticket-007-refactor-load-representation.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T01:30:00Z"
+    },
+    "ticket-008-migrate-example-cases.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T02:00:00Z"
+    },
+    "ticket-009-add-comprehensive-test-coverage.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T12:00:00Z"
+    },
+    "ticket-010-add-remaining-risk-measures.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T13:00:00Z"
+    },
+    "ticket-011-add-chained-stopping-rules.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T14:00:00Z"
+    },
+    "ticket-012-add-sampling-schemes.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T15:00:00Z"
+    },
+    "ticket-013-add-duality-handlers.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T19:00:00Z"
+    },
+    "ticket-014-add-forward-pass-strategies.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T19:30:00Z"
+    },
+    "ticket-015-add-cut-type-selection.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T20:00:00Z"
+    },
+    "ticket-016-wire-algorithm-options-through-pipeline.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T20:15:00Z"
+    },
+    "ticket-017-implement-variable-units-registry.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T21:30:00Z"
+    },
+    "ticket-018-implement-automatic-lp-scaling.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T22:30:00Z"
+    },
+    "ticket-019-integrate-numerical-stability-diagnostics.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-17T23:00:00Z"
+    },
+    "ticket-020-add-solver-configuration-options.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-17T23:45:00Z"
+    },
+    "ticket-021-enable-threaded-parallel-training.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-18T01:30:00Z"
+    },
+    "ticket-022-implement-thread-safe-saa-generation.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-18T12:00:00Z"
+    },
+    "ticket-023-profile-optimize-model-building.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-18T21:00:00Z"
+    },
+    "ticket-024-add-distributed-computing-support.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-18T22:30:00Z"
+    },
+    "ticket-025-add-renewable-generation.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T10:00:00Z"
+    },
+    "ticket-025b-fix-test-main-hanging.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "priority": "emergency",
+      "last_updated": "2026-02-19T10:30:00Z"
+    },
+    "ticket-026-add-energy-contracts.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T12:00:00Z"
+    },
+    "ticket-027-add-pumping-stations.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T14:00:00Z"
+    },
+    "ticket-028-add-stage-time-duration.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T19:00:00Z"
+    },
+    "ticket-029-add-inner-load-blocks.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T22:00:00Z"
+    },
+    "ticket-030-add-inflow-nonnegativity.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T23:30:00Z"
+    },
+    "ticket-031-add-multivariate-stochastic-process.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-20T02:00:00Z"
+    },
+    "ticket-032-add-markov-chain-state-transitions.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-20T04:00:00Z"
+    },
+    "ticket-033-add-out-of-sample-validation.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-20T06:00:00Z"
+    },
+    "ticket-034-implement-multi-config-experiment-runner.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T22:30:00Z"
+    },
+    "ticket-035-add-automated-sensitivity-analysis.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T23:00:00Z"
+    },
+    "ticket-036-add-result-aggregation-comparison.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T23:30:00Z"
+    },
+    "ticket-037-add-reproducibility-infrastructure.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T23:45:00Z"
+    },
+    "ticket-038-add-training-progress-monitoring.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-20T08:00:00Z"
+    },
+    "ticket-039-add-convergence-analysis-tools.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T12:00:00Z"
+    },
+    "ticket-040-add-subproblem-debugging-utilities.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T16:00:00Z"
+    },
+    "ticket-041-write-api-reference-documentation.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-02-19T22:30:00Z"
+    },
+    "ticket-042-write-configuration-format-reference.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T19:00:00Z"
+    },
+    "ticket-043-create-tutorial-examples.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "assigned_agent": "sddp-specialist",
+      "agent": "sddp-specialist",
+      "last_updated": "2026-02-19T21:00:00Z"
+    },
+    "ticket-044-restructure-blockconfig-per-stage.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T15:16:38Z",
+      "scores": {
+        "readiness": 0.91,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        },
+        "quality": 0.68,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.0,
+          "lint_cleanliness": 1.0,
+          "type_safety": 0.5,
+          "test_delta": 1.0
+        }
+      },
+      "workflow_step": null
+    },
+    "ticket-045-update-subproblem-builder-per-stage-blocks.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.9,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.85,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "sddp-specialist",
+      "last_updated": "2026-03-03T15:28:54Z"
+    },
+    "ticket-046-reform-output-parquet-block-columns.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "readiness": 0.89,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.8,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T17:03:30Z"
+    },
+    "ticket-047-update-tests-examples-per-stage-blocks.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T18:30:19Z",
+      "scores": {
+        "readiness": 0.88,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.8,
+          "boundary": 0.85,
+          "dependency_clarity": 0.9,
+          "atomicity": 0.85
+        }
+      },
+      "workflow_step": null
+    },
+    "ticket-048-validate-same-stage-node-datetimes.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.95,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.95,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        },
+        "quality": 0.85,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.8,
+          "lint_cleanliness": 0.85,
+          "type_safety": 0.8,
+          "test_delta": 0.8
+        }
+      },
+      "workflow_step": null,
+      "agent": "sddp-specialist",
+      "last_updated": "2026-03-03T18:57:30Z"
+    },
+    "ticket-049-adaptive-model-derived-magnitudes.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "readiness": 0.89,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.85,
+          "boundary": 0.85,
+          "dependency_clarity": 0.9,
+          "atomicity": 0.85
+        },
+        "quality": 0.88,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.85,
+          "lint_cleanliness": 0.85,
+          "type_safety": 0.85,
+          "test_delta": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "sddp-specialist",
+      "last_updated": "2026-03-03T18:57:30Z"
+    },
+    "ticket-050-deterministic-threadsafe-rng-xoshiro.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "readiness": 0.93,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 0.9,
+          "boundary": 0.9,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.9
+        },
+        "quality": 0.9,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.9,
+          "lint_cleanliness": 0.9,
+          "type_safety": 0.85,
+          "test_delta": 0.85
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer",
+      "last_updated": "2026-03-03T18:57:30Z"
+    },
+    "ticket-051-add-precompiletools-dependency-scaffold.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "readiness": 1.0,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer"
+    },
+    "ticket-052-implement-smart-precompile-workload.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "sddp-specialist",
+      "scores": {
+        "quality": 0.8,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 1.0,
+          "lint_cleanliness": 0.5,
+          "type_safety": 0.5,
+          "test_delta": 0.5
+        },
+        "readiness": 1.0,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      },
+      "workflow_step": null,
+      "agent": "sddp-specialist"
+    },
+    "ticket-053-suppress-sddp-stdout-precompilation.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "quality": 0.85,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 1.0,
+          "lint_cleanliness": 0.5,
+          "type_safety": 0.5,
+          "test_delta": 1.0
+        },
+        "readiness": 0.97,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 0.85,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer"
+    },
+    "ticket-054-add-julia-main-entry-point.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "quality": 0.85,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 1.0,
+          "lint_cleanliness": 0.5,
+          "type_safety": 0.5,
+          "test_delta": 1.0
+        },
+        "readiness": 1.0,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer"
+    },
+    "ticket-055-create-build-app-script-tarball.md": {
+      "status": "completed",
+      "detail_level": "detailed",
+      "assigned_agent": "hpc-julia-developer",
+      "scores": {
+        "quality": 0.875,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 0.5,
+          "lint_cleanliness": 1.0,
+          "type_safety": 1.0,
+          "test_delta": 1.0
+        },
+        "readiness": 0.97,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 0.85,
+          "dependency_clarity": 1.0,
+          "atomicity": 1.0
+        }
+      },
+      "workflow_step": null,
+      "agent": "hpc-julia-developer"
+    },
+    "ticket-056-add-github-actions-release-workflow.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "workflow_step": null,
+      "agent": "hpc-julia-developer",
+      "scores": {
+        "quality": 0.95,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 1.0,
+          "lint_cleanliness": 1.0,
+          "type_safety": 1.0,
+          "test_delta": 1.0
+        }
+      }
+    },
+    "ticket-057-update-readme-docs-distribution-guide.md": {
+      "status": "completed",
+      "detail_level": "refined",
+      "workflow_step": "verified_and_scored",
+      "agent": "open-source-documentation-writer",
+      "last_updated": "2026-03-04T18:00:00Z",
+      "scores": {
+        "quality": 0.93,
+        "quality_breakdown": {
+          "conformance": 1.0,
+          "scope_adherence": 1.0,
+          "lint_cleanliness": 1.0,
+          "type_safety": 1.0,
+          "test_delta": 1.0
+        }
+      }
+    }
+  },
+  "epics": {
+    "epic-01-stabilize-engine-abstraction": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-02-algorithm-flexibility": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-03-units-lp-conditioning": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-04-parallelization-performance": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-05-enhanced-system-elements": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-06-subproblem-structure": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-07-advanced-stochastic-modeling": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-08-experiment-management": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-09-observability-diagnostics": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-10-documentation-examples": {
+      "phase": "completed",
+      "learning_extracted": true
+    },
+    "epic-11-per-stage-blocks": {
+      "phase": "completed",
+      "learning_extracted": false
+    },
+    "epic-12-robustness-reproducibility": {
+      "phase": "completed",
+      "learning_extracted": false
+    },
+    "epic-13-precompilation-logging-control": {
+      "phase": "completed",
+      "learning_extracted": false
+    },
+    "epic-14-distribution-packaging": {
+      "phase": "completed",
+      "learning_extracted": false
+    },
+    "epic-15-ci-release-pipeline": {
+      "phase": "completed",
+      "learning_extracted": false
+    },
+    "epic-16-documentation-distribution": {
+      "phase": "completed",
+      "learning_extracted": false
+    }
+  }
+}

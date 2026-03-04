@@ -1,0 +1,33 @@
+name: format check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+      - name: Install JuliaFormatter
+        run: julia -e 'using Pkg; Pkg.add(Pkg.PackageSpec(;name="JuliaFormatter", version="1"))'
+      - name: Format check
+        run: |
+          julia -e '
+            using JuliaFormatter
+            format("src", verbose=true)
+            format("test", verbose=true)
+            format("docs", verbose=true)
+          '
+          if [ -n "$(git diff)" ]; then
+            echo "Some files have not been formatted !!!"
+            git diff
+            exit 1
+          fi

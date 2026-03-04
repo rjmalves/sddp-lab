@@ -39,7 +39,7 @@ end
 function __validate_files_keys_types_before_build!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    keys = ["algorithm", "scenarios", "system", "tasks"]
+    keys = ["scenarios", "system"]
     keys_types = [String, String, String, String, String]
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
@@ -79,28 +79,17 @@ function __build_files!(d::Dict{String,Any}, e::CompositeException)::Bool
         return false
     end
 
-    files_d["algorithm"] = AlgorithmData(files_d["algorithm"], e)
-    valid_algorithm = files_d["algorithm"] !== nothing
     files_d["scenarios"] = ScenariosData(files_d["scenarios"], e)
     valid_scenarios = files_d["scenarios"] !== nothing
     files_d["system"] = SystemData(files_d["system"], e)
     valid_system = files_d["system"] !== nothing
 
-    # TODO - improve this logic for managing current directories.
-    # TasksData currently never mentions other files, so it can
-    # be validated by passing the relative path to the tasks.jsonc
-    # file instead of changing to its directory (data/tasks.jsonc)
     cd(curdir)
 
-    files_d["tasks"] = TasksData(joinpath(d["path"], files_d["tasks"]), e)
-    valid_tasks = files_d["tasks"] !== nothing
-
-    valid_files = valid_algorithm && valid_scenarios && valid_system && valid_tasks
+    valid_files = valid_scenarios && valid_system
 
     if valid_files
-        d["files"] = [
-            files_d["algorithm"], files_d["scenarios"], files_d["system"], files_d["tasks"]
-        ]
+        d["files"] = [files_d["scenarios"], files_d["system"]]
     end
 
     return valid_files
@@ -110,16 +99,5 @@ function __build_inputsdata_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     valid_directory = __validate_directory!(d["path"], e)
-
-    # TODO - Improve safety coming back to entrypoint dir 
-    curdir = pwd()
-    valid_files = valid_directory && __build_files!(d, e)
-    cd(curdir)
-    return valid_files
-end
-
-function __cast_inputsdata_internals_from_files!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
+    return valid_directory && __build_files!(d, e)
 end

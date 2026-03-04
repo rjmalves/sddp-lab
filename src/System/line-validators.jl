@@ -1,16 +1,19 @@
+# SCHEMA --------------------------------------------------------------------------------------
+
+const LINE_SCHEMA = [
+    FieldRule("id", Integer; constraints = [positive()]),
+    FieldRule("name", String; constraints = [non_empty(), matches(r"^[\sa-zA-Z0-9_-]*$")]),
+    FieldRule("source_bus_id", Integer),
+    FieldRule("target_bus_id", Integer),
+    FieldRule("capacity", Real; constraints = [positive()]),
+    FieldRule("exchange_penalty", Real),
+]
+
 # KEYS / TYPES VALIDATORS -------------------------------------------------------------------
 
 function __validate_lines_main_key_type!(d::Dict{String,Any}, e::CompositeException)::Bool
     keys = ["lines"]
     keys_types = [Dict{String,Any}]
-    valid_keys = __validate_keys!(d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
-    return valid_types
-end
-
-function __validate_line_keys_types!(d::Dict{String,Any}, e::CompositeException)::Bool
-    keys = ["id", "name", "source_bus_id", "target_bus_id", "capacity", "exchange_penalty"]
-    keys_types = [Integer, String, Integer, Integer, Real, Real]
     valid_keys = __validate_keys!(d, keys, e)
     valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
     return valid_types
@@ -34,31 +37,7 @@ function __validate_lines_keys_types_before_build!(
     return valid_types
 end
 
-# CONTENT VALIDATORS -----------------------------------------------------------------------
-
-function __validate_line_id!(d::Dict{String,Any}, e::CompositeException)::Bool
-    id = d["id"]
-    valid = id > 0
-    valid || push!(e, AssertionError("Line id ($id) must be positive"))
-    return valid
-end
-
-function __validate_line_name!(d::Dict{String,Any}, e::CompositeException)::Bool
-    id = d["id"]
-    name = d["name"]
-    valid_length = length(name) > 0
-    valid_regex = __valid_name_regex_match(name)
-    valid = valid_length && valid_regex
-    valid_length ||
-        push!(e, AssertionError("Line $id - name ($name) must have at least one character"))
-    valid_regex || push!(
-        e,
-        AssertionError(
-            "Line $id - name ($name) must contain alphanumeric, '_', '-' or ' ' characters",
-        ),
-    )
-    return valid
-end
+# CROSS-ENTITY VALIDATORS ------------------------------------------------------------------
 
 function __validate_line_bus!(
     d::Dict{String,Any}, key::String, buses::Buses, e::CompositeException
@@ -72,28 +51,12 @@ function __validate_line_bus!(
     return bus_index
 end
 
-function __validate_line_capacity!(d::Dict{String,Any}, e::CompositeException)::Bool
-    capacity = d["capacity"]
-    valid = capacity > 0
-    valid || push!(e, AssertionError("Line capacity ($capacity) must be positive"))
-    return valid
-end
-
 function __validate_line_content!(
     d::Dict{String,Any}, buses::Buses, e::CompositeException
 )::Union{Dict{Symbol,Ref{Bus}},Nothing}
-    valid_id = __validate_line_id!(d, e)
-    valid_name = __validate_line_name!(d, e)
     source_bus_index = __validate_line_bus!(d, "source_bus_id", buses, e)
     target_bus_index = __validate_line_bus!(d, "target_bus_id", buses, e)
-    valid_capacity = __validate_line_capacity!(d, e)
-    valid = all([
-        valid_id,
-        valid_name,
-        source_bus_index !== nothing,
-        target_bus_index !== nothing,
-        valid_capacity,
-    ])
+    valid = source_bus_index !== nothing && target_bus_index !== nothing
     return if valid
         Dict{Symbol,Ref{Bus}}(
             :source => Ref(buses.entities[source_bus_index]),
@@ -104,15 +67,7 @@ function __validate_line_content!(
     end
 end
 
-function __validate_lines_content!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
-end
-
 # CONSISTENCY VALIDATORS -------------------------------------------------------------------
-
-function __validate_line_consistency!(d::Dict{String,Any}, e::CompositeException)::Bool
-    return true
-end
 
 function __validate_lines_unique_ids!(
     line_ids::Vector{<:Integer}, e::CompositeException
@@ -140,15 +95,8 @@ end
 
 # HELPERS -------------------------------------------------------------------------------------
 
-function __build_line_internals_from_dicts!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
-end
-
 function __build_lines_internals_from_dicts!(
     d::Dict{String,Any}, buses::Buses, e::CompositeException
 )::Bool
-    valid_lines = __build_line_entities!(d, buses, e)
-    return valid_lines
+    return __build_line_entities!(d, buses, e)
 end

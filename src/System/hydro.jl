@@ -1,21 +1,14 @@
 # CLASS Hydro -----------------------------------------------------------------------
 
 function Hydro(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid = validate_schema!(
+        d, HYDRO_SCHEMA, e; entity_label = "Hydro $(get(d, "id", "?"))"
+    )
 
-    # Build internal objects
-    valid_internals = __build_hydro_internals_from_dicts!(d, e)
-
-    # Keys and types validation
-    valid_keys_types = valid_internals && __validate_hydro_keys_types!(d, e)
-
-    # Content validation
-    bus_ref = valid_keys_types ? __validate_hydro_content!(d, buses, e) : nothing
+    bus_ref = valid ? __validate_hydro_content!(d, buses, e) : nothing
     valid_content = bus_ref !== nothing
 
-    # Consistency validation
-    valid_consistency = valid_content && __validate_hydro_consistency!(d, e)
-
-    return if valid_consistency
+    return if valid_content
         Hydro(
             d["id"],
             d["downstream_id"],
@@ -38,17 +31,9 @@ end
 # CLASS Hydros -----------------------------------------------------------------------
 
 function Hydros(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    # Build internal objects
     valid_internals = __build_hydros_internals_from_dicts!(d, buses, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_hydros_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_hydros_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_hydros_consistency!(d, e)
+    valid_consistency = valid_keys_types && __validate_hydros_consistency!(d, e)
 
     return valid_consistency ? Hydros(d["entities"], d["topology"]) : nothing
 end
@@ -83,85 +68,39 @@ function length(ses::Hydros)::Integer
     return length(get_ids(ses))
 end
 
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Hydros)
-    num_hydros = length(ses)
-
-    m[STORED_VOLUME] = @variable(
-        m,
-        [n = 1:num_hydros],
-        base_name = String(STORED_VOLUME),
-        SDDP.State,
-        initial_value = ses.entities[n].initial_storage
-    )
-
-    for n in 1:num_hydros
-        # no bounds are set on the 'in' field because this variable is always internally fixed
-        # to the previous' stage 'out' with JuMP.fix; this throws an error when the variable being
-        # fixed is bounded
-        # Indeed, even when a state variable is created the canonical way
-        # (using @variable(..., SDDP.State)), only the 'out' half receives the bound information
-        set_lower_bound(m[STORED_VOLUME][n].out, ses.entities[n].min_storage)
-        set_upper_bound(m[STORED_VOLUME][n].out, ses.entities[n].max_storage)
-    end
-
-    m[INFLOW] = @variable(m, [1:num_hydros], base_name = String(INFLOW))
-
-    m[TURBINED_FLOW] = @variable(m, [1:num_hydros], base_name = String(TURBINED_FLOW))
-    set_lower_bound.(
-        m[TURBINED_FLOW], [e.min_generation / e.productivity for e in ses.entities]
-    )
-    set_upper_bound.(
-        m[TURBINED_FLOW], [e.max_generation / e.productivity for e in ses.entities]
-    )
-
-    m[SPILLAGE] = @variable(m, [n = 1:num_hydros], base_name = String(SPILLAGE))
-    set_lower_bound.(m[SPILLAGE], 0)
-
-    m[OUTFLOW] = @expression(m, m[TURBINED_FLOW] + m[SPILLAGE])
-
-    m[HYDRO_GENERATION] = @expression(
-        m, [n = 1:num_hydros], ses.entities[n].productivity * m[TURBINED_FLOW][n]
-    )
-
-    m[HYDRO_MIN_GENERATION_SLACK] = @variable(
-        m, [n = 1:num_hydros], base_name = String(HYDRO_MIN_GENERATION_SLACK)
-    )
-    set_lower_bound.(m[HYDRO_MIN_GENERATION_SLACK], 0)
-
-    @constraint(
-        m,
-        [n = 1:num_hydros],
-        m[HYDRO_GENERATION][n] + m[HYDRO_MIN_GENERATION_SLACK][n] >=
-            ses.entities[n].min_generation
-    )
-end
-
-function add_hydro_balance!(m::JuMP.Model, hydros::Hydros)
-    num_hydros = length(hydros)
-
-    m[HYDRO_BALANCE] = @constraint(
-        m,
-        [n = 1:num_hydros],
-        m[STORED_VOLUME][n].out ==
-            m[STORED_VOLUME][n].in - m[OUTFLOW][n] +
-        m[INFLOW][n] +
-        sum(
-            m[OUTFLOW][j] for j in 1:num_hydros if
-            downstream(hydros.entities[j].id, hydros) == hydros.entities[n]
-        )
-    )
-    return nothing
-end
-
 # HELPER METHODS ---------------------------------------------------------------------------
 
+"""
+    upstream(id, hydros) -> Union{Nothing, SubArray}
+
+Return a view of the upstream [`Hydro`](@ref) plants for the plant with the
+given `id`, or `nothing` if the plant has no upstream neighbors.
+
+# Arguments
+
+  - `id`: Integer ID of the hydro plant.
+  - `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+See also: [`downstream`](@ref), [`Hydros`](@ref)
+"""
 function upstream(id::Integer, hydros::Hydros)
     upstream_ids = inneighbors(hydros.topology, id)
     return length(upstream_ids) == 0 ? nothing : @view hydros.entities[upstream_ids]
 end
 
+"""
+    downstream(id, hydros) -> Union{Nothing, SubArray}
+
+Return a view of the immediately downstream [`Hydro`](@ref) plant for the plant
+with the given `id`, or `nothing` if the plant has no downstream neighbor.
+
+# Arguments
+
+  - `id`: Integer ID of the hydro plant.
+  - `hydros`: A [`Hydros`](@ref) collection with the cascade topology graph.
+
+See also: [`upstream`](@ref), [`Hydros`](@ref)
+"""
 function downstream(id::Integer, hydros::Hydros)
     downstream_id = outneighbors(hydros.topology, id)
     return length(downstream_id) == 0 ? nothing : @view hydros.entities[downstream_id[1]]

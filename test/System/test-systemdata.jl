@@ -59,7 +59,7 @@ CFG_DICT = Dict(
     end
 
     @testset "system-valid-from-file" begin
-        d, e = __renew(DICT)
+        e = CompositeException()
 
         cd(example_data_dir)
         s = System.SystemData("system.jsonc", e)

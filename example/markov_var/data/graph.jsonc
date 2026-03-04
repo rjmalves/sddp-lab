@@ -1,0 +1,29 @@
+{
+    "nodes": [
+        { "id": 1,  "stage": 1,  "start_datetime": "2024-01-01", "end_datetime": "2024-02-01" },
+        { "id": 2,  "stage": 2,  "start_datetime": "2024-02-01", "end_datetime": "2024-03-01" },
+        { "id": 3,  "stage": 3,  "start_datetime": "2024-03-01", "end_datetime": "2024-04-01" },
+        { "id": 4,  "stage": 4,  "start_datetime": "2024-04-01", "end_datetime": "2024-05-01" },
+        { "id": 5,  "stage": 5,  "start_datetime": "2024-05-01", "end_datetime": "2024-06-01" },
+        { "id": 6,  "stage": 6,  "start_datetime": "2024-06-01", "end_datetime": "2024-07-01" },
+        { "id": 7,  "stage": 7,  "start_datetime": "2024-07-01", "end_datetime": "2024-08-01" },
+        { "id": 8,  "stage": 8,  "start_datetime": "2024-08-01", "end_datetime": "2024-09-01" },
+        { "id": 9,  "stage": 9,  "start_datetime": "2024-09-01", "end_datetime": "2024-10-01" },
+        { "id": 10, "stage": 10, "start_datetime": "2024-10-01", "end_datetime": "2024-11-01" },
+        { "id": 11, "stage": 11, "start_datetime": "2024-11-01", "end_datetime": "2024-12-01" },
+        { "id": 12, "stage": 12, "start_datetime": "2024-12-01", "end_datetime": "2025-01-01" }
+    ],
+    "edges": [
+        { "source": 1,  "target": 2,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 2,  "target": 3,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 3,  "target": 4,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 4,  "target": 5,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 5,  "target": 6,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 6,  "target": 7,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 7,  "target": 8,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 8,  "target": 9,  "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 9,  "target": 10, "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 10, "target": 11, "probability": 1.0, "discount_rate": 0.0 },
+        { "source": 11, "target": 12, "probability": 1.0, "discount_rate": 0.0 }
+    ]
+}
