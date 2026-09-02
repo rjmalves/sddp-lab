@@ -7,7 +7,20 @@ function Graph(d::Dict{String,Any}, e::CompositeException)
     nodes = [__build_node(node) for node in d["nodes"]]
     edges = [__build_edge(edge, nodes) for edge in d["edges"]]
 
-    return Graph(nodes, edges)
+    root_index = findfirst(n -> n.id == 0, nodes)
+    if root_index === nothing
+        # no explicit root in the dict: synthesize one and wire it to the entry node(s)
+        root_node = __build_synthetic_root(nodes)
+        entry_nodes = __find_entry_nodes(nodes, edges)
+        root_edges = [Edge(Ref(root_node), Ref(n), 1.0, 0.0) for n in entry_nodes]
+        edges = vcat(root_edges, edges)
+    else
+        # id=0 node provided: use it as root, keep only decision nodes in `nodes`
+        root_node = nodes[root_index]
+        nodes = filter(n -> n.id != 0, nodes)
+    end
+
+    return Graph(nodes, edges, root_node)
 end
 
 function Graph(filename::String, e::CompositeException)
@@ -40,6 +53,16 @@ end
 # GENERAL METHODS -----------------------------------------------------------------------
 
 # HELPERS -------------------------------------------------------------------------------------
+
+function __find_entry_nodes(nodes::Vector{Node}, edges::Vector{Edge})::Vector{Node}
+    targets = Set(e.target[].id for e in edges)
+    return [n for n in nodes if !(n.id in targets)]
+end
+
+function __build_synthetic_root(nodes::Vector{Node})::Node
+    earliest = minimum(n -> n.start_datetime, nodes)
+    return Node(0, 0, earliest, earliest)   # id=0, stage=0, zero-width interval at t0
+end
 
 function __build_graph!(d::Dict{String,Any}, e::CompositeException)::Bool
     d["graph"] = Graph(d["graph"]["params"], e)
