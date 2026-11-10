@@ -58,10 +58,10 @@ my_study/
 ├── main.jsonc            # entry point: wires all sub-configs
 └── data/
     ├── system.jsonc          # power system topology and components
-    ├── scenarios.jsonc       # graph topology, load, blocks, Markov chain
+    ├── scenarios.jsonc       # graph topology, load, blocks
     ├── constraints.jsonc     # reserved for future constraints
     ├── graph.jsonc           # scenario graph (nodes and edges)
-    ├── inflow_scenarios.jsonc  # AR/VAR/Naive inflow model parameters
+    ├── inflow_scenarios.jsonc  # AR/Naive inflow model parameters
     ├── load.csv              # deterministic load values
     ├── buses.csv             # bus definitions
     ├── lines.csv             # line definitions

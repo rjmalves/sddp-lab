@@ -125,8 +125,6 @@ using Test
     @testset "node-id-to-string" begin
         @test Engines._node_id_to_string(1) == "1"
         @test Engines._node_id_to_string(42) == "42"
-        @test Engines._node_id_to_string((1, 2)) == "1_2"
-        @test Engines._node_id_to_string((3, 1)) == "3_1"
     end
 
     example_dir = joinpath(@__DIR__, "..", "example", "1dtoy")

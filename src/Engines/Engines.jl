@@ -835,7 +835,7 @@ end
     InflowNonNegativity
 
 Abstract base type for inflow non-negativity enforcement strategies.
-AR/VAR processes can produce negative inflow samples; these strategies handle
+AR processes can produce negative inflow samples; these strategies handle
 that case. Subtypes: [`InflowNone`](@ref), [`InflowPenalty`](@ref),
 [`InflowTruncation`](@ref), [`InflowTruncationWithPenalty`](@ref).
 

@@ -20,8 +20,8 @@ parallelism strategies, etc.) without changing any Julia code.
   single consistent interface.
 - **Rich system model**: Hydro cascades, thermals, non-controllable renewables,
   energy contracts, pumping stations, and transmission lines.
-- **Flexible stochastic processes**: Naive (copula-based), AR(p), and VAR(p)
-  inflow models with optional Markov chain regime switching.
+- **Flexible stochastic processes**: Naive (copula-based) and AR(p) inflow
+  models.
 - **Experiment management**: Run multiple configurations, sensitivity sweeps,
   and result comparisons with a few lines of code.
 - **Reproducibility tools**: Environment snapshots, config hashing, and

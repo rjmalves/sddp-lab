@@ -24,24 +24,15 @@ Naive
 AutoRegressive
 ```
 
-### Vector Autoregressive
-
-```@docs
-VectorAutoRegressive
-```
-
 ## SAA Generation
 
 ```@docs
 generate_saa
 ```
 
-## AR/VAR Parameter Access
+## AR Parameter Access
 
 ```@docs
 get_ar_parameters
 get_ar_scale
-get_var_season_parameters
-get_var_coefficient_matrix
-get_var_scales
 ```

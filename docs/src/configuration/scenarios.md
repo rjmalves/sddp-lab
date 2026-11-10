@@ -2,8 +2,8 @@
 
 The scenarios configuration defines the stochastic structure of the optimization
 problem: the scenario graph (policy graph), inflow uncertainty, load demand,
-optional inner load blocks, and optional Markov chain state transitions. It is
-specified in `scenarios.jsonc` within the study's `data/` directory.
+and optional inner load blocks. It is specified in `scenarios.jsonc` within the
+study's `data/` directory.
 
 ## Top-Level Structure
 
@@ -17,8 +17,7 @@ specified in `scenarios.jsonc` within the study's `data/` directory.
     "inflow": { ... },
     "load": { ... },
     // Optional keys
-    "stage_blocks": { ... },
-    "markov_chain": { ... }
+    "stage_blocks": { ... }
 }
 ```
 
@@ -33,7 +32,6 @@ specified in `scenarios.jsonc` within the study's `data/` directory.
 | `inflow`         | Object  | Yes      | --          | Inflow stochastic process (see below)                 |
 | `load`           | Object  | Yes      | --          | Load demand specification (see below)                 |
 | `stage_blocks`   | Object  | No       | --          | Per-stage inner load block definitions (see below)    |
-| `markov_chain`   | Object  | No       | --          | Markov chain transition matrices (see below)          |
 
 ## Graph
 
@@ -283,140 +281,6 @@ The length of `initial_values` must match the maximum lag order across all
 seasons. If the model has a single season entry, it applies to all seasons
 (simple AR). If it has multiple entries, it is a periodic AR (PAR).
 
-#### `VectorAutoRegressive` -- VAR(p) Process
-
-The `VectorAutoRegressive` process generalizes the AR model to the multivariate
-case. All hydro plants share coefficient matrices that capture cross-correlations,
-while each plant retains its own scale parameters.
-
-**Parameters:**
-
-| Key                    | Type  | Required | Description                                  |
-| ---------------------- | ----- | -------- | -------------------------------------------- |
-| `marginal_models`      | Array | Yes      | Per-hydro model specs (same structure as AR) |
-| `copulas`              | Array | Yes      | Per-season copula for noise correlation      |
-| `coefficient_matrices` | Array | Yes      | Per-season, per-lag coefficient matrices     |
-
-Each entry in `marginal_models`:
-
-| Key              | Type         | Required | Description                                                             |
-| ---------------- | ------------ | -------- | ----------------------------------------------------------------------- |
-| `id`             | Integer      | Yes      | Hydro id (> 0)                                                          |
-| `initial_values` | Array[Float] | Yes      | Initial lag values (length = max lag)                                   |
-| `models`         | Array        | Yes      | Per-season specs with `season`, `residual_variance`, `scale_parameters` |
-
-Each season model in `models`:
-
-| Key                 | Type         | Required | Constraints       | Description                   |
-| ------------------- | ------------ | -------- | ----------------- | ----------------------------- |
-| `season`            | Integer      | Yes      | > 0               | Season index                  |
-| `residual_variance` | Float        | Yes      | > 0               | Noise variance                |
-| `scale_parameters`  | Array[Float] | Yes      | Length 2, std > 0 | [mean, std] for normalization |
-
-Each entry in `coefficient_matrices`:
-
-| Key      | Type    | Required | Constraints | Description                          |
-| -------- | ------- | -------- | ----------- | ------------------------------------ |
-| `season` | Integer | Yes      | > 0         | Season index                         |
-| `lag`    | Integer | Yes      | > 0         | Lag index (1, 2, ..., p)             |
-| `matrix` | Array   | Yes      | N x N       | Coefficient matrix (rows of columns) |
-
-The matrix is N x N where N is the number of marginal models (hydros). It is
-specified as an array of row arrays.
-
-### Constraints
-
-- Coefficient matrices must be provided for all combinations of seasons and
-  lags 1 through max_lag.
-- All seasons must have the same max lag.
-- `initial_values` length must equal the max lag.
-- The matrix in each `coefficient_matrices` entry must be square and match the
-  number of marginal models.
-
-**Example** (2 hydros, 1 season, lag 1):
-
-```jsonc
-{
-  "inflow": {
-    "stochastic_process": {
-      "kind": "VectorAutoRegressive",
-      "params": {
-        "marginal_models": [
-          {
-            "id": 1,
-            "initial_values": [50.0],
-            "models": [
-              {
-                "season": 1,
-                "residual_variance": 100.0,
-                "scale_parameters": [50.0, 20.0],
-              },
-            ],
-          },
-          {
-            "id": 2,
-            "initial_values": [30.0],
-            "models": [
-              {
-                "season": 1,
-                "residual_variance": 80.0,
-                "scale_parameters": [30.0, 10.0],
-              },
-            ],
-          },
-        ],
-        "copulas": [
-          {
-            "season": 1,
-            "kind": "GaussianCopula",
-            "parameters": [
-              [1.0, 0.5],
-              [0.5, 1.0],
-            ],
-          },
-        ],
-        "coefficient_matrices": [
-          {
-            "season": 1,
-            "lag": 1,
-            "matrix": [
-              [0.7, 0.1],
-              [0.2, 0.6],
-            ],
-          },
-        ],
-      },
-    },
-  },
-}
-```
-
-### Per-State Stochastic Processes (Markov Mode)
-
-When using a Markov chain (see below), the `stochastic_process` key holds a
-dictionary of state-specific processes instead of a single `kind`/`params` block.
-The keys are string integers matching the Markov state indices:
-
-```jsonc
-{
-    "inflow": {
-        "stochastic_process": {
-            "1": {
-                "kind": "AutoRegressive",
-                "params": { ... }
-            },
-            "2": {
-                "kind": "AutoRegressive",
-                "params": { ... }
-            }
-        }
-    }
-}
-```
-
-The number of entries must match the number of Markov states, and the keys
-must be exactly `"1"`, `"2"`, ..., `"N"`.
-
 ## Load
 
 The `load` section defines the demand at each bus for each graph node. It uses
@@ -582,99 +446,6 @@ stages) is still accepted but deprecated and will emit a warning. Use
 ```
 
 You cannot specify both `blocks` and `stage_blocks` simultaneously.
-
-## Markov Chain (Optional)
-
-The `markov_chain` key defines a discrete Markov chain that indexes state-dependent
-stochastic processes. This enables modeling regime-switching behavior (e.g.,
-wet/dry hydrological regimes).
-
-### Structure
-
-```jsonc
-{
-  "markov_chain": {
-    "transition_matrices": [
-      // Matrix 1: root -> states (1 x N)
-      [[0.5, 0.5]],
-      // Matrix 2: states -> states (N x N)
-      [
-        [0.7, 0.3],
-        [0.4, 0.6],
-      ],
-      // Matrix 3: states -> states (N x N)
-      [
-        [0.7, 0.3],
-        [0.4, 0.6],
-      ],
-    ],
-  },
-}
-```
-
-### Keys
-
-| Key                   | Type  | Required | Description                                    |
-| --------------------- | ----- | -------- | ---------------------------------------------- |
-| `transition_matrices` | Array | Yes      | Sequence of transition matrices, one per stage |
-
-### Transition Matrix Rules
-
-1. The **first** matrix must have exactly 1 row (it transitions from the root
-   node to the initial Markov states). Its number of columns N defines the
-   number of Markov states.
-
-2. All **subsequent** matrices must be square (N x N), where N matches the
-   number of columns from the first matrix.
-
-3. The number of rows in matrix `i+1` must equal the number of columns in
-   matrix `i`.
-
-4. All entries must be non-negative.
-
-5. Each row must sum to 1.0 (within tolerance 1e-6).
-
-### Integration with Stochastic Processes
-
-When a Markov chain is present, the `inflow.stochastic_process` must use the
-per-state dictionary format (see "Per-State Stochastic Processes" above), with
-exactly N entries matching the N Markov states.
-
-**Example** (2 states, 3 stages):
-
-```jsonc
-{
-    "seed": 42,
-    "initial_season": 1,
-    "branchings": 10,
-    "graph": {
-        "params": { "file": "graph.jsonc" }
-    },
-    "inflow": {
-        "stochastic_process": {
-            "1": {
-                "kind": "AutoRegressive",
-                "params": { ... }
-            },
-            "2": {
-                "kind": "AutoRegressive",
-                "params": { ... }
-            }
-        }
-    },
-    "load": {
-        "kind": "DeterministicLoad",
-        "params": { "file": "load.csv" }
-    },
-    "markov_chain": {
-        "transition_matrices": [
-            [[0.5, 0.5]],
-            [[0.7, 0.3], [0.4, 0.6]],
-            [[0.7, 0.3], [0.4, 0.6]]
-        ]
-    }
-}
-```
 
 ## Complete Example
 

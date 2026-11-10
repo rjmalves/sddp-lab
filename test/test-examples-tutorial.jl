@@ -36,16 +36,6 @@ examples_root = joinpath(@__DIR__, "..", "example")
         @test true
     end
 
-    @testset "markov_var" begin
-        @suppress begin
-            study = SDDPlab.read_study(joinpath(examples_root, "markov_var"))
-            model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.train(study, model)
-            SDDPlab.simulate(study, model)
-        end
-        @test true
-    end
-
     @testset "experiment_sweep" begin
         @suppress begin
             exp_path = joinpath(examples_root, "experiment_sweep", "experiment.jsonc")

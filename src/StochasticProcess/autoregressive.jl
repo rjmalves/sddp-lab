@@ -80,7 +80,7 @@ modeling when inter-site correlations are captured through the noise copula.
     definitions.
   - `noise_model`: [`Naive`](@ref) process for the residual noise term.
 
-See also: [`VectorAutoRegressive`](@ref), [`generate_saa`](@ref),
+See also: [`generate_saa`](@ref),
 [`get_ar_parameters`](@ref), [`get_ar_scale`](@ref)
 """
 struct AutoRegressive <: AbstractStochasticProcess

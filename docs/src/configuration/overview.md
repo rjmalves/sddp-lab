@@ -17,7 +17,7 @@ my_study/
   main.jsonc              # Entry point: engine config + file references
   data/
     system.jsonc          # Power system definition
-    scenarios.jsonc       # Stochastic scenarios, graph, load, blocks, Markov
+    scenarios.jsonc       # Stochastic scenarios, graph, load, blocks
     constraints.jsonc     # Reserved for future constraints
     graph.jsonc           # Scenario graph (nodes and edges)
     inflow_scenarios.jsonc  # Inflow stochastic process parameters
@@ -94,7 +94,7 @@ This pattern is used for:
 - **Cut types**: `SingleCut`, `MultiCut`
 - **Scaling modes**: `NoScaling`, `AutoScaling`
 - **Inflow non-negativity**: `InflowNone`, `InflowPenalty`, `InflowTruncation`, `InflowTruncationWithPenalty`
-- **Stochastic processes**: `Naive`, `AutoRegressive`, `VectorAutoRegressive`
+- **Stochastic processes**: `Naive`, `AutoRegressive`
 - **Load formats**: `DeterministicLoad`
 - **Engine**: `SDDPEngine`
 
