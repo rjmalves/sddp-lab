@@ -34,8 +34,9 @@ struct Edge
 end
 
 struct Graph
-    nodes::Vector{Node}
-    edges::Vector{Edge}
+    nodes::Vector{Node}     # decision nodes only (root excluded)
+    edges::Vector{Edge}     # includes root -> entry edges
+    root_node::Node
 end
 
 """
@@ -114,12 +115,7 @@ end
 Gets the root node acconding to the graph topology
 """
 function get_root_node_id(g::Graph)::Integer
-    node_ids = [n.id for n in g.nodes]
-    nodes_with_targets = [e.target[].id for e in g.edges]
-    unique!(node_ids)
-    unique!(nodes_with_targets)
-    node_ids = setdiff(node_ids, nodes_with_targets)
-    return node_ids[1]
+    return g.root_node.id
 end
 
 include("graph-validators.jl")

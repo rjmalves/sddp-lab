@@ -282,12 +282,10 @@ function __build_graph(files::Vector{InputModule})::SDDP.Graph
     root_node_id = get_root_node_id(g)
     graph = SDDP.Graph(root_node_id)
 
-    for n in g.nodes
-        if n.id !== root_node_id
-            SDDP.add_node(graph, n.id)
-        end
+    for n in g.nodes                 # root is no longer among g.nodes
+        SDDP.add_node(graph, n.id)
     end
-    for e in g.edges
+    for e in g.edges                 # now includes the root -> entry edge(s)
         SDDP.add_edge(graph, e.source[].id => e.target[].id, e.probability)
     end
 
