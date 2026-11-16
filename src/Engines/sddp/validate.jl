@@ -189,9 +189,6 @@ function __write_validation_simulation_results(
     map_variable_output = Dict(
         "validation_operation_buses" => [DEFICIT, MARGINAL_COST],
         "validation_operation_thermals" => [THERMAL_GENERATION, THERMAL_GENERATION_COST],
-        "validation_operation_noncontrollables" => [NC_GENERATION, NC_CURTAILMENT],
-        "validation_operation_contracts" => [CONTRACT_DISPATCH],
-        "validation_operation_pumping" => [PUMPED_FLOW, PUMP_POWER],
         "validation_operation_lines" => [NET_EXCHANGE],
         "validation_operation_hydros" => [
             STORED_VOLUME,
@@ -213,11 +210,6 @@ function __write_validation_simulation_results(
         MARGINAL_COST => get_buses_entities(system),
         THERMAL_GENERATION => get_thermals_entities(system),
         THERMAL_GENERATION_COST => get_thermals_entities(system),
-        NC_GENERATION => get_noncontrollables_entities(system),
-        NC_CURTAILMENT => get_noncontrollables_entities(system),
-        CONTRACT_DISPATCH => get_energycontracts_entities(system),
-        PUMPED_FLOW => get_pumpingstations_entities(system),
-        PUMP_POWER => get_pumpingstations_entities(system),
         NET_EXCHANGE => get_lines_entities(system),
         HYDRO_GENERATION => get_hydros_entities(system),
         STORED_VOLUME => get_hydros_entities(system),

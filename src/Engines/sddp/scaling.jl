@@ -24,23 +24,16 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
 
     hydros = get_hydros_entities(system)
     thermals = get_thermals_entities(system)
-    noncontrollables = get_noncontrollables_entities(system)
     buses = get_buses_entities(system)
     lines = get_lines_entities(system)
-
-    contracts = get_energycontracts_entities(system)
 
     all_gen = Float64[
         [Float64(h.max_generation) for h in hydros]...,
         [Float64(t.max_generation) for t in thermals]...,
-        [Float64(nc.max_generation) for nc in noncontrollables]...,
-        [Float64(c.max_mw) for c in contracts]...,
     ]
     max_gen = isempty(all_gen) ? DEFAULT_SCALING_FACTOR : maximum(all_gen)
     factors[HYDRO_GENERATION] = _safe_scaling_factor(max_gen)
     factors[THERMAL_GENERATION] = _safe_scaling_factor(max_gen)
-    factors[NC_GENERATION] = _safe_scaling_factor(max_gen)
-    factors[CONTRACT_DISPATCH] = _safe_scaling_factor(max_gen)
     factors[DEFICIT] = _safe_scaling_factor(max_gen)
 
     max_stor =
@@ -58,7 +51,6 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
     factors[SPILLAGE] = s_hydro
     factors[OUTFLOW] = s_hydro
     factors[INFLOW] = s_hydro
-    factors[PUMPED_FLOW] = s_hydro
 
     max_cap = if isempty(lines)
         DEFAULT_SCALING_FACTOR
@@ -70,10 +62,7 @@ function compute_scaling_factors(system::SystemData)::ScalingConfig
     factors[REVERSE_EXCHANGE] = _safe_scaling_factor(max_cap)
 
     all_costs = Float64[
-        [Float64(t.cost) for t in thermals]...,
-        [Float64(nc.curtailment_cost) for nc in noncontrollables]...,
-        [abs(Float64(c.price_per_mwh)) for c in contracts]...,
-        [Float64(b.deficit_cost) for b in buses]...,
+        [Float64(t.cost) for t in thermals]..., [Float64(b.deficit_cost) for b in buses]...
     ]
     max_cost = isempty(all_costs) ? DEFAULT_SCALING_FACTOR : maximum(all_costs)
     factors[COST_SCALE] = _safe_scaling_factor(max_cost)
@@ -86,8 +75,6 @@ function no_scaling_config()::ScalingConfig
         STORED_VOLUME => DEFAULT_SCALING_FACTOR,
         HYDRO_GENERATION => DEFAULT_SCALING_FACTOR,
         THERMAL_GENERATION => DEFAULT_SCALING_FACTOR,
-        NC_GENERATION => DEFAULT_SCALING_FACTOR,
-        CONTRACT_DISPATCH => DEFAULT_SCALING_FACTOR,
         DEFICIT => DEFAULT_SCALING_FACTOR,
         FLOW_SCALE => DEFAULT_SCALING_FACTOR,
         TURBINED_FLOW => DEFAULT_SCALING_FACTOR,
@@ -96,7 +83,6 @@ function no_scaling_config()::ScalingConfig
         INFLOW => DEFAULT_SCALING_FACTOR,
         INFLOW_SLACK => DEFAULT_SCALING_FACTOR,
         NOISE_ADJUSTMENT_SLACK => DEFAULT_SCALING_FACTOR,
-        PUMPED_FLOW => DEFAULT_SCALING_FACTOR,
         DIRECT_EXCHANGE => DEFAULT_SCALING_FACTOR,
         REVERSE_EXCHANGE => DEFAULT_SCALING_FACTOR,
         COST_SCALE => DEFAULT_SCALING_FACTOR,

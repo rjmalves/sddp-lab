@@ -96,43 +96,6 @@ function add_system_elements!(m::JuMP.Model, ses::Thermals, num_blocks::Int)
     return nothing
 end
 
-function add_system_elements!(m::JuMP.Model, ses::NonControllables, num_blocks::Int)
-    num_nc = length(ses)
-    if num_nc == 0
-        return nothing
-    end
-    m[NC_GENERATION] = JuMP.@variable(
-        m, [1:num_nc, 1:num_blocks], base_name = String(NC_GENERATION)
-    )
-    for n in 1:num_nc, k in 1:num_blocks
-        JuMP.set_lower_bound(m[NC_GENERATION][n, k], 0)
-        JuMP.set_upper_bound(m[NC_GENERATION][n, k], ses.entities[n].max_generation)
-    end
-
-    m[NC_CURTAILMENT] = JuMP.@expression(
-        m,
-        [n = 1:num_nc, k = 1:num_blocks],
-        ses.entities[n].max_generation - m[NC_GENERATION][n, k]
-    )
-
-    return nothing
-end
-
-function add_system_elements!(m::JuMP.Model, ses::EnergyContracts, num_blocks::Int)
-    num_contracts = length(ses)
-    if num_contracts == 0
-        return nothing
-    end
-    m[CONTRACT_DISPATCH] = JuMP.@variable(
-        m, [1:num_contracts, 1:num_blocks], base_name = String(CONTRACT_DISPATCH)
-    )
-    for n in 1:num_contracts, k in 1:num_blocks
-        JuMP.set_lower_bound(m[CONTRACT_DISPATCH][n, k], ses.entities[n].min_mw)
-        JuMP.set_upper_bound(m[CONTRACT_DISPATCH][n, k], ses.entities[n].max_mw)
-    end
-    return nothing
-end
-
 function add_system_elements!(m::JuMP.Model, ses::Hydros, num_blocks::Int)
     num_hydros = length(ses)
 
@@ -197,45 +160,16 @@ function add_system_elements!(m::JuMP.Model, ses::Hydros, num_blocks::Int)
     )
 end
 
-function add_system_elements!(m::JuMP.Model, ses::PumpingStations, num_blocks::Int)
-    num_stations = length(ses)
-    if num_stations == 0
-        return nothing
-    end
-    m[PUMPED_FLOW] = JuMP.@variable(
-        m, [1:num_stations, 1:num_blocks], base_name = String(PUMPED_FLOW)
-    )
-    for n in 1:num_stations, k in 1:num_blocks
-        JuMP.set_lower_bound(m[PUMPED_FLOW][n, k], ses.entities[n].min_m3s)
-        JuMP.set_upper_bound(m[PUMPED_FLOW][n, k], ses.entities[n].max_m3s)
-    end
-    m[PUMP_POWER] = JuMP.@expression(
-        m,
-        [n = 1:num_stations, k = 1:num_blocks],
-        ses.entities[n].consumption_mw_per_m3s * m[PUMPED_FLOW][n, k]
-    )
-    return nothing
-end
-
 function add_system_elements!(m::JuMP.Model, s::SystemData, num_blocks::Int)
     add_system_elements!(m, get_buses(s), num_blocks)
     add_system_elements!(m, get_lines(s), num_blocks)
     add_system_elements!(m, get_thermals(s), num_blocks)
-    add_system_elements!(m, get_noncontrollables(s), num_blocks)
-    add_system_elements!(m, get_energycontracts(s), num_blocks)
-    add_system_elements!(m, get_pumpingstations(s), num_blocks)
     add_system_elements!(m, get_hydros(s), num_blocks)
     return nothing
 end
 
 function add_hydro_balance_parallel!(
-    m::JuMP.Model,
-    hydros::Hydros,
-    pump_source_map::Dict{Int,Vector{Int}},
-    pump_dest_map::Dict{Int,Vector{Int}},
-    zeta::Float64,
-    w_k::Vector{Float64},
-    num_blocks::Int,
+    m::JuMP.Model, hydros::Hydros, zeta::Float64, w_k::Vector{Float64}, num_blocks::Int
 )
     num_hydros = length(hydros)
 
@@ -249,14 +183,6 @@ function add_hydro_balance_parallel!(
             w_k[k] * m[OUTFLOW][j, k] for j in 1:num_hydros if
             downstream(hydros.entities[j].id, hydros) == hydros.entities[n] for
             k in 1:num_blocks
-        ) -
-        zeta * sum(
-            w_k[k] * m[PUMPED_FLOW][j, k] for j in get(pump_source_map, n, Int[]) for
-            k in 1:num_blocks
-        ) +
-        zeta * sum(
-            w_k[k] * m[PUMPED_FLOW][j, k] for j in get(pump_dest_map, n, Int[]) for
-            k in 1:num_blocks
         )
     )
     return nothing
@@ -265,8 +191,6 @@ end
 function add_hydro_balance_chronological!(
     m::JuMP.Model,
     hydros::Hydros,
-    pump_source_map::Dict{Int,Vector{Int}},
-    pump_dest_map::Dict{Int,Vector{Int}},
     zeta_k::Vector{Float64},
     w_k::Vector{Float64},
     num_blocks::Int,
@@ -298,13 +222,7 @@ function add_hydro_balance_chronological!(
             downstream(hydros.entities[j].id, hydros) == hydros.entities[n];
             init = 0.0,
         )
-        source_pump = sum(
-            m[PUMPED_FLOW][j, k] for j in get(pump_source_map, n, Int[]); init = 0.0
-        )
-        dest_pump = sum(
-            m[PUMPED_FLOW][j, k] for j in get(pump_dest_map, n, Int[]); init = 0.0
-        )
-        return upstream_flow - m[OUTFLOW][n, k] - source_pump + dest_pump
+        return upstream_flow - m[OUTFLOW][n, k]
     end
 
     m[HYDRO_BALANCE] = JuMP.@constraint(
@@ -321,8 +239,6 @@ end
 function add_hydro_balance!(
     m::JuMP.Model,
     hydros::Hydros,
-    pump_source_map::Dict{Int,Vector{Int}},
-    pump_dest_map::Dict{Int,Vector{Int}},
     block_mode::Symbol,
     tau_k::Vector{Float64},
     num_blocks::Int,
@@ -331,14 +247,10 @@ function add_hydro_balance!(
 
     if block_mode == :parallel
         zeta = 0.0036 * sum(tau_k)
-        add_hydro_balance_parallel!(
-            m, hydros, pump_source_map, pump_dest_map, zeta, w_k, num_blocks
-        )
+        add_hydro_balance_parallel!(m, hydros, zeta, w_k, num_blocks)
     elseif block_mode == :chronological
         zeta_k = 0.0036 .* tau_k
-        add_hydro_balance_chronological!(
-            m, hydros, pump_source_map, pump_dest_map, zeta_k, w_k, num_blocks
-        )
+        add_hydro_balance_chronological!(m, hydros, zeta_k, w_k, num_blocks)
     else
         error("Unknown block mode: $block_mode. Expected :parallel or :chronological.")
     end
@@ -403,14 +315,10 @@ function add_system_objective!(
     buses = get_buses_entities(s)
     lines = get_lines_entities(s)
     thermals = get_thermals_entities(s)
-    noncontrollables = get_noncontrollables_entities(s)
-    contracts = get_energycontracts_entities(s)
     num_buses = length(buses)
     num_lines = length(lines)
     num_hydros = length(hydros)
     num_thermals = length(thermals)
-    num_nc = length(noncontrollables)
-    num_contracts = length(contracts)
     K = length(tau_k)
 
     penalty = _inflow_penalty_expr(m, method, tau_k, scaling)
@@ -431,27 +339,8 @@ function add_system_objective!(
                 for n in 1:num_hydros
             ) +
             tau_k[k] *
-            sum(hydros[n].spillage_penalty * m[SPILLAGE][n, k] for n in 1:num_hydros) +
-            tau_k[k] * (
-                if num_nc > 0
-                    sum(
-                        noncontrollables[n].curtailment_cost * m[NC_CURTAILMENT][n, k] for
-                        n in 1:num_nc
-                    )
-                else
-                    0.0
-                end
-            ) +
-            tau_k[k] * (
-                if num_contracts > 0
-                    sum(
-                        contracts[n].price_per_mwh * m[CONTRACT_DISPATCH][n, k] for
-                        n in 1:num_contracts
-                    )
-                else
-                    0.0
-                end
-            ) for k in 1:K
+            sum(hydros[n].spillage_penalty * m[SPILLAGE][n, k] for n in 1:num_hydros) for
+            k in 1:K
         ) + penalty
     )
 end
@@ -836,21 +725,10 @@ function __generate_subproblem_builder(
     hydros_entities = get_hydros_entities(system)
     thermals_entities = get_thermals_entities(system)
     lines_entities = get_lines_entities(system)
-    noncontrollable_entities = get_noncontrollables_entities(system)
-    contracts_entities = get_energycontracts_entities(system)
-    pumping_entities = get_pumpingstations_entities(system)
     bus_ids = get_ids(get_buses(system))
-    hydro_ids = get_ids(get_hydros(system))
 
     hydro_bus_map = _build_bus_index_map(hydros_entities, bus_ids, :bus_id)
     thermal_bus_map = _build_bus_index_map(thermals_entities, bus_ids, :bus_id)
-    noncontrollable_bus_map = _build_bus_index_map(
-        noncontrollable_entities, bus_ids, :bus_id
-    )
-    contract_bus_map = _build_bus_index_map(contracts_entities, bus_ids, :bus_id)
-    pumping_bus_map = _build_bus_index_map(pumping_entities, bus_ids, :bus_id)
-    pump_source_map = _build_bus_index_map(pumping_entities, hydro_ids, :source_hydro_id)
-    pump_dest_map = _build_bus_index_map(pumping_entities, hydro_ids, :destination_hydro_id)
     line_target_map = _build_bus_index_map(lines_entities, bus_ids, :target_bus_id)
     line_source_map = _build_bus_index_map(lines_entities, bus_ids, :source_bus_id)
 
@@ -876,9 +754,7 @@ function __generate_subproblem_builder(
         tau_k = get_block_durations(stage_block_config, tau)
 
         add_system_elements!(m, system, K)
-        add_hydro_balance!(
-            m, get_hydros(system), pump_source_map, pump_dest_map, block_mode, tau_k, K
-        )
+        add_hydro_balance!(m, get_hydros(system), block_mode, tau_k, K)
 
         process = get_stochastic_process(scenarios.inflow, markov_state)
         season = __node2season(stage, size(process, 2), initial_season)
@@ -893,13 +769,8 @@ function __generate_subproblem_builder(
             K,
             hydro_bus_map,
             thermal_bus_map,
-            noncontrollable_bus_map,
             line_target_map,
             line_source_map,
-            contract_bus_map,
-            contracts_entities,
-            pumping_bus_map,
-            pumping_entities,
         )
 
         Ω_node = vec(SAA[markov_state][stage])
@@ -924,13 +795,8 @@ function __add_load_balance!(
     num_blocks::Int,
     hydro_bus_map::Dict{Int,Vector{Int}},
     thermal_bus_map::Dict{Int,Vector{Int}},
-    noncontrollable_bus_map::Dict{Int,Vector{Int}},
     line_target_map::Dict{Int,Vector{Int}},
     line_source_map::Dict{Int,Vector{Int}},
-    contract_bus_map::Dict{Int,Vector{Int}},
-    contracts_entities::Vector{EnergyContract},
-    pumping_bus_map::Dict{Int,Vector{Int}},
-    pumping_entities::Vector{PumpingStation},
 )
     num_buses = length(bus_ids)
 
@@ -939,14 +805,6 @@ function __add_load_balance!(
         [n = 1:num_buses, k = 1:num_blocks],
         sum(m[HYDRO_GENERATION][j, k] for j in get(hydro_bus_map, n, Int[])) +
         sum(m[THERMAL_GENERATION][j, k] for j in get(thermal_bus_map, n, Int[])) +
-        sum(m[NC_GENERATION][j, k] for j in get(noncontrollable_bus_map, n, Int[])) +
-        sum(
-            if contracts_entities[j].contract_type == "import"
-                m[CONTRACT_DISPATCH][j, k]
-            else
-                -m[CONTRACT_DISPATCH][j, k]
-            end for j in get(contract_bus_map, n, Int[])
-        ) - sum(m[PUMP_POWER][j, k] for j in get(pumping_bus_map, n, Int[])) +
         sum(
             m[DIRECT_EXCHANGE][j, k] - m[REVERSE_EXCHANGE][j, k] for
             j in get(line_target_map, n, Int[])
