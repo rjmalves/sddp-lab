@@ -7,9 +7,6 @@
 
 ## New features
 
-- **Non-controllable generation**: renewable generators (solar, wind) with per-stage uncertainty profiles and curtailment variables
-- **Energy contracts**: bilateral energy contracts with min/max dispatch bounds and price-per-MWh objective contribution
-- **Pumping stations**: pumped-storage units with coupled power/flow constraints and upstream/downstream hydro linkage
 - **Inner load blocks**: within-stage load block representation for intraday demand resolution
 - **Stage time duration**: configurable stage duration (hours) enabling flexible time horizons beyond monthly resolution
 - **Inflow non-negativity**: optional truncation of negative inflow noise samples, configurable per engine
@@ -27,14 +24,13 @@
 - Adds Julia formatter check to CI (Blue style via JuliaFormatter.jl)
 - Adds full API reference documentation via Documenter.jl (docstrings on 80+ exported symbols)
 - Adds Configuration Reference and Tutorial pages to documentation site
-- Adds five tutorial examples with runnable configurations
+- Adds three tutorial examples with runnable configurations
 - Switches CI matrix to Linux-only with `fail-fast: false` (mirrors SDDP.jl upstream)
 
 ## Fixes
 
 - `get_input_module` now raises a descriptive error instead of `MethodError` on missing module type
 - `save_simulation`, `save_policy`, `save_validation` restore working directory on exception via `try/finally`
-- `EnergyContract.get_params` key corrected from `"contract_type"` to `"type"` to match input schema
 
 # v2.0.0
 

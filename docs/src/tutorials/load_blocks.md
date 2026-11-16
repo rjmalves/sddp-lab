@@ -102,4 +102,3 @@ The cost-to-go function accounts for the block-weighted water consumption, so th
 - Switch to `"chronological"` mode and observe the creation of `BLOCK_STORAGE` intermediate variables
 - Add a 4th block ("night") and redistribute durations across the four blocks
 - Increase peak demand to 300 MW to force deficit in peak hours
-- Add a non-controllable (solar) that produces only during shoulder/peak blocks

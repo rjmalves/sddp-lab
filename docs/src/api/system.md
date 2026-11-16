@@ -22,12 +22,6 @@ get_thermals
 get_thermals_entities
 get_lines
 get_lines_entities
-get_noncontrollables
-get_noncontrollables_entities
-get_energycontracts
-get_energycontracts_entities
-get_pumpingstations
-get_pumpingstations_entities
 ```
 
 ## Entity Collections
@@ -37,9 +31,6 @@ Buses
 Lines
 Hydros
 Thermals
-NonControllables
-EnergyContracts
-PumpingStations
 ```
 
 ## Individual Entities
@@ -49,9 +40,6 @@ Bus
 Line
 Hydro
 Thermal
-NonControllable
-EnergyContract
-PumpingStation
 ```
 
 ## Cascade Topology
