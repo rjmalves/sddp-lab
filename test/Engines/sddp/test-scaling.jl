@@ -188,18 +188,7 @@ using Graphs
         thermals = System.Thermals([
             System.Thermal(1, "thermal1", 1, 0.0, 100.0, 10.0, Ref(buses.entities[1]))
         ])
-        noncontrollables = System.NonControllables(System.NonControllable[])
-        energycontracts = System.EnergyContracts(System.EnergyContract[])
-        pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(
-            buses,
-            lines,
-            hydros,
-            thermals,
-            noncontrollables,
-            energycontracts,
-            pumpingstations,
-        )
+        system = System.SystemData(buses, lines, hydros, thermals)
 
         config = Engines.compute_scaling_factors(system)
 
@@ -228,18 +217,7 @@ using Graphs
         thermals = System.Thermals([
             System.Thermal(1, "thermal1", 1, 0.0, 200.0, 5.0, Ref(buses.entities[1]))
         ])
-        noncontrollables = System.NonControllables(System.NonControllable[])
-        energycontracts = System.EnergyContracts(System.EnergyContract[])
-        pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(
-            buses,
-            lines,
-            hydros,
-            thermals,
-            noncontrollables,
-            energycontracts,
-            pumpingstations,
-        )
+        system = System.SystemData(buses, lines, hydros, thermals)
 
         config = Engines.compute_scaling_factors(system)
 
@@ -279,18 +257,7 @@ using Graphs
             Graphs.DiGraph(1),
         )
         thermals = System.Thermals(System.Thermal[])
-        noncontrollables = System.NonControllables(System.NonControllable[])
-        energycontracts = System.EnergyContracts(System.EnergyContract[])
-        pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(
-            buses,
-            lines,
-            hydros,
-            thermals,
-            noncontrollables,
-            energycontracts,
-            pumpingstations,
-        )
+        system = System.SystemData(buses, lines, hydros, thermals)
 
         config = Engines.compute_scaling_factors(system)
 
@@ -327,18 +294,7 @@ using Graphs
             System.Thermal(1, "thermal1", 1, 0.0, 15.0, 5.0, Ref(buses.entities[1])),
             System.Thermal(2, "thermal2", 1, 0.0, 15.0, 10.0, Ref(buses.entities[1])),
         ])
-        noncontrollables = System.NonControllables(System.NonControllable[])
-        energycontracts = System.EnergyContracts(System.EnergyContract[])
-        pumpingstations = System.PumpingStations(System.PumpingStation[])
-        system = System.SystemData(
-            buses,
-            lines,
-            hydros,
-            thermals,
-            noncontrollables,
-            energycontracts,
-            pumpingstations,
-        )
+        system = System.SystemData(buses, lines, hydros, thermals)
 
         config = Engines.compute_scaling_factors(system)
         scaled = Engines.apply_scaling(system, config)

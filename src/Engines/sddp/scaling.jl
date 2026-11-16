@@ -158,54 +158,5 @@ function apply_scaling(system::SystemData, config::ScalingConfig)::SystemData
     ]
     new_thermals = Thermals(scaled_thermals)
 
-    scaled_noncontrollables = NonControllable[
-        NonControllable(
-            nc.id,
-            nc.name,
-            nc.bus_id,
-            nc.max_generation / s_hgen,
-            nc.curtailment_cost / s_cost,
-            Ref(scaled_buses[findfirst(b -> b.id == nc.bus_id, scaled_buses)]),
-        ) for nc in system.noncontrollables.entities
-    ]
-    new_noncontrollables = NonControllables(scaled_noncontrollables)
-
-    scaled_energycontracts = EnergyContract[
-        EnergyContract(
-            c.id,
-            c.name,
-            c.bus_id,
-            c.contract_type,
-            c.price_per_mwh / s_cost,
-            c.min_mw / s_hgen,
-            c.max_mw / s_hgen,
-            Ref(scaled_buses[findfirst(b -> b.id == c.bus_id, scaled_buses)]),
-        ) for c in system.energycontracts.entities
-    ]
-    new_energycontracts = EnergyContracts(scaled_energycontracts)
-
-    scaled_pumpingstations = PumpingStation[
-        PumpingStation(
-            ps.id,
-            ps.name,
-            ps.bus_id,
-            ps.source_hydro_id,
-            ps.destination_hydro_id,
-            ps.consumption_mw_per_m3s * s_flow / s_hgen,
-            ps.min_m3s / s_flow,
-            ps.max_m3s / s_flow,
-            Ref(scaled_buses[findfirst(b -> b.id == ps.bus_id, scaled_buses)]),
-        ) for ps in system.pumpingstations.entities
-    ]
-    new_pumpingstations = PumpingStations(scaled_pumpingstations)
-
-    return SystemData(
-        new_buses,
-        new_lines,
-        new_hydros,
-        new_thermals,
-        new_noncontrollables,
-        new_energycontracts,
-        new_pumpingstations,
-    )
+    return SystemData(new_buses, new_lines, new_hydros, new_thermals)
 end

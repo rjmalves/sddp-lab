@@ -85,12 +85,7 @@ function _make_system(;
     end
     hydros = System.Hydros(hydro_entities, g)
     lines = System.Lines(System.Line[])
-    noncontrollables = System.NonControllables(System.NonControllable[])
-    energycontracts = System.EnergyContracts(System.EnergyContract[])
-    pumpingstations = System.PumpingStations(System.PumpingStation[])
-    return System.SystemData(
-        buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations
-    )
+    return System.SystemData(buses, lines, hydros, thermals)
 end
 
 # =====================================================================================
