@@ -18,8 +18,7 @@ parallelism strategies, etc.) without changing any Julia code.
   loaded at runtime.
 - **Full pipeline**: `read_study → build → train → simulate → save` with a
   single consistent interface.
-- **Rich system model**: Hydro cascades, thermals, non-controllable renewables,
-  energy contracts, pumping stations, and transmission lines.
+- **Rich system model**: Hydro cascades, thermals, and transmission lines.
 - **Flexible stochastic processes**: Naive (copula-based) and AR(p) inflow
   models.
 - **Experiment management**: Run multiple configurations, sensitivity sweeps,

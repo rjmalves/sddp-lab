@@ -33,8 +33,6 @@ makedocs(;
             "Experiments" => "configuration/experiments.md",
         ],
         "Tutorials" => [
-            "Renewable Generation & Contracts" => "tutorials/renewable_contracts.md",
-            "Pumped Storage" => "tutorials/pumped_storage.md",
             "Inner Load Blocks" => "tutorials/load_blocks.md",
             "Experiments & Sensitivity" => "tutorials/experiment_sweep.md",
         ],

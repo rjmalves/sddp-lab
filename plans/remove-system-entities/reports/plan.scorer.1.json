@@ -1,0 +1,22 @@
+{
+  "schema": "spec-score/v1",
+  "kind": "scorer",
+  "scope": "plan",
+  "attempt": 1,
+  "at": "2026-11-10T16:16:54Z",
+  "agent": "spec-scorer",
+  "status": "complete",
+  "clarification": null,
+  "mode": "design",
+  "subject": "/home/carlosribeiro/git/sddp-lab/plans/remove-system-entities",
+  "score": 1.0,
+  "breakdown": {
+    "traceability": 1.0,
+    "options_considered": 1.0,
+    "council_coverage": 1.0,
+    "durability": 1.0,
+    "proportionality": 1.0
+  },
+  "rubric": "design/v1",
+  "summary": "Design Fitness 1.00 (gate 0.80, PASS), all five dimensions applicable, divisor 1.00. 4/4 accepted decisions cite requirement ids and 3/3 implements: tickets resolve to declared ids; 4/4 accepted decisions carry 2+ options, reversibility and rework_trigger; 2/2 briefs and 2/2 sign-off verdicts on disk; the only critique finding (F1-001, UNDER, major) is ACKNOWLEDGED with the revision log naming superseding ADR-005, so it is resolved; no OVER finding recorded."
+}

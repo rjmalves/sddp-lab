@@ -8,15 +8,7 @@ function SystemData(d::Dict{String,Any}, e::CompositeException)
     valid_consistency = valid_content && __validate_system_consistency!(d, e)
 
     return if valid_consistency
-        SystemData(
-            d["buses"],
-            d["lines"],
-            d["hydros"],
-            d["thermals"],
-            d["noncontrollables"],
-            d["energycontracts"],
-            d["pumpingstations"],
-        )
+        SystemData(d["buses"], d["lines"], d["hydros"], d["thermals"])
     else
         nothing
     end
@@ -109,64 +101,4 @@ Return the vector of [`Line`](@ref) entities from a [`SystemData`](@ref) instanc
 """
 function get_lines_entities(s::SystemData)::Vector{Line}
     return s.lines.entities
-end
-
-"""
-    get_noncontrollables(s) -> NonControllables
-
-Return the [`NonControllables`](@ref) collection from a [`SystemData`](@ref)
-instance.
-"""
-function get_noncontrollables(s::SystemData)::NonControllables
-    return s.noncontrollables
-end
-
-"""
-    get_noncontrollables_entities(s) -> Vector{NonControllable}
-
-Return the vector of [`NonControllable`](@ref) entities from a
-[`SystemData`](@ref) instance.
-"""
-function get_noncontrollables_entities(s::SystemData)::Vector{NonControllable}
-    return s.noncontrollables.entities
-end
-
-"""
-    get_energycontracts(s) -> EnergyContracts
-
-Return the [`EnergyContracts`](@ref) collection from a [`SystemData`](@ref)
-instance.
-"""
-function get_energycontracts(s::SystemData)::EnergyContracts
-    return s.energycontracts
-end
-
-"""
-    get_energycontracts_entities(s) -> Vector{EnergyContract}
-
-Return the vector of [`EnergyContract`](@ref) entities from a
-[`SystemData`](@ref) instance.
-"""
-function get_energycontracts_entities(s::SystemData)::Vector{EnergyContract}
-    return s.energycontracts.entities
-end
-
-"""
-    get_pumpingstations(s) -> PumpingStations
-
-Return the [`PumpingStations`](@ref) collection from a [`SystemData`](@ref)
-instance.
-"""
-function get_pumpingstations(s::SystemData)::PumpingStations
-    return s.pumpingstations
-end
-
-"""
-    get_pumpingstations_entities(s) -> Vector{PumpingStation}
-
-Return the vector of [`PumpingStation`](@ref) entities from a
-[`SystemData`](@ref) instance.
-"""
-function get_pumpingstations_entities(s::SystemData)::Vector{PumpingStation}
-    return s.pumpingstations.entities
 end

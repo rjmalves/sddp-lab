@@ -34,31 +34,6 @@ Symbol key for thermal plant generation cost (currency).
 THERMAL_GENERATION_COST = Symbol("THERMAL_GENERATION_COST")
 
 """
-Symbol key for non-controllable (renewable) generation dispatch (MW).
-"""
-NC_GENERATION = Symbol("NC_GENERATION")
-
-"""
-Symbol key for non-controllable generation curtailment (MW).
-"""
-NC_CURTAILMENT = Symbol("NC_CURTAILMENT")
-
-"""
-Symbol key for energy contract dispatch (MW), positive = import.
-"""
-CONTRACT_DISPATCH = Symbol("CONTRACT_DISPATCH")
-
-"""
-Symbol key for pumped flow rate through a pumping station (m³/s).
-"""
-PUMPED_FLOW = Symbol("PUMPED_FLOW")
-
-"""
-Symbol key for power consumed by a pumping station (MW).
-"""
-PUMP_POWER = Symbol("PUMP_POWER")
-
-"""
 Symbol key for stored volume in a hydro reservoir (hm³).
 """
 STORED_VOLUME = Symbol("STORAGE")

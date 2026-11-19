@@ -1,9 +1,8 @@
 # System Configuration
 
 The system configuration defines the physical power system: buses (load nodes),
-transmission lines, hydro plants, thermal plants, non-controllable generators,
-energy contracts, and pumping stations. It is specified in `system.jsonc` within
-the study's `data/` directory.
+transmission lines, hydro plants, and thermal plants. It is specified in
+`system.jsonc` within the study's `data/` directory.
 
 ## Top-Level Structure
 
@@ -13,11 +12,7 @@ the study's `data/` directory.
     "buses": { ... },
     "lines": { ... },
     "hydros": { ... },
-    "thermals": { ... },
-    // Optional sections (omit if not needed)
-    "noncontrollables": { ... },
-    "energycontracts": { ... },
-    "pumpingstations": { ... }
+    "thermals": { ... }
 }
 ```
 
@@ -223,219 +218,6 @@ id,name,bus_id,min_generation,max_generation,cost
 2,"UTE2",1,0.0,15.0,10.0
 ```
 
-## Non-Controllable Generation
-
-Non-controllable generators represent renewable or must-run generation sources
-(e.g., wind, solar, run-of-river). They inject power at their maximum capacity
-by default; the optimizer may curtail generation at a specified cost.
-
-### CSV Columns
-
-| Column             | Type    | Required | Constraints             | Description                                  |
-| ------------------ | ------- | -------- | ----------------------- | -------------------------------------------- |
-| `id`               | Integer | Yes      | > 0                     | Unique identifier                            |
-| `name`             | String  | Yes      | Non-empty, alphanumeric | Human-readable name                          |
-| `bus_id`           | Integer | Yes      | Valid bus id            | Bus where generation is injected             |
-| `max_generation`   | Real    | Yes      | >= 0                    | Maximum (nameplate) generation (MW)          |
-| `curtailment_cost` | Real    | Yes      | >= 0                    | Cost per MW of curtailed generation (\$/MWh) |
-
-### Constraints
-
-- All `id` values must be unique across non-controllables.
-- All `name` values must be unique across non-controllables.
-- `bus_id` must reference an existing bus.
-
-### Modeling
-
-The non-controllable generator injects up to `max_generation` MW into its bus.
-The SDDP subproblem introduces a curtailment variable bounded by `[0, max_generation]`
-with cost `curtailment_cost` in the objective. This means the optimizer will only
-curtail generation when it is cheaper than alternatives (e.g., when there is
-excess supply).
-
-### Example
-
-**`system.jsonc` (noncontrollables section):**
-
-```jsonc
-{
-  "noncontrollables": {
-    "file": "noncontrollables.csv",
-    "default_values": {
-      "curtailment_cost": 0.0,
-    },
-  },
-}
-```
-
-**`noncontrollables.csv`:**
-
-```csv
-id,name,bus_id,max_generation,curtailment_cost
-1,"WindFarm1",1,50.0,0.5
-2,"Solar1",2,30.0,0.0
-```
-
-!!! note
-This section is optional. If omitted from `system.jsonc`, no non-controllable
-generators are included in the model.
-
-## Energy Contracts
-
-Energy contracts model bilateral purchase (import) or sale (export) agreements at
-a fixed price, subject to minimum and maximum power limits.
-
-### JSONC Structure
-
-Unlike the simpler CSV-only entities, energy contracts use a nested structure in
-the CSV with a `type` field and a `limits` sub-object.
-
-### CSV Columns
-
-| Column          | Type    | Required | Constraints              | Description                         |
-| --------------- | ------- | -------- | ------------------------ | ----------------------------------- |
-| `id`            | Integer | Yes      | > 0                      | Unique contract identifier          |
-| `name`          | String  | Yes      | Non-empty, alphanumeric  | Human-readable name                 |
-| `bus_id`        | Integer | Yes      | Valid bus id             | Bus where the contract is connected |
-| `type`          | String  | Yes      | `"import"` or `"export"` | Contract direction                  |
-| `price_per_mwh` | Real    | Yes      | --                       | Contract price (\$/MWh)             |
-
-Additionally, a `limits` sub-object is required in the JSONC entity definition:
-
-| Field    | Type | Required | Constraints | Description        |
-| -------- | ---- | -------- | ----------- | ------------------ |
-| `min_mw` | Real | Yes      | >= 0        | Minimum power (MW) |
-| `max_mw` | Real | Yes      | >= 0        | Maximum power (MW) |
-
-### Constraints
-
-- All `id` values must be unique across energy contracts.
-- All `name` values must be unique across energy contracts.
-- `bus_id` must reference an existing bus.
-- `type` must be exactly `"import"` or `"export"`.
-- `min_mw <= max_mw`.
-
-### Modeling
-
-- An **import** contract adds generation to the bus at the contract price (a cost
-  in the objective).
-- An **export** contract removes generation from the bus; the contract price appears
-  as negative cost (revenue) in the objective.
-
-### Example
-
-**`system.jsonc` (energycontracts section):**
-
-```jsonc
-{
-  "energycontracts": {
-    "entities": [
-      {
-        "id": 1,
-        "name": "ImportContract1",
-        "bus_id": 1,
-        "type": "import",
-        "price_per_mwh": 120.0,
-        "limits": {
-          "min_mw": 0.0,
-          "max_mw": 50.0,
-        },
-      },
-      {
-        "id": 2,
-        "name": "ExportContract1",
-        "bus_id": 1,
-        "type": "export",
-        "price_per_mwh": 80.0,
-        "limits": {
-          "min_mw": 0.0,
-          "max_mw": 30.0,
-        },
-      },
-    ],
-  },
-}
-```
-
-!!! note
-This section is optional. If omitted from `system.jsonc`, no energy contracts
-are included in the model.
-
-## Pumping Stations
-
-Pumping stations transfer water between two hydro reservoirs at the cost of
-electrical power consumption. They model inter-basin water transfers and
-pump-storage operations.
-
-### JSONC Structure
-
-Pumping stations reference two hydro plants (source and destination) and include
-a `flow` sub-object for flow limits.
-
-### Fields
-
-| Field                    | Type    | Required | Constraints             | Description                                        |
-| ------------------------ | ------- | -------- | ----------------------- | -------------------------------------------------- |
-| `id`                     | Integer | Yes      | > 0                     | Unique pumping station identifier                  |
-| `name`                   | String  | Yes      | Non-empty, alphanumeric | Human-readable name                                |
-| `bus_id`                 | Integer | Yes      | Valid bus id            | Bus where power is consumed                        |
-| `source_hydro_id`        | Integer | Yes      | Valid hydro id          | Hydro plant water is pumped from                   |
-| `destination_hydro_id`   | Integer | Yes      | Valid hydro id          | Hydro plant water is pumped to                     |
-| `consumption_mw_per_m3s` | Real    | Yes      | > 0                     | Power consumed per unit of pumped flow (MW/(m3/s)) |
-
-Additionally, a `flow` sub-object is required:
-
-| Field     | Type | Required | Constraints | Description                 |
-| --------- | ---- | -------- | ----------- | --------------------------- |
-| `min_m3s` | Real | Yes      | >= 0        | Minimum pumping flow (m3/s) |
-| `max_m3s` | Real | Yes      | >= 0        | Maximum pumping flow (m3/s) |
-
-### Constraints
-
-- All `id` values must be unique across pumping stations.
-- All `name` values must be unique across pumping stations.
-- `bus_id` must reference an existing bus.
-- Both `source_hydro_id` and `destination_hydro_id` must reference existing hydro ids.
-- `source_hydro_id` and `destination_hydro_id` must be different.
-- `min_m3s <= max_m3s`.
-
-### Modeling
-
-When a pumping station operates at flow rate `q` (m3/s), it:
-
-1. **Removes** `q` from the source hydro's reservoir balance (equivalent to outflow).
-2. **Adds** `q` to the destination hydro's reservoir balance (equivalent to inflow).
-3. **Consumes** `q * consumption_mw_per_m3s` MW of power from the connected bus.
-
-### Example
-
-**`system.jsonc` (pumpingstations section):**
-
-```jsonc
-{
-  "pumpingstations": {
-    "entities": [
-      {
-        "id": 1,
-        "name": "Pump1",
-        "bus_id": 1,
-        "source_hydro_id": 2,
-        "destination_hydro_id": 1,
-        "consumption_mw_per_m3s": 0.5,
-        "flow": {
-          "min_m3s": 0.0,
-          "max_m3s": 20.0,
-        },
-      },
-    ],
-  },
-}
-```
-
-!!! note
-This section is optional. If omitted from `system.jsonc`, no pumping stations
-are included in the model.
-
 ## Complete System Example
 
 A complete `system.jsonc` combining all entity types:
@@ -465,37 +247,6 @@ A complete `system.jsonc` combining all entity types:
   "thermals": {
     "file": "thermals.csv",
     "default_values": {},
-  },
-  "noncontrollables": {
-    "file": "noncontrollables.csv",
-    "default_values": {
-      "curtailment_cost": 0.0,
-    },
-  },
-  "energycontracts": {
-    "entities": [
-      {
-        "id": 1,
-        "name": "ImportContract",
-        "bus_id": 1,
-        "type": "import",
-        "price_per_mwh": 120.0,
-        "limits": { "min_mw": 0.0, "max_mw": 50.0 },
-      },
-    ],
-  },
-  "pumpingstations": {
-    "entities": [
-      {
-        "id": 1,
-        "name": "Pump1",
-        "bus_id": 1,
-        "source_hydro_id": 2,
-        "destination_hydro_id": 1,
-        "consumption_mw_per_m3s": 0.5,
-        "flow": { "min_m3s": 0.0, "max_m3s": 20.0 },
-      },
-    ],
   },
 }
 ```

@@ -138,95 +138,6 @@ struct Thermal <: SystemEntity
 end
 
 """
-    NonControllable <: SystemEntity
-
-Represents a non-controllable (renewable) generation source such as wind or
-solar PV. The plant has a time-varying maximum generation profile and a
-curtailment penalty when its output is reduced below available capacity.
-
-# Fields
-
-  - `id`: Unique integer identifier.
-  - `name`: Human-readable name.
-  - `bus_id`: ID of the bus to which this source is connected.
-  - `max_generation`: Installed capacity / maximum available generation (MW).
-  - `curtailment_cost`: Penalty cost per MW of curtailed generation (currency/MWh).
-  - `bus`: Reference to the connected [`Bus`](@ref).
-
-See also: [`NonControllables`](@ref), [`get_noncontrollables`](@ref)
-"""
-struct NonControllable <: SystemEntity
-    id::Integer
-    name::String
-    bus_id::Integer
-    max_generation::Real
-    curtailment_cost::Real
-    # Reference to other system elements
-    bus::Ref{Bus}
-end
-
-"""
-    EnergyContract <: SystemEntity
-
-Represents a bilateral energy contract for importing or exporting power.
-
-# Fields
-
-  - `id`: Unique integer identifier.
-  - `name`: Human-readable name.
-  - `bus_id`: ID of the bus associated with this contract.
-  - `contract_type`: `"import"` (power received) or `"export"` (power delivered).
-  - `price_per_mwh`: Contract price (currency/MWh); positive = cost for imports.
-  - `min_mw`: Minimum contracted power (MW).
-  - `max_mw`: Maximum contracted power (MW).
-  - `bus`: Reference to the connected [`Bus`](@ref).
-
-See also: [`EnergyContracts`](@ref), [`get_energycontracts`](@ref)
-"""
-struct EnergyContract <: SystemEntity
-    id::Integer
-    name::String
-    bus_id::Integer
-    contract_type::String   # "import" or "export"
-    price_per_mwh::Real
-    min_mw::Real
-    max_mw::Real
-    bus::Ref{Bus}
-end
-
-"""
-    PumpingStation <: SystemEntity
-
-Represents a pumped-storage facility that transfers water from a source
-reservoir to a destination reservoir, consuming electrical power.
-
-# Fields
-
-  - `id`: Unique integer identifier.
-  - `name`: Human-readable name.
-  - `bus_id`: ID of the bus where power is consumed.
-  - `source_hydro_id`: ID of the hydro reservoir from which water is pumped.
-  - `destination_hydro_id`: ID of the hydro reservoir to which water is pumped.
-  - `consumption_mw_per_m3s`: Power consumed per unit pumped flow (MW·s/m³).
-  - `min_m3s`: Minimum pumping flow rate (m³/s).
-  - `max_m3s`: Maximum pumping flow rate (m³/s).
-  - `bus`: Reference to the connected [`Bus`](@ref).
-
-See also: [`PumpingStations`](@ref), [`get_pumpingstations`](@ref)
-"""
-struct PumpingStation <: SystemEntity
-    id::Integer
-    name::String
-    bus_id::Integer
-    source_hydro_id::Integer
-    destination_hydro_id::Integer
-    consumption_mw_per_m3s::Real
-    min_m3s::Real
-    max_m3s::Real
-    bus::Ref{Bus}
-end
-
-"""
     SystemEntitySet
 
 Abstract base type for collections of [`SystemEntity`](@ref) objects. Provides
@@ -299,51 +210,6 @@ struct Thermals <: SystemEntitySet
 end
 
 """
-    NonControllables <: SystemEntitySet
-
-Collection of all [`NonControllable`](@ref) (renewable) generation entities.
-
-# Fields
-
-  - `entities`: Vector of [`NonControllable`](@ref) objects.
-
-See also: [`get_noncontrollables`](@ref), [`get_noncontrollables_entities`](@ref)
-"""
-struct NonControllables <: SystemEntitySet
-    entities::Vector{NonControllable}
-end
-
-"""
-    EnergyContracts <: SystemEntitySet
-
-Collection of all [`EnergyContract`](@ref) entities in the system.
-
-# Fields
-
-  - `entities`: Vector of [`EnergyContract`](@ref) objects.
-
-See also: [`get_energycontracts`](@ref), [`get_energycontracts_entities`](@ref)
-"""
-struct EnergyContracts <: SystemEntitySet
-    entities::Vector{EnergyContract}
-end
-
-"""
-    PumpingStations <: SystemEntitySet
-
-Collection of all [`PumpingStation`](@ref) entities in the system.
-
-# Fields
-
-  - `entities`: Vector of [`PumpingStation`](@ref) objects.
-
-See also: [`get_pumpingstations`](@ref), [`get_pumpingstations_entities`](@ref)
-"""
-struct PumpingStations <: SystemEntitySet
-    entities::Vector{PumpingStation}
-end
-
-"""
     SystemData <: InputModule
 
 Root container for all power system topology and component data. Produced by
@@ -355,9 +221,6 @@ parsing the `system.jsonc` file referenced in `main.jsonc`.
   - `lines`: [`Lines`](@ref) collection.
   - `hydros`: [`Hydros`](@ref) collection (includes cascade topology).
   - `thermals`: [`Thermals`](@ref) collection.
-  - `noncontrollables`: [`NonControllables`](@ref) collection.
-  - `energycontracts`: [`EnergyContracts`](@ref) collection.
-  - `pumpingstations`: [`PumpingStations`](@ref) collection.
 
 See also: [`get_system`](@ref), [`get_buses`](@ref), [`get_hydros`](@ref)
 """
@@ -366,9 +229,6 @@ struct SystemData <: InputModule
     lines::Lines
     hydros::Hydros
     thermals::Thermals
-    noncontrollables::NonControllables
-    energycontracts::EnergyContracts
-    pumpingstations::PumpingStations
 end
 
 # GENERAL METHODS ------------------------------------------------------------------------
@@ -490,15 +350,6 @@ include("hydro.jl")
 include("thermal-validators.jl")
 include("thermal.jl")
 
-include("noncontrollable-validators.jl")
-include("noncontrollable.jl")
-
-include("energycontract-validators.jl")
-include("energycontract.jl")
-
-include("pumpingstation-validators.jl")
-include("pumpingstation.jl")
-
 include("systemdata-validators.jl")
 include("systemdata.jl")
 
@@ -511,12 +362,6 @@ export SystemData,
     Buses,
     Thermal,
     Thermals,
-    NonControllable,
-    NonControllables,
-    EnergyContract,
-    EnergyContracts,
-    PumpingStation,
-    PumpingStations,
     Line,
     Lines,
     get_system,
@@ -526,12 +371,6 @@ export SystemData,
     get_hydros_entities,
     get_thermals,
     get_thermals_entities,
-    get_noncontrollables,
-    get_noncontrollables_entities,
-    get_energycontracts,
-    get_energycontracts_entities,
-    get_pumpingstations,
-    get_pumpingstations_entities,
     get_lines,
     get_lines_entities,
     get_ids,

@@ -6,26 +6,6 @@ using Test
 examples_root = joinpath(@__DIR__, "..", "example")
 
 @testset "tutorial-examples" begin
-    @testset "renewable_contracts" begin
-        @suppress begin
-            study = SDDPlab.read_study(joinpath(examples_root, "renewable_contracts"))
-            model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.train(study, model)
-            SDDPlab.simulate(study, model)
-        end
-        @test true
-    end
-
-    @testset "pumped_storage" begin
-        @suppress begin
-            study = SDDPlab.read_study(joinpath(examples_root, "pumped_storage"))
-            model = SDDPlab.build(study, HiGHS.Optimizer)
-            SDDPlab.train(study, model)
-            SDDPlab.simulate(study, model)
-        end
-        @test true
-    end
-
     @testset "load_blocks" begin
         @suppress begin
             study = SDDPlab.read_study(joinpath(examples_root, "load_blocks"))

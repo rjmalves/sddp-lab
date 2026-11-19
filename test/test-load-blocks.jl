@@ -85,12 +85,7 @@ function _make_system(;
     end
     hydros = System.Hydros(hydro_entities, g)
     lines = System.Lines(System.Line[])
-    noncontrollables = System.NonControllables(System.NonControllable[])
-    energycontracts = System.EnergyContracts(System.EnergyContract[])
-    pumpingstations = System.PumpingStations(System.PumpingStation[])
-    return System.SystemData(
-        buses, lines, hydros, thermals, noncontrollables, energycontracts, pumpingstations
-    )
+    return System.SystemData(buses, lines, hydros, thermals)
 end
 
 # =====================================================================================
@@ -345,13 +340,8 @@ end
             # LOAD_BALANCE[n, k] for n in 1:num_buses, k in 1:num_blocks
             hydro_bus_map = Dict{Int,Vector{Int}}(1 => [1], 2 => [2])
             thermal_bus_map = Dict{Int,Vector{Int}}(1 => [1], 2 => [2])
-            nc_bus_map = Dict{Int,Vector{Int}}()
             line_target_map = Dict{Int,Vector{Int}}()
             line_source_map = Dict{Int,Vector{Int}}()
-            contract_bus_map = Dict{Int,Vector{Int}}()
-            contracts = System.EnergyContract[]
-            pumping_bus_map = Dict{Int,Vector{Int}}()
-            pumping_entities = System.PumpingStation[]
 
             # Create a simple ScenariosData for the load balance
             # We need the get_load function which requires ScenariosData.
@@ -386,16 +376,8 @@ end
             stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
-            pump_source_map = Dict{Int,Vector{Int}}()
-            pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_parallel!(
-                sp,
-                System.get_hydros(system),
-                pump_source_map,
-                pump_dest_map,
-                zeta,
-                w_k,
-                num_blocks,
+                sp, System.get_hydros(system), zeta, w_k, num_blocks
             )
         end
 
@@ -424,16 +406,8 @@ end
             stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
-            pump_source_map = Dict{Int,Vector{Int}}()
-            pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_chronological!(
-                sp,
-                System.get_hydros(system),
-                pump_source_map,
-                pump_dest_map,
-                zeta_k,
-                w_k,
-                num_blocks,
+                sp, System.get_hydros(system), zeta_k, w_k, num_blocks
             )
         end
 
@@ -470,16 +444,8 @@ end
             stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
-            pump_source_map = Dict{Int,Vector{Int}}()
-            pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance_chronological!(
-                sp,
-                System.get_hydros(system),
-                pump_source_map,
-                pump_dest_map,
-                zeta_k,
-                w_k,
-                num_blocks,
+                sp, System.get_hydros(system), zeta_k, w_k, num_blocks
             )
         end
 
@@ -506,16 +472,8 @@ end
             stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
-            pump_source_map = Dict{Int,Vector{Int}}()
-            pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance!(
-                sp,
-                System.get_hydros(system),
-                pump_source_map,
-                pump_dest_map,
-                :parallel,
-                tau_k,
-                num_blocks,
+                sp, System.get_hydros(system), :parallel, tau_k, num_blocks
             )
         end
 
@@ -535,16 +493,8 @@ end
             stages = 1, lower_bound = 0.0, optimizer = HiGHS.Optimizer
         ) do sp, t
             Engines.add_system_elements!(sp, System.get_hydros(system), num_blocks)
-            pump_source_map = Dict{Int,Vector{Int}}()
-            pump_dest_map = Dict{Int,Vector{Int}}()
             Engines.add_hydro_balance!(
-                sp,
-                System.get_hydros(system),
-                pump_source_map,
-                pump_dest_map,
-                :chronological,
-                tau_k,
-                num_blocks,
+                sp, System.get_hydros(system), :chronological, tau_k, num_blocks
             )
         end
 

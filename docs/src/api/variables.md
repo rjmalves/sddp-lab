@@ -28,26 +28,6 @@ THERMAL_GENERATION
 THERMAL_GENERATION_COST
 ```
 
-### Non-Controllable Generation
-
-```@docs
-NC_GENERATION
-NC_CURTAILMENT
-```
-
-### Energy Contracts
-
-```@docs
-CONTRACT_DISPATCH
-```
-
-### Pumping Stations
-
-```@docs
-PUMPED_FLOW
-PUMP_POWER
-```
-
 ### Hydro Operation
 
 ```@docs
