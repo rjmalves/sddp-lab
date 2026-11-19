@@ -10,8 +10,6 @@
 - **Inner load blocks**: within-stage load block representation for intraday demand resolution
 - **Stage time duration**: configurable stage duration (hours) enabling flexible time horizons beyond monthly resolution
 - **Inflow non-negativity**: optional truncation of negative inflow noise samples, configurable per engine
-- **VAR stochastic process**: Vector AutoRegressive (VAR) model for spatially-correlated inflow scenario generation
-- **Markov chain states**: Markov-switching inflow model with state-conditional distributions
 - **Out-of-sample validation**: Monte Carlo policy evaluation against fresh scenario draws with 95% confidence intervals
 - **Experiment management**: multi-configuration sweep runner with result aggregation and sensitivity analysis
 - **Convergence diagnostics**: gap trajectory, statistical convergence detection, and JSON convergence report

@@ -30,17 +30,5 @@ end
 function __cast_inflow_scenarios_internals_from_files!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    sp_dict = d["inflow"]["stochastic_process"]
-    if __is_multi_process_dict(sp_dict)
-        valid = true
-        for (key, state_dict) in sp_dict
-            if state_dict isa Dict{String,Any} && haskey(state_dict, "params")
-                sub_d = Dict{String,Any}("stochastic_process" => state_dict)
-                valid = valid && __cast_stochastic_process_internals_from_files!(sub_d, e)
-            end
-        end
-        return valid
-    else
-        return __cast_stochastic_process_internals_from_files!(d["inflow"], e)
-    end
+    return __cast_stochastic_process_internals_from_files!(d["inflow"], e)
 end

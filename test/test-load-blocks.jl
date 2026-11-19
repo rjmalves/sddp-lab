@@ -645,7 +645,6 @@ end
             old_scenarios.inflow,
             old_scenarios.load,
             block_configs,
-            old_scenarios.markov_chain,
         )
 
         # Reconstruct inputs with the new scenarios
@@ -726,7 +725,6 @@ end
             old_scenarios.inflow,
             old_scenarios.load,
             block_configs,
-            old_scenarios.markov_chain,
         )
 
         new_files = Lab.InputModule[
@@ -991,7 +989,6 @@ end
             old_scenarios.inflow,
             old_scenarios.load,
             block_configs,
-            old_scenarios.markov_chain,
         )
         new_files = Lab.InputModule[
             f isa Scenarios.ScenariosData ? new_scenarios : f for f in old_files

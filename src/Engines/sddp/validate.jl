@@ -1,15 +1,13 @@
 function generate_saa(
     scenarios::ScenariosData, num_stages::Integer, seed::Integer, branchings::Integer
 )
-    initial_season = scenarios.initial_season
-    result = Dict{Int,Vector{Vector{Vector{Float64}}}}()
-    for (state, process) in scenarios.inflow.stochastic_process
-        state_seed = seed + (state - 1) * 7919  # prime offset ensures per-state independence
-        result[state] = StochasticProcess.generate_saa(
-            process, initial_season, num_stages, branchings, state_seed
-        )
-    end
-    return result
+    return StochasticProcess.generate_saa(
+        get_stochastic_process(scenarios.inflow),
+        scenarios.initial_season,
+        num_stages,
+        branchings,
+        seed,
+    )
 end
 
 function Lab.validate(
@@ -25,19 +23,15 @@ function Lab.validate(
 
     s_flow = get_scaling_factor(scaling, FLOW_SCALE)
     if s_flow != DEFAULT_SCALING_FACTOR
-        for (state, saa_stages) in oos_saa
-            for stage_idx in eachindex(saa_stages)
-                saa_stages[stage_idx] = saa_stages[stage_idx] ./ s_flow
-            end
+        for stage_idx in eachindex(oos_saa)
+            oos_saa[stage_idx] = oos_saa[stage_idx] ./ s_flow
         end
     end
 
     # Always truncate to non-negative: negative inflows are physically meaningless
     # and the validate function does not receive the engine's InflowNonNegativity setting.
-    for (state, saa_stages) in oos_saa
-        for stage_idx in eachindex(saa_stages)
-            saa_stages[stage_idx] = [max.(0.0, omega) for omega in saa_stages[stage_idx]]
-        end
+    for stage_idx in eachindex(oos_saa)
+        oos_saa[stage_idx] = [max.(0.0, omega) for omega in oos_saa[stage_idx]]
     end
 
     try
@@ -50,8 +44,7 @@ function Lab.validate(
         model.policy_graph; use_insample_transition = true
     ) do node
         stage = __extract_stage(node)
-        markov_state = __extract_markov_state(node)
-        oos_stage = oos_saa[markov_state][stage]
+        oos_stage = oos_saa[stage]
         return [
             SDDP.Noise(oos_stage[b], 1.0 / length(oos_stage)) for b in eachindex(oos_stage)
         ]

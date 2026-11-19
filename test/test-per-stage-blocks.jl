@@ -67,7 +67,6 @@ function _pstb_make_scenarios(
         original.inflow,
         original.load,
         block_configs,
-        original.markov_chain,
     )
 end
 
