@@ -13,18 +13,17 @@ import Base: length
 """
     InflowScenarios
 
-Container for inflow stochastic processes, keyed by Markov state index.
-In the non-Markov case (single process), the key is always `1`.
+Container for the inflow stochastic process.
 
 # Fields
 
-  - `stochastic_process`: Dict mapping Markov state index (Int) to an
-    [`AbstractStochasticProcess`](@ref) that generates inflow SAA samples.
+  - `stochastic_process`: [`AbstractStochasticProcess`](@ref) that generates
+    inflow SAA samples.
 
 See also: [`ScenariosData`](@ref), [`get_stochastic_process`](@ref)
 """
 struct InflowScenarios
-    stochastic_process::Dict{Int,AbstractStochasticProcess}
+    stochastic_process::AbstractStochasticProcess
 end
 
 """
@@ -102,9 +101,6 @@ function length(s::LoadScenarios) end
 
 include("blocks.jl")
 
-include("markov-validators.jl")
-include("markov.jl")
-
 """
     ScenariosData <: InputModule
 
@@ -121,7 +117,6 @@ Root container for all scenario-related configuration. Produced by parsing the
   - `load`: `LoadScenarios` with deterministic or block load profiles.
   - `block_configs`: `Dict{Int, BlockConfig}` mapping stage index to per-stage
     [`BlockConfig`](@ref). Stages absent from the dict use `default_block_config()`.
-  - `markov_chain`: [`AbstractMarkovChain`](@ref) for Markov state transitions.
 
 See also: [`get_scenarios`](@ref), [`get_graph`](@ref), [`get_block_config`](@ref)
 """
@@ -133,7 +128,6 @@ struct ScenariosData <: InputModule
     inflow::InflowScenarios
     load::LoadScenarios
     block_configs::Dict{Int,BlockConfig}
-    markov_chain::AbstractMarkovChain
 end
 
 function __get_load(bus_id::Integer, node_id::Integer, load::LoadScenarios)::Real end
@@ -259,46 +253,15 @@ function get_root_node_id(g::Graph)::Integer
 end
 
 """
-    get_markov_chain(scenarios) -> AbstractMarkovChain
-
-Return the [`AbstractMarkovChain`](@ref) from a [`ScenariosData`](@ref) object.
-
-See also: [`AbstractMarkovChain`](@ref), [`has_markov_chain`](@ref)
-"""
-function get_markov_chain(scenarios::ScenariosData)
-    return scenarios.markov_chain
-end
-
-"""
     get_stochastic_process(inflow) -> AbstractStochasticProcess
 
-Return the single [`AbstractStochasticProcess`](@ref) from an
-[`InflowScenarios`](@ref) container (non-Markov mode).
-
-Throws an error if more than one process is present. Use
-`get_stochastic_process(inflow, state)` for Markov mode.
+Return the [`AbstractStochasticProcess`](@ref) from an
+[`InflowScenarios`](@ref) container.
 
 See also: [`InflowScenarios`](@ref), [`AbstractStochasticProcess`](@ref)
 """
 function get_stochastic_process(inflow::InflowScenarios)
-    if length(inflow.stochastic_process) != 1
-        error(
-            "Expected single stochastic process, got $(length(inflow.stochastic_process)) processes. Use get_stochastic_process(inflow, state) for Markov mode.",
-        )
-    end
-    return first(values(inflow.stochastic_process))
-end
-
-"""
-    get_stochastic_process(inflow, state) -> AbstractStochasticProcess
-
-Return the [`AbstractStochasticProcess`](@ref) for Markov state `state` from an
-[`InflowScenarios`](@ref) container.
-
-See also: [`InflowScenarios`](@ref), [`MarkovChainConfig`](@ref)
-"""
-function get_stochastic_process(inflow::InflowScenarios, state::Int)
-    return inflow.stochastic_process[state]
+    return inflow.stochastic_process
 end
 
 include("graph-validators.jl")
@@ -316,12 +279,6 @@ include("scenariosdata.jl")
 export ScenariosData,
     Block,
     BlockConfig,
-    AbstractMarkovChain,
-    NoMarkovChain,
-    MarkovChainConfig,
-    has_markov_chain,
-    num_markov_states,
-    get_markov_chain,
     get_stochastic_process,
     add_uncertainties!,
     generate_saa,

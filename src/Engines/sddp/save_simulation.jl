@@ -249,7 +249,6 @@ function __increase_dataframe!(
     # Build a mapping from simulation step index (1-based) to graph stage number.
     # SDDP.jl records the node_index in each stage dict as :node_index. The graph
     # stage number equals __extract_stage(node_index) = Int(node_index) for integer nodes.
-    # For non-Markov graphs this is just the node ID.
     # This mapping is needed because stage_block_durations is keyed by graph stage number,
     # not by the 1-based simulation step index.
     step_to_graph_stage = Dict{Int,Int}()
@@ -258,14 +257,7 @@ function __increase_dataframe!(
             if step_idx <= length(sim)
                 sd = sim[step_idx]
                 if haskey(sd, :node_index)
-                    node_idx = sd[:node_index]
-                    # For Markov (Tuple{Int,Int}) extract first element as stage
-                    graph_stage = if node_idx isa Tuple
-                        node_idx[1]
-                    else
-                        Int(node_idx)
-                    end
-                    step_to_graph_stage[step_idx] = graph_stage
+                    step_to_graph_stage[step_idx] = Int(sd[:node_index])
                     break
                 end
             end

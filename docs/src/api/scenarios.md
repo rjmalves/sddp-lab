@@ -1,8 +1,8 @@
 # Scenarios
 
 The scenarios module defines the SDDP scenario tree structure, inflow data,
-load profiles, and Markov chain state transitions. All types in this module are
-constructed from your `scenarios.jsonc` configuration file.
+and load profiles. All types in this module are constructed from your
+`scenarios.jsonc` configuration file.
 
 ## Scenarios Container
 
@@ -17,7 +17,6 @@ get_scenarios
 get_graph
 get_load
 get_block_config
-get_markov_chain
 get_stochastic_process
 ```
 
@@ -47,14 +46,4 @@ num_blocks
 get_block_names
 get_block_durations
 get_block_weights
-```
-
-## Markov Chain
-
-```@docs
-AbstractMarkovChain
-NoMarkovChain
-MarkovChainConfig
-has_markov_chain
-num_markov_states
 ```

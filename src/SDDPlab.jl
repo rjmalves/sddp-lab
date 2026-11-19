@@ -68,13 +68,9 @@ using .StochasticProcess:
     AbstractStochasticProcess,
     Naive,
     AutoRegressive,
-    VectorAutoRegressive,
     generate_saa,
     get_ar_parameters,
-    get_ar_scale,
-    get_var_season_parameters,
-    get_var_coefficient_matrix,
-    get_var_scales
+    get_ar_scale
 
 using .System:
     SystemData,
@@ -117,12 +113,6 @@ using .Scenarios:
     ScenariosData,
     Block,
     BlockConfig,
-    AbstractMarkovChain,
-    NoMarkovChain,
-    MarkovChainConfig,
-    has_markov_chain,
-    num_markov_states,
-    get_markov_chain,
     get_stochastic_process,
     get_load,
     get_block_config,
@@ -320,12 +310,6 @@ export SystemData,
 export ScenariosData,
     Block,
     BlockConfig,
-    AbstractMarkovChain,
-    NoMarkovChain,
-    MarkovChainConfig,
-    has_markov_chain,
-    num_markov_states,
-    get_markov_chain,
     get_stochastic_process,
     generate_saa,
     get_load,
@@ -344,15 +328,7 @@ export ScenariosData,
     Edge,
     InflowScenarios
 
-export AbstractStochasticProcess,
-    Naive,
-    AutoRegressive,
-    VectorAutoRegressive,
-    get_ar_parameters,
-    get_ar_scale,
-    get_var_season_parameters,
-    get_var_coefficient_matrix,
-    get_var_scales
+export AbstractStochasticProcess, Naive, AutoRegressive, get_ar_parameters, get_ar_scale
 
 export SDDPEngine,
     SDDPPolicyTaskDefinition,

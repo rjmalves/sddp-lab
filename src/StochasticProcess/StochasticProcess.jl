@@ -14,7 +14,7 @@ import Base: length, size
     AbstractStochasticProcess
 
 Abstract base type for inflow stochastic processes. Concrete subtypes:
-[`Naive`](@ref), [`AutoRegressive`](@ref), [`VectorAutoRegressive`](@ref).
+[`Naive`](@ref), [`AutoRegressive`](@ref).
 
 All subtypes must implement `__generate_saa` (internal) for SAA generation and
 `add_inflow_uncertainty!` for adding uncertainty to SDDP subproblems.
@@ -55,7 +55,7 @@ Uses Julia's default (global) RNG. For reproducible results, use the
 
 A `Vector{Vector{Vector{Float64}}}` with shape `[N][B][num_hydros]`.
 
-See also: [`Naive`](@ref), [`AutoRegressive`](@ref), [`VectorAutoRegressive`](@ref)
+See also: [`Naive`](@ref), [`AutoRegressive`](@ref)
 """
 function generate_saa(
     s::AbstractStochasticProcess, initial_season::Integer, N::Integer, B::Integer
@@ -118,17 +118,10 @@ include("naive.jl")
 include("autoregressive-validators.jl")
 include("autoregressive.jl")
 
-include("vectorautoregressive-validators.jl")
-include("vectorautoregressive.jl")
-
 export Naive,
     AutoRegressive,
-    VectorAutoRegressive,
     get_ar_parameters,
     get_ar_scale,
-    get_var_season_parameters,
-    get_var_coefficient_matrix,
-    get_var_scales,
     AbstractStochasticProcess,
     __cast_stochastic_process_internals_from_files!
 

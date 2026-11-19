@@ -9,10 +9,6 @@ function _node_id_to_string(id::Int)::String
     return string(id)
 end
 
-function _node_id_to_string(id::Tuple{Int,Int})::String
-    return "$(id[1])_$(id[2])"
-end
-
 function Lab.debug(model::SDDPModel, engine::SDDPEngine, path::String)
     config = engine.debug
 
