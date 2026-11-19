@@ -4,25 +4,55 @@
         // Each file defines settings for a specific
         // component of the lab
         "files": {
-            // Settings regarding the tasks that are being
-            // performed in the current run
-            // (policy optimization, simulation, etc.)
-            "tasks": "tasks.jsonc",
-            // Settings regarding the solution algorithm
-            // that is used to solve the optimization problem
-            // (decomposition strategy, discretization, etc.)
-            "algorithm": "algorithm.jsonc",
             // Defines the scenarios that are used to the
             // optimization, including the scenario generation
             // model and its parameters
             "scenarios": "scenarios.jsonc",
             // Defines the system that is being optimized,
-            // with all the hydro plants, thermal plants, 
+            // with all the hydro plants, thermal plants,
             // load buses and exchange lines.
             "system": "system.jsonc",
             // Defines the constraints that are used in some
             // problems, in a generic way
             "constraints": "constraints.jsonc"
+        }
+    },
+    "engine": {
+        "kind": "SDDPEngine",
+        "params": {
+            "policy": {
+                "convergence": {
+                    // Min/Max number of iterations
+                    "min_iterations": 10,
+                    "max_iterations": 256,
+                    // Early stopping criteria and params
+                    "stopping_criteria": {
+                        // IterationLimit | TimeLimit | LowerBoundStability | Statistical | ...
+                        "kind": "IterationLimit",
+                        "params": {
+                            "num_iterations": 256
+                        }
+                    }
+                },
+                "risk_measure": {
+                    // Expectation | WorstCase | AVaR | CVaR | ...
+                    "kind": "Expectation",
+                    // each risk measure might need different params,
+                    // such as the confidence level for AVaR, etc.
+                    "params": {}
+                },
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                }
+            },
+            "simulation": {
+                "num_simulated_series": 2000,
+                "parallel_scheme": {
+                    "kind": "Serial",
+                    "params": {}
+                }
+            }
         }
     }
 }

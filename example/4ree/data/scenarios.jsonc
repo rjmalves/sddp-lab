@@ -1,23 +1,26 @@
 {
-  "seed": 42,
-  "initial_season": 1,
-  "branchings": 10,
-  "inflow": {
-    "stochastic_process": {
-      // AR | PAR | HMM | ...
-      "kind": "Naive",
-      "params": {
-        "file": "inflow_scenarios.jsonc"
-        // "marginal_models": [],
-        // "copulas": []
-      }
+    "seed": 42,
+    "initial_season": 1,
+    "branchings": 10,
+    "graph": {
+        "params": {
+            "file": "graph.jsonc"
+        }
+    },
+    "inflow": {
+        "stochastic_process": {
+            // AR | PAR | HMM | ...
+            "kind": "Naive",
+            "params": {
+                "file": "inflow_scenarios.jsonc"
+            }
+        }
+    },
+    "load": {
+        // DeterministicLoad | ...
+        "kind": "DeterministicLoad",
+        "params": {
+            "file": "load.csv"
+        }
     }
-  },
-  "load": {
-    // DeterministicLoad | ...
-    "kind": "DeterministicLoad",
-    "params": {
-      "file": "load.csv"
-    }
-  }
 }

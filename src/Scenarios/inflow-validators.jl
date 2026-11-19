@@ -1,5 +1,3 @@
-# KEYS / TYPES VALIDATORS -------------------------------------------------------------------
-
 INFLOW_SCENARIOS_KEYS = ["stochastic_process"]
 INFLOW_SCENARIOS_KEY_TYPES = [T where {T<:AbstractStochasticProcess}]
 INFLOW_SCENARIOS_KEY_TYPES_BEFORE_BUILD = [Dict{String,Any}]
@@ -17,56 +15,66 @@ end
 function __validate_inflow_scenarios_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    keys = INFLOW_SCENARIOS_KEYS
-    keys_types = INFLOW_SCENARIOS_KEY_TYPES
-    valid_keys = __validate_keys!(d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
-    return valid_types
+    valid_keys = __validate_keys!(d, INFLOW_SCENARIOS_KEYS, e)
+    if !valid_keys
+        return false
+    end
+    sp = d["stochastic_process"]
+    valid = sp isa AbstractStochasticProcess
+    if !valid
+        push!(
+            e,
+            ErrorException(
+                "Key 'stochastic_process' ($(typeof(sp))) can't be converted to AbstractStochasticProcess",
+            ),
+        )
+    end
+    return valid
 end
 
 function __validate_inflow_scenarios_before_build_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     keys = INFLOW_SCENARIOS_KEYS
-    keys_types = INFLOW_SCENARIOS_KEY_TYPES_BEFORE_BUILD
     valid_keys = __validate_keys!(d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
-    return valid_types
+    if !valid_keys
+        return false
+    end
+    sp = d["stochastic_process"]
+    valid = sp isa Dict{String,Any}
+    if !valid
+        push!(
+            e, ErrorException("Key 'stochastic_process' must be a Dict, got $(typeof(sp))")
+        )
+    end
+    return valid
 end
-
-# CONTENT VALIDATORS -----------------------------------------------------------------------
-
-function __validate_inflow_scenarios_content!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
-end
-
-# CONSISTENCY VALIDATORS -------------------------------------------------------------------
-
-function __validate_inflow_scenarios_consistency!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    return true
-end
-
-# HELPERS -------------------------------------------------------------------------------------
 
 function __build_inflow_scenarios_internals_from_dicts!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
-    valid_stochastic_process = __build_stochastic_process!(d, e)
-    return valid_stochastic_process
+    return __build_stochastic_process!(d, e)
 end
 
 function __validate_stochastic_process_keys_types!(
     d::Dict{String,Any}, e::CompositeException
 )::Bool
     keys = ["stochastic_process"]
-    keys_types = [Dict{String,Any}]
     valid_keys = __validate_keys!(d, keys, e)
-    valid_types = valid_keys && __validate_key_types!(d, keys, keys_types, e)
-    return valid_types
+    if !valid_keys
+        return false
+    end
+    sp = d["stochastic_process"]
+    valid = sp isa Dict{String,Any}
+    if !valid
+        push!(
+            e,
+            ErrorException(
+                "Key 'stochastic_process' must be a Dict{String,Any}, got $(typeof(sp))"
+            ),
+        )
+    end
+    return valid
 end
 
 function __build_stochastic_process!(d::Dict{String,Any}, e::CompositeException)::Bool
@@ -75,45 +83,10 @@ function __build_stochastic_process!(d::Dict{String,Any}, e::CompositeException)
         return false
     end
 
-    return __kind_factory!(StochasticProcess, d, "stochastic_process", e)
-end
-
-# CASTING FROM FILES ------------------------------------------------------------------------
-
-function __validate_inflow_file_key!(d::Dict{String,Any}, e::CompositeException)
-    valid_params_key = __validate_keys!(d, ["params"], e)
-    valid_params_type =
-        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    has_file_key = valid_params_type && haskey(d["params"], "file")
-    valid_file_key =
-        has_file_key && __validate_key_types!(d["params"], ["file"], [String], e)
-    return valid_file_key
-end
-
-function __validate_inflow_params_key_with_values!(
-    d::Dict{String,Any}, e::CompositeException
-)
-    valid_params_key = __validate_keys!(d, ["params"], e)
-    valid_params_type =
-        valid_params_key && __validate_key_types!(d, ["params"], [Dict{String,Any}], e)
-    valid_values_in_params_key =
-        valid_params_type &&
-        __validate_keys!(d["params"], ["marginal_models", "copulas"], e)
-    valid_values_in_params_type =
-        valid_values_in_params_key && __validate_key_types!(
-            d["params"],
-            ["marginal_models", "copulas"],
-            [Vector{Dict{String,Any}}, Vector{Dict{String,Any}}],
-            e,
-        )
-    return valid_values_in_params_type
-end
-
-function __validate_cast_inflow_with_file!(d::Dict{String,Any}, e::CompositeException)::Bool
-    process_data = read_jsonc(d["params"]["file"], e)
-    valid_process = process_data !== nothing
-    if valid_process
-        merge!(d["params"], process_data)
+    result = __single_object_factory(StochasticProcess, d["stochastic_process"], e)
+    valid = result !== nothing
+    if valid
+        d["stochastic_process"] = result
     end
-    return valid_process
+    return valid
 end

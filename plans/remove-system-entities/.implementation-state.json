@@ -1,0 +1,113 @@
+{
+  "plan": "remove-system-entities",
+  "last_updated": "2026-11-10T15:38:16Z",
+  "progressive": false,
+  "tickets": {
+    "ticket-001-remove-entity-model-footprint.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "scores": {
+        "readiness": 0.96,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.6
+        }
+      }
+    },
+    "ticket-002-remove-entity-system-layer.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "scores": {
+        "readiness": 0.94,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.4
+        },
+        "history": [
+          {
+            "value": 0.96,
+            "breakdown": {
+              "structure": 1.0,
+              "testability": 1.0,
+              "boundary": 1.0,
+              "dependency_clarity": 1.0,
+              "atomicity": 0.6
+            },
+            "at": "2026-11-10T15:38:16Z",
+            "attempt": 1,
+            "kind": "readiness",
+            "rubric": "legacy"
+          },
+          {
+            "value": 0.94,
+            "breakdown": {
+              "structure": 1.0,
+              "testability": 1.0,
+              "boundary": 1.0,
+              "dependency_clarity": 1.0,
+              "atomicity": 0.4
+            },
+            "at": "2026-11-10T16:15:05Z",
+            "attempt": 2,
+            "kind": "readiness",
+            "rubric": "readiness/v1",
+            "source": "implementation-planner-revision-r1"
+          }
+        ]
+      }
+    },
+    "ticket-003-remove-entity-traces-outside-package.md": {
+      "status": "pending",
+      "detail_level": "detailed",
+      "scores": {
+        "readiness": 0.96,
+        "readiness_breakdown": {
+          "structure": 1.0,
+          "testability": 1.0,
+          "boundary": 1.0,
+          "dependency_clarity": 1.0,
+          "atomicity": 0.6
+        }
+      }
+    }
+  },
+  "epics": {
+    "epic-01-remove-system-entities": {
+      "phase": "executing",
+      "learning_extracted": false
+    }
+  },
+  "plan_scores": {
+    "history": [
+      {
+        "value": 1.0,
+        "breakdown": {
+          "traceability": 1.0,
+          "options_considered": 1.0,
+          "council_coverage": 1.0,
+          "durability": 1.0,
+          "proportionality": 1.0
+        },
+        "at": "2026-11-10T16:17:26Z",
+        "attempt": 1,
+        "kind": "design",
+        "rubric": "design/v1",
+        "source": "spec-scorer"
+      }
+    ],
+    "design": 1.0,
+    "design_breakdown": {
+      "traceability": 1.0,
+      "options_considered": 1.0,
+      "council_coverage": 1.0,
+      "durability": 1.0,
+      "proportionality": 1.0
+    }
+  }
+}

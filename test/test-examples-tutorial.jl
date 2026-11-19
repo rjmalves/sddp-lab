@@ -1,0 +1,32 @@
+using SDDPlab
+using HiGHS
+using Suppressor
+using Test
+
+examples_root = joinpath(@__DIR__, "..", "example")
+
+@testset "tutorial-examples" begin
+    @testset "load_blocks" begin
+        @suppress begin
+            study = SDDPlab.read_study(joinpath(examples_root, "load_blocks"))
+            model = SDDPlab.build(study, HiGHS.Optimizer)
+            SDDPlab.train(study, model)
+            SDDPlab.simulate(study, model)
+        end
+        @test true
+    end
+
+    @testset "experiment_sweep" begin
+        @suppress begin
+            exp_path = joinpath(examples_root, "experiment_sweep", "experiment.jsonc")
+            SDDPlab.run_experiment(exp_path)
+        end
+        @test true
+
+        @suppress begin
+            sens_path = joinpath(examples_root, "experiment_sweep", "sensitivity.jsonc")
+            SDDPlab.run_sensitivity(sens_path)
+        end
+        @test true
+    end
+end

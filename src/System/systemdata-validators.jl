@@ -24,17 +24,6 @@ function __validate_system_keys_types_before_build!(
     return valid_types
 end
 
-function __validate_system_entity_keys_types!(
-    d::Dict{String,Any}, e::CompositeException
-)::Bool
-    valid_entity_keys = __validate_keys!(d, ["entities"], e)
-    valid_entity_types =
-        valid_entity_keys &&
-        __validate_key_types!(d, ["entities"], [Vector{Dict{String,Any}}], e)
-
-    return valid_entity_types
-end
-
 # CONTENT VALIDATORS -----------------------------------------------------------------------
 
 function __validate_system_content!(d::Dict{String,Any}, e::CompositeException)::Bool

@@ -1,37 +1,113 @@
-# sddp-lab
-Laboratório para análise em pequena escala de variações no problema de planejamento energético usando SDDP.
+# SDDPlab.jl
 
+A Julia laboratory for experimenting with SDDP algorithm variations in hydrothermal dispatch.
 
-## Uso
+[![CI](https://github.com/rjmalves/sddp-lab/workflows/CI/badge.svg)](https://github.com/rjmalves/sddp-lab/actions)
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://rjmalves.github.io/sddp-lab/)
+[![codecov](https://codecov.io/gh/rjmalves/sddp-lab/graph/badge.svg)](https://codecov.io/gh/rjmalves/sddp-lab)
 
+SDDPlab.jl provides a configuration-driven pipeline for building, training, and simulating
+multi-stage stochastic optimization models of power systems. It is built on top of
+[SDDP.jl](https://sddp.dev/stable/) and [JuMP.jl](https://jump.dev/), and is designed to make
+it easy to compare algorithmic variants (risk measures, stopping criteria, parallelism strategies)
+without modifying Julia source code.
+
+## Installation
+
+SDDPlab.jl is not registered in the Julia General registry. Install it directly from GitHub:
+
+```julia
+julia> ]
+pkg> add https://github.com/rjmalves/sddp-lab.git
 ```
-$ julia
 
-]activate .
-Ctrl+D
+Julia 1.10 or higher is required.
 
-$ julia --project main.jl
-```
+## Compiled App
 
+Pre-built application bundles are available on the
+[GitHub Releases](https://github.com/rjmalves/sddp-lab/releases) page. No Julia installation
+is required to run the compiled app.
 
-## Instalação como pacote
-
-É possível realizar a instalação do pacote a partir do repositório privado, mesmo sem adicioná-lo a um registro privado.
-
-Tendo instalada uma versão de Julia `>=1.7`, desde que esteja configurada a CLI do `git` local com as credenciais necessárias para se acessar o repositório, basta fazer, utilizando autenticação via `ssh`:
+Download the tarball for your platform, extract it, and run:
 
 ```bash
-export JULIA_PKG_USE_CLI_GIT=true
-julia
-]
-add git@github.com:rjmalves/sddp-lab.git
+tar -xzf sddp-lab-v3.0.0-linux-x86_64.tar.gz
+SDDPLabApp/bin/SDDPlab <study-path>
 ```
 
-No caso de uso em sistema operacional Windows, pode-se fazer algo semelhante, por exemplo no `PowerShell`:
+## Quick Start
 
-```powershell
-$env:JULIA_PKG_USE_CLI_GIT=true
-julia
-]
-add git@github.com:rjmalves/sddp-lab.git
+```julia
+using SDDPlab
+
+study = read_study("path/to/case")
+model = build(study)
+train(study, model)
+simulate(study, model)
 ```
+
+Results are saved to `<study-path>/data/` by default in Parquet format.
+
+## CLI Usage
+
+The compiled app exposes a CLI with the following interface:
+
+```
+SDDPlab [OPTIONS] <study-path>
+
+Arguments:
+  <study-path>          Path to directory containing main.jsonc
+
+Task selection:
+  --policy-only         Train policy and exit (skip simulation)
+  --simulate-only       Load policy from disk and simulate (skip training)
+
+Policy source:
+  --policy-path <dir>   Directory to load policy from (default: output dir)
+                        Only used with --simulate-only
+
+Output control:
+  -o, --output <dir>    Output directory (default: <study-path>/data/)
+  -f, --format <fmt>    Output format: "parquet" (default) or "csv"
+  --no-save-policy      Skip saving policy artifacts after training
+  --no-save-simulation  Skip saving simulation results
+
+General:
+  -h, --help            Print this help message
+  -V, --version         Print version information
+```
+
+By default both training and simulation run. Common workflows:
+
+```bash
+# Train only, save policy to custom directory
+SDDPlab --policy-only -o results/ my_study/
+
+# Simulate using a previously trained policy
+SDDPlab --simulate-only --policy-path results/ my_study/
+
+# Full pipeline without saving intermediate policy
+SDDPlab --no-save-policy my_study/
+```
+
+## Building from Source
+
+To build the compiled app from source, PackageCompiler.jl is required:
+
+```bash
+julia --project=build build/build_app.jl
+build/package_tarball.sh
+```
+
+The tarball is written to `build/sddp-lab-v{version}-{os}-{arch}.tar.gz`.
+
+## Documentation
+
+Full documentation, including configuration reference and tutorials, is available at:
+
+https://rjmalves.github.io/sddp-lab/
+
+## License
+
+[MIT](LICENSE)

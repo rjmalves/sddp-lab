@@ -1,0 +1,13 @@
+{
+    "base_study": "../1dtoy",
+    "output_dir": "output_sensitivity",
+    "mode": "oat",
+    "overwrite": true,
+    "parameters": [
+        {
+            "label": "max_iterations",
+            "path": "policy.convergence.max_iterations",
+            "values": [32, 64, 128]
+        }
+    ]
+}

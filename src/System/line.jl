@@ -1,21 +1,12 @@
 # CLASS Line -----------------------------------------------------------------------
 
 function Line(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid = validate_schema!(d, LINE_SCHEMA, e; entity_label = "Line $(get(d, "id", "?"))")
 
-    # Build internal objects
-    valid_internals = __build_line_internals_from_dicts!(d, e)
-
-    # Keys and types validation
-    valid_keys_types = valid_internals && __validate_line_keys_types!(d, e)
-
-    # Content validation
-    bus_refs = valid_keys_types ? __validate_line_content!(d, buses, e) : nothing
+    bus_refs = valid ? __validate_line_content!(d, buses, e) : nothing
     valid_content = bus_refs !== nothing
 
-    # Consistency validation
-    valid_consistency = valid_content && __validate_line_consistency!(d, e)
-
-    return if valid_consistency
+    return if valid_content
         Line(
             d["id"],
             d["name"],
@@ -34,43 +25,11 @@ end
 # CLASS Lines -----------------------------------------------------------------------
 
 function Lines(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    # Build internal objects
     valid_internals = __build_lines_internals_from_dicts!(d, buses, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_lines_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_lines_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_lines_consistency!(d, e)
+    valid_consistency = valid_keys_types && __validate_lines_consistency!(d, e)
 
     return valid_consistency ? Lines(d["entities"]) : nothing
-end
-
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Lines)
-    num_lines = length(ses)
-
-    m[DIRECT_EXCHANGE] = @variable(
-        m, [n = 1:num_lines], base_name = String(DIRECT_EXCHANGE)
-    )
-    for n in 1:num_lines
-        set_lower_bound(m[DIRECT_EXCHANGE][n], 0)
-        set_upper_bound(m[DIRECT_EXCHANGE][n], ses.entities[n].capacity)
-    end
-    
-    m[REVERSE_EXCHANGE] = @variable(
-        m, [n = 1:num_lines], base_name = String(REVERSE_EXCHANGE)
-    )
-    for n in 1:num_lines
-        set_lower_bound(m[REVERSE_EXCHANGE][n], 0)
-        set_upper_bound(m[REVERSE_EXCHANGE][n], ses.entities[n].capacity)
-    end
-        
-    m[NET_EXCHANGE] = @expression(m, m[DIRECT_EXCHANGE] - m[REVERSE_EXCHANGE])
 end
 
 # GENERAL METHODS --------------------------------------------------------------------------

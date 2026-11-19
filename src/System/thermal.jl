@@ -1,21 +1,14 @@
 # CLASS Thermal -----------------------------------------------------------------------
 
 function Thermal(d::Dict{String,Any}, buses::Buses, e::CompositeException)
+    valid = validate_schema!(
+        d, THERMAL_SCHEMA, e; entity_label = "Thermal $(get(d, "id", "?"))"
+    )
 
-    # Build internal objects
-    valid_internals = __build_thermal_internals_from_dicts!(d, e)
-
-    # Keys and types validation
-    valid_keys_types = valid_internals && __validate_thermal_keys_types!(d, e)
-
-    # Content validation
-    bus_ref = valid_keys_types ? __validate_thermal_content!(d, buses, e) : nothing
+    bus_ref = valid ? __validate_thermal_content!(d, buses, e) : nothing
     valid_content = bus_ref !== nothing
 
-    # Consistency validation
-    valid_consistency = valid_content && __validate_thermal_consistency!(d, e)
-
-    return if valid_consistency
+    return if valid_content
         Thermal(
             d["id"],
             d["name"],
@@ -33,17 +26,9 @@ end
 # CLASS Thermals -----------------------------------------------------------------------
 
 function Thermals(d::Dict{String,Any}, buses::Buses, e::CompositeException)
-    # Build internal objects
     valid_internals = __build_thermals_internals_from_dicts!(d, buses, e)
-
-    # Keys and types validation
     valid_keys_types = valid_internals && __validate_thermals_keys_types!(d, e)
-
-    # Content validation
-    valid_content = valid_keys_types && __validate_thermals_content!(d, e)
-
-    # Consistency validation
-    valid_consistency = valid_content && __validate_thermals_consistency!(d, e)
+    valid_consistency = valid_keys_types && __validate_thermals_consistency!(d, e)
 
     return valid_consistency ? Thermals(d["entities"]) : nothing
 end
@@ -71,25 +56,6 @@ end
 
 function length(ses::Thermals)::Integer
     return length(get_ids(ses))
-end
-
-# SDDP METHODS -----------------------------------------------------------------------------
-
-function add_system_elements!(m::JuMP.Model, ses::Thermals)
-    num_thermals = length(ses)
-    m[THERMAL_GENERATION] = @variable(
-        m, [n = 1:num_thermals], base_name = String(THERMAL_GENERATION)
-    )
-    for n in 1:num_thermals
-        set_lower_bound(m[THERMAL_GENERATION][n], ses.entities[n].min_generation)
-        set_upper_bound(m[THERMAL_GENERATION][n], ses.entities[n].max_generation)
-    end
-
-    m[THERMAL_GENERATION_COST] = @expression(
-        m, [n = 1:num_thermals], ses.entities[n].cost * m[THERMAL_GENERATION][n]
-    )
-
-    return nothing
 end
 
 # HELPERS --------------------------------------------------------------------------

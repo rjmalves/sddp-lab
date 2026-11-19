@@ -35,4 +35,46 @@ BUSES = System.Buses(BUSES_DICT, CompositeException())
         d = __remove_key(d, "name")
         @test System.Thermal(d, BUSES, e) === nothing
     end
+
+    # --- Schema boundary tests ---
+
+    @testset "thermal-boundary-id-zero-fails" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "id", 0)
+        thermal = System.Thermal(d, BUSES, e)
+        @test thermal === nothing
+        @test length(e) > 0
+    end
+
+    @testset "thermal-boundary-id-one-passes" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "id", 1)
+        thermal = System.Thermal(d, BUSES, e)
+        @test typeof(thermal) === System.Thermal
+    end
+
+    @testset "thermal-invalid-negative-cost" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "cost", -10.0)
+        thermal = System.Thermal(d, BUSES, e)
+        @test thermal === nothing
+        @test length(e) > 0
+    end
+
+    @testset "thermal-invalid-min-greater-than-max-generation" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "min_generation", 500.0)
+        d = __modif_key(d, "max_generation", 100.0)
+        thermal = System.Thermal(d, BUSES, e)
+        @test thermal === nothing
+        @test length(e) > 0
+    end
+
+    @testset "thermal-zero-generation-valid" begin
+        d, e = __renew(DICT)
+        d = __modif_key(d, "min_generation", 0.0)
+        d = __modif_key(d, "max_generation", 0.0)
+        thermal = System.Thermal(d, BUSES, e)
+        @test typeof(thermal) === System.Thermal
+    end
 end

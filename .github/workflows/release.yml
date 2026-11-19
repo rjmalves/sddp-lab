@@ -1,0 +1,57 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    name: Build distributable app
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+
+      - uses: julia-actions/cache@v2
+
+      - name: Install build dependencies
+        run: julia --project=build -e 'using Pkg; Pkg.instantiate()'
+
+      - name: Build app with PackageCompiler
+        run: julia --project=build build/build_app.jl
+
+      - name: Package tarball
+        run: bash build/package_tarball.sh
+
+      - name: Check bundle size
+        run: |
+          TARBALL=$(ls build/sddp-lab-v*.tar.gz)
+          SIZE=$(stat -c%s "$TARBALL")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          echo "Tarball size: ${SIZE_MB} MB"
+          if [ "$SIZE_MB" -gt 2048 ]; then
+            echo "::error::Tarball exceeds 2 GB limit (${SIZE_MB} MB)"
+            exit 1
+          elif [ "$SIZE_MB" -gt 1536 ]; then
+            echo "::warning::Tarball exceeds 1.5 GB (${SIZE_MB} MB)"
+          fi
+
+      - name: Smoke test - version
+        run: build/SDDPLabApp/bin/SDDPlab --version
+
+      - name: Smoke test - 1dtoy
+        run: build/SDDPLabApp/bin/SDDPlab example/1dtoy/
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TARBALL=$(ls build/sddp-lab-v*.tar.gz)
+          gh release upload "${{ github.event.release.tag_name }}" "$TARBALL" --clobber
